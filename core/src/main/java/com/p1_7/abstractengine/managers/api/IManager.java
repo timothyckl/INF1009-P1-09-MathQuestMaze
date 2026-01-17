@@ -1,4 +1,4 @@
-package com.p1_7.abstractengine.managers;
+package com.p1_7.abstractengine.managers.api;
 
 // NOTE: this is a blueprint manager interface
 // methods defined here don't need an implementation,
