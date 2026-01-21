@@ -21,7 +21,7 @@ public class Entity extends AbstractObject implements Taggable {
 
     @Override
     public void update(float deltaTime) {
-        // intentionally empty - subclasses implement game-specific update logic
+
     }
 
     @Override

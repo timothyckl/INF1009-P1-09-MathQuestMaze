@@ -41,7 +41,12 @@ public class EntityManager extends AbstractManager {
         entities.clear();
     }
 
-    // retrieves an entity by its unique identifier
+    /**
+     * Retrieves an entity by ID.
+     *
+     * @param id entity identifier
+     * @return the entity, or null if not found
+     */
     public Entity getEntity(UUID id) {
         if (id == null) {
             return null;
@@ -49,7 +54,12 @@ public class EntityManager extends AbstractManager {
         return entities.get(id);
     }
 
-    // adds an entity to this manager
+    /**
+     * Adds an entity.
+     *
+     * @param entity the entity to add
+     * @return true if added, false if null
+     */
     public boolean addEntity(Entity entity) {
         if (entity == null) {
             return false;
@@ -58,7 +68,12 @@ public class EntityManager extends AbstractManager {
         return true;
     }
 
-    // removes an entity from this manager
+    /**
+     * Removes an entity.
+     *
+     * @param id entity identifier
+     * @return true if removed, false if not found
+     */
     public boolean removeEntity(UUID id) {
         if (id == null) {
             return false;
@@ -66,14 +81,19 @@ public class EntityManager extends AbstractManager {
         return entities.remove(id) != null;
     }
 
-    // returns all entities managed by this manager
+    /** Returns all managed entities. */
     public Iterable<Entity> getAllEntities() {
         return entities.values();
     }
 
     // tag-based query methods
 
-    // returns all entities with the specified tag
+    /**
+     * Returns entities with the specified tag.
+     *
+     * @param tag the tag to match
+     * @return matching entities
+     */
     public <T extends Enum<T> & Tag> List<Entity> getEntitiesByTag(T tag) {
         List<Entity> result = new ArrayList<>();
         if (tag == null) {
@@ -87,7 +107,12 @@ public class EntityManager extends AbstractManager {
         return result;
     }
 
-    // returns all active entities with the specified tag
+    /**
+     * Returns active entities with the specified tag.
+     *
+     * @param tag the tag to match
+     * @return matching active entities
+     */
     public <T extends Enum<T> & Tag> List<Entity> getActiveEntitiesByTag(T tag) {
         List<Entity> result = new ArrayList<>();
         if (tag == null) {
@@ -101,7 +126,12 @@ public class EntityManager extends AbstractManager {
         return result;
     }
 
-    // returns all entities that have all specified tags
+    /**
+     * Returns entities having all specified tags.
+     *
+     * @param tags tags to match
+     * @return matching entities
+     */
     public List<Entity> getEntitiesWithAllTags(Tag... tags) {
         List<Entity> result = new ArrayList<>();
         if (tags == null || tags.length == 0) {
@@ -115,7 +145,12 @@ public class EntityManager extends AbstractManager {
         return result;
     }
 
-    // returns all entities that have any of the specified tags
+    /**
+     * Returns entities having any specified tag.
+     *
+     * @param tags tags to match
+     * @return matching entities
+     */
     public List<Entity> getEntitiesWithAnyTag(Tag... tags) {
         List<Entity> result = new ArrayList<>();
         if (tags == null || tags.length == 0) {
@@ -129,7 +164,12 @@ public class EntityManager extends AbstractManager {
         return result;
     }
 
-    // counts entities with the specified tag
+    /**
+     * Counts entities with the specified tag.
+     *
+     * @param tag the tag to count
+     * @return entity count
+     */
     public <T extends Enum<T> & Tag> int countEntitiesByTag(T tag) {
         if (tag == null) {
             return 0;
@@ -145,7 +185,12 @@ public class EntityManager extends AbstractManager {
 
     // property-based query methods
 
-    // returns all entities with the specified property type
+    /**
+     * Returns entities with the specified property type.
+     *
+     * @param propertyType the property class
+     * @return matching entities
+     */
     public List<Entity> getEntitiesByProperty(Class<? extends AbstractProperty> propertyType) {
         List<Entity> result = new ArrayList<>();
         if (propertyType == null) {
@@ -159,7 +204,12 @@ public class EntityManager extends AbstractManager {
         return result;
     }
 
-    // returns all active entities with the specified property type
+    /**
+     * Returns active entities with the specified property type.
+     *
+     * @param propertyType the property class
+     * @return matching active entities
+     */
     public List<Entity> getActiveEntitiesByProperty(Class<? extends AbstractProperty> propertyType) {
         List<Entity> result = new ArrayList<>();
         if (propertyType == null) {
@@ -173,7 +223,12 @@ public class EntityManager extends AbstractManager {
         return result;
     }
 
-    // returns all entities that have all specified property types
+    /**
+     * Returns entities having all specified property types.
+     *
+     * @param propertyTypes property classes
+     * @return matching entities
+     */
     @SafeVarargs
     public final List<Entity> getEntitiesWithAllProperties(Class<? extends AbstractProperty>... propertyTypes) {
         List<Entity> result = new ArrayList<>();
@@ -195,7 +250,12 @@ public class EntityManager extends AbstractManager {
         return result;
     }
 
-    // returns all entities that have any of the specified property types
+    /**
+     * Returns entities having any specified property type.
+     *
+     * @param propertyTypes property classes
+     * @return matching entities
+     */
     @SafeVarargs
     public final List<Entity> getEntitiesWithAnyProperty(Class<? extends AbstractProperty>... propertyTypes) {
         List<Entity> result = new ArrayList<>();
@@ -213,7 +273,12 @@ public class EntityManager extends AbstractManager {
         return result;
     }
 
-    // counts entities with the specified property type
+    /**
+     * Counts entities with the specified property type.
+     *
+     * @param propertyType the property class
+     * @return entity count
+     */
     public int countEntitiesByProperty(Class<? extends AbstractProperty> propertyType) {
         if (propertyType == null) {
             return 0;
