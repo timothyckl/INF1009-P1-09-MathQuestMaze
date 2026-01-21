@@ -86,8 +86,6 @@ public class EntityManager extends AbstractManager {
         return entities.values();
     }
 
-    // tag-based query methods
-
     /**
      * Returns entities with the specified tag.
      *
@@ -109,65 +107,6 @@ public class EntityManager extends AbstractManager {
     }
 
     /**
-     * Returns entities having all specified tags.
-     *
-     * @param tags tags to match
-     * @return matching entities
-     */
-    public List<Entity> getEntitiesWithAll(Tag... tags) {
-        List<Entity> result = new ArrayList<>();
-        if (tags == null || tags.length == 0) {
-            return result;
-        }
-        for (Entity entity : entities.values()) {
-            if (entity.hasAllTags(tags)) {
-                result.add(entity);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Returns entities having any specified tag.
-     *
-     * @param tags tags to match
-     * @return matching entities
-     */
-    public List<Entity> getEntitiesWithAny(Tag... tags) {
-        List<Entity> result = new ArrayList<>();
-        if (tags == null || tags.length == 0) {
-            return result;
-        }
-        for (Entity entity : entities.values()) {
-            if (entity.hasAnyTag(tags)) {
-                result.add(entity);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Counts entities with the specified tag.
-     *
-     * @param tag the tag to count
-     * @return entity count
-     */
-    public <T extends Enum<T> & Tag> int countEntitiesBy(T tag) {
-        if (tag == null) {
-            return 0;
-        }
-        int count = 0;
-        for (Entity entity : entities.values()) {
-            if (entity.hasTag(tag)) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    // property-based query methods
-
-    /**
      * Returns entities with the specified property type.
      *
      * @param propertyType the property class
@@ -181,6 +120,25 @@ public class EntityManager extends AbstractManager {
         }
         for (Entity entity : entities.values()) {
             if ((!activeOnly || entity.isActive()) && entity.hasProperty(propertyType)) {
+                result.add(entity);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns entities having all specified tags.
+     *
+     * @param tags tags to match
+     * @return matching entities
+     */
+    public List<Entity> getEntitiesWithAll(Tag... tags) {
+        List<Entity> result = new ArrayList<>();
+        if (tags == null || tags.length == 0) {
+            return result;
+        }
+        for (Entity entity : entities.values()) {
+            if (entity.hasAllTags(tags)) {
                 result.add(entity);
             }
         }
@@ -215,6 +173,25 @@ public class EntityManager extends AbstractManager {
     }
 
     /**
+     * Returns entities having any specified tag.
+     *
+     * @param tags tags to match
+     * @return matching entities
+     */
+    public List<Entity> getEntitiesWithAny(Tag... tags) {
+        List<Entity> result = new ArrayList<>();
+        if (tags == null || tags.length == 0) {
+            return result;
+        }
+        for (Entity entity : entities.values()) {
+            if (entity.hasAnyTag(tags)) {
+                result.add(entity);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Returns entities having any specified property type.
      *
      * @param propertyTypes property classes
@@ -235,6 +212,25 @@ public class EntityManager extends AbstractManager {
             }
         }
         return result;
+    }
+
+    /**
+     * Counts entities with the specified tag.
+     *
+     * @param tag the tag to count
+     * @return entity count
+     */
+    public <T extends Enum<T> & Tag> int countEntitiesBy(T tag) {
+        if (tag == null) {
+            return 0;
+        }
+        int count = 0;
+        for (Entity entity : entities.values()) {
+            if (entity.hasTag(tag)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
