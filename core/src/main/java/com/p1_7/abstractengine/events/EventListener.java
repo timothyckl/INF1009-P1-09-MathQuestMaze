@@ -1,19 +1,20 @@
 package com.p1_7.abstractengine.events;
 
 /**
- * Generic listener interface for events.
+ * functional interface for event listeners.
  *
- * @param <T> the event type enum (must implement EventType)
- * @param <D> the data type passed with events
+ * listeners subscribe to specific event types and receive events
+ * of that exact type when published.
+ *
+ * @param <T> the event type this listener handles
  */
 @FunctionalInterface
-public interface EventListener<T extends Enum<T> & EventType, D> {
+public interface EventListener<T extends Event> {
 
     /**
-     * Handles the received event.
+     * handles the received event.
      *
-     * @param type the event type
-     * @param data the data associated with the event
+     * @param event the event to process
      */
-    void onEvent(T type, D data);
+    void onEvent(T event);
 }
