@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.badlogic.gdx.utils.Array;
+import com.p1_7.abstractengine.properties.Dimension;
+import com.p1_7.abstractengine.properties.Position;
 
 public class Entity extends AbstractObject implements Taggable {
     private final UUID id;
@@ -17,11 +19,6 @@ public class Entity extends AbstractObject implements Taggable {
         active = false;
         properties = new Array<AbstractProperty>();
         initialiseProperties();
-    }
-
-    @Override
-    public void update(float deltaTime) {
-
     }
 
     @Override
@@ -82,6 +79,21 @@ public class Entity extends AbstractObject implements Taggable {
         return getProperty(type) != null;
     }
 
+    /**
+     * Returns the set of property class types this entity contains.
+     *
+     * @return an unmodifiable set of property class types
+     */
+    public Set<Class<? extends AbstractProperty>> getPropertyTypes() {
+        Set<Class<? extends AbstractProperty>> types = new HashSet<>();
+        for (AbstractProperty property : properties) {
+            if (property != null) {
+                types.add(property.getClass());
+            }
+        }
+        return Collections.unmodifiableSet(types);
+    }
+
     public UUID getID() {
         return id;
     }
@@ -91,7 +103,8 @@ public class Entity extends AbstractObject implements Taggable {
      * properties.
      */
     protected void initialiseProperties() {
-
+        properties.add(new Dimension());
+        properties.add(new Position());
     }
 
     // taggable interface implementation
