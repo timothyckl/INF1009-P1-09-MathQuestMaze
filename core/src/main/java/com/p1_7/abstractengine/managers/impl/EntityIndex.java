@@ -10,8 +10,11 @@ import com.p1_7.abstractengine.core.AbstractProperty;
 import com.p1_7.abstractengine.core.Entity;
 import com.p1_7.abstractengine.core.EntityRepository;
 import com.p1_7.abstractengine.core.Tag;
-import com.p1_7.abstractengine.events.EntityEventType;
-import com.p1_7.abstractengine.events.EventListener;
+import com.p1_7.abstractengine.events.EntityActiveChangedEvent;
+import com.p1_7.abstractengine.events.EntityAddedEvent;
+import com.p1_7.abstractengine.events.EntityPropertyChangedEvent;
+import com.p1_7.abstractengine.events.EntityRemovedEvent;
+import com.p1_7.abstractengine.events.EntityTagChangedEvent;
 
 /**
  * Provides efficient querying of entities by maintaining secondary indices
@@ -25,7 +28,6 @@ public class EntityIndex {
 
     // event subscription
     private EventManager eventManager;
-    private EventListener<EntityEventType, Entity> entityListener;
 
     /**
      * Creates a new entity index backed by the specified repository.
@@ -45,8 +47,8 @@ public class EntityIndex {
     // ========================================================================
 
     /**
-     * Subscribes this index to entity events from the given EventManager.
-     * Enables automatic index updates when entities are added, removed, or change
+     * subscribes this index to entity events from the given EventManager.
+     * enables automatic index updates when entities are added, removed, or change
      * state.
      *
      * @param eventManager the event manager to subscribe to
@@ -61,46 +63,25 @@ public class EntityIndex {
 
         this.eventManager = eventManager;
 
-        // create listener that delegates to existing methods
-        entityListener = (type, entity) -> {
-            switch (type) {
-                case ADDED:
-                    indexEntity(entity);
-                    break;
-                case REMOVED:
-                    unindexEntity(entity);
-                    break;
-                case ACTIVE_CHANGED:
-                    updateEntityActive(entity);
-                    break;
-                case TAG_CHANGED:
-                case PROPERTY_CHANGED:
-                    reindexEntity(entity);
-                    break;
-            }
-        };
-
-        // subscribe to all entity event types
-        for (EntityEventType type : EntityEventType.values()) {
-            eventManager.subscribe(type, entityListener);
-        }
+        // subscribe to each entity event type with 'this' as owner
+        eventManager.subscribe(EntityAddedEvent.class, e -> indexEntity(e.entity()), this);
+        eventManager.subscribe(EntityRemovedEvent.class, e -> unindexEntity(e.entity()), this);
+        eventManager.subscribe(EntityActiveChangedEvent.class, e -> updateEntityActive(e.entity()), this);
+        eventManager.subscribe(EntityTagChangedEvent.class, e -> reindexEntity(e.entity()), this);
+        eventManager.subscribe(EntityPropertyChangedEvent.class, e -> reindexEntity(e.entity()), this);
     }
 
     /**
-     * Unsubscribes this index from entity events.
-     * Call this during cleanup or before switching event managers.
+     * unsubscribes this index from entity events.
+     * call this during cleanup or before switching event managers.
      */
     public void unsubscribeFromEvents() {
-        if (eventManager == null || entityListener == null) {
+        if (eventManager == null) {
             return;
         }
 
-        for (EntityEventType type : EntityEventType.values()) {
-            eventManager.unsubscribe(type, entityListener);
-        }
-
+        eventManager.unsubscribeAll(this);
         eventManager = null;
-        entityListener = null;
     }
 
     // ========================================================================
