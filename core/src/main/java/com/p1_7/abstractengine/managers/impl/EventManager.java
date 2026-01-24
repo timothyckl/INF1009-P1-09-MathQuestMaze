@@ -2,20 +2,35 @@ package com.p1_7.abstractengine.managers.impl;
 
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.p1_7.abstractengine.events.Event;
 import com.p1_7.abstractengine.events.EventListener;
-import com.p1_7.abstractengine.events.EventType;
 import com.p1_7.abstractengine.managers.base.AbstractManager;
 
 /**
- * Central event broker that manages event subscriptions and publishing.
- * Implements the publish/subscribe pattern for loose coupling between
+ * central event broker that manages event subscriptions and publishing.
+ * implements the publish/subscribe pattern for loose coupling between
  * components.
- * Note that this event manager is synchronous.
+ *
+ * uses exact-match dispatch: when an event is published, only listeners
+ * subscribed to that exact event class are notified.
+ *
+ * supports owner-based subscription tracking: subscribers can pass themselves
+ * as an owner when subscribing, then call unsubscribeAll(owner) to remove all
+ * their subscriptions at once. this avoids repetitive bookkeeping in each
+ * subscribing class.
+ *
+ * note that this event manager is synchronous.
  */
 public class EventManager extends AbstractManager {
 
-    // maps event types to their registered listeners
-    private final ObjectMap<EventType, Array<EventListener<?, ?>>> listeners;
+    /**
+     * wraps a listener with its owner for tracking purposes.
+     */
+    private record OwnedListener(EventListener<?> listener, Object owner) {
+    }
+
+    // maps event class types to their registered listeners
+    private final ObjectMap<Class<? extends Event>, Array<OwnedListener>> listeners;
 
     // flag to prevent modification during iteration
     private boolean publishing;
@@ -41,29 +56,48 @@ public class EventManager extends AbstractManager {
     }
 
     /**
-     * Subscribes a listener to events of the specified type.
+     * subscribes a listener to events of the specified type.
+     * the listener will only receive events of the exact type specified.
      *
-     * @param <T>      the event type enum
-     * @param <D>      the data type passed with events
-     * @param type     the event type to listen for
-     * @param listener the listener to register
+     * @param <T>       the event type
+     * @param eventType the event class to listen for
+     * @param listener  the listener to register
      */
-    public <T extends Enum<T> & EventType, D> void subscribe(T type, EventListener<T, D> listener) {
-        if (type == null || listener == null) {
+    public <T extends Event> void subscribe(Class<T> eventType, EventListener<T> listener) {
+        subscribe(eventType, listener, null);
+    }
+
+    /**
+     * subscribes a listener to events of the specified type, associated with an owner.
+     * the listener will only receive events of the exact type specified.
+     * use unsubscribeAll(owner) to remove all listeners registered by this owner.
+     *
+     * @param <T>       the event type
+     * @param eventType the event class to listen for
+     * @param listener  the listener to register
+     * @param owner     the owner of this subscription (can be null)
+     */
+    public <T extends Event> void subscribe(Class<T> eventType, EventListener<T> listener, Object owner) {
+        if (eventType == null || listener == null) {
             return;
         }
 
+        OwnedListener owned = new OwnedListener(listener, owner);
+
         Runnable operation = () -> {
-            Array<EventListener<?, ?>> eventListeners = listeners.get(type);
+            Array<OwnedListener> eventListeners = listeners.get(eventType);
             if (eventListeners == null) {
                 eventListeners = new Array<>();
-                listeners.put(type, eventListeners);
+                listeners.put(eventType, eventListeners);
             }
 
-            // prevent duplicate subscriptions
-            if (!eventListeners.contains(listener, true)) {
-                eventListeners.add(listener);
+            // prevent duplicate subscriptions (check by listener reference)
+            for (OwnedListener existing : eventListeners) {
+                if (existing.listener == listener) {
+                    return;
+                }
             }
+            eventListeners.add(owned);
         };
 
         if (publishing) {
@@ -74,22 +108,26 @@ public class EventManager extends AbstractManager {
     }
 
     /**
-     * Unsubscribes a listener from events of the specified type.
+     * unsubscribes a listener from events of the specified type.
      *
-     * @param <T>      the event type enum
-     * @param <D>      the data type passed with events
-     * @param type     the event type to unsubscribe from
-     * @param listener the listener to remove
+     * @param <T>       the event type
+     * @param eventType the event class to unsubscribe from
+     * @param listener  the listener to remove
      */
-    public <T extends Enum<T> & EventType, D> void unsubscribe(T type, EventListener<T, D> listener) {
-        if (type == null || listener == null) {
+    public <T extends Event> void unsubscribe(Class<T> eventType, EventListener<T> listener) {
+        if (eventType == null || listener == null) {
             return;
         }
 
         Runnable operation = () -> {
-            Array<EventListener<?, ?>> eventListeners = listeners.get(type);
+            Array<OwnedListener> eventListeners = listeners.get(eventType);
             if (eventListeners != null) {
-                eventListeners.removeValue(listener, true);
+                for (int i = eventListeners.size - 1; i >= 0; i--) {
+                    if (eventListeners.get(i).listener == listener) {
+                        eventListeners.removeIndex(i);
+                        break;
+                    }
+                }
             }
         };
 
@@ -101,28 +139,54 @@ public class EventManager extends AbstractManager {
     }
 
     /**
-     * Publishes an event to all registered listeners of its type.
+     * unsubscribes all listeners registered by the specified owner.
+     * this is the recommended way to clean up subscriptions, as it removes
+     * all listeners in one call without requiring the subscriber to track them.
      *
-     * @param <T>  the event type enum
-     * @param <D>  the data type passed with events
-     * @param type the event type
-     * @param data the data to pass to listeners
+     * @param owner the owner whose listeners should be removed
      */
-    @SuppressWarnings("unchecked")
-    public <T extends Enum<T> & EventType, D> void publish(T type, D data) {
-        if (type == null) {
+    public void unsubscribeAll(Object owner) {
+        if (owner == null) {
             return;
         }
 
-        Array<EventListener<?, ?>> eventListeners = listeners.get(type);
+        Runnable operation = () -> {
+            for (Array<OwnedListener> eventListeners : listeners.values()) {
+                for (int i = eventListeners.size - 1; i >= 0; i--) {
+                    if (eventListeners.get(i).owner == owner) {
+                        eventListeners.removeIndex(i);
+                    }
+                }
+            }
+        };
+
+        if (publishing) {
+            pendingOperations.add(operation);
+        } else {
+            operation.run();
+        }
+    }
+
+    /**
+     * publishes an event to all registered listeners of its exact type.
+     *
+     * @param event the event to publish
+     */
+    @SuppressWarnings("unchecked")
+    public void publish(Event event) {
+        if (event == null) {
+            return;
+        }
+
+        Array<OwnedListener> eventListeners = listeners.get(event.getClass());
         if (eventListeners == null || eventListeners.size == 0) {
             return;
         }
 
         publishing = true;
         try {
-            for (EventListener<?, ?> listener : eventListeners) {
-                ((EventListener<T, D>) listener).onEvent(type, data);
+            for (OwnedListener owned : eventListeners) {
+                ((EventListener<Event>) owned.listener).onEvent(event);
             }
         } finally {
             publishing = false;
@@ -131,7 +195,7 @@ public class EventManager extends AbstractManager {
     }
 
     /**
-     * Processes any subscribe/unsubscribe operations that occurred during
+     * processes any subscribe/unsubscribe operations that occurred during
      * publishing.
      */
     private void processPendingOperations() {
@@ -142,27 +206,27 @@ public class EventManager extends AbstractManager {
     }
 
     /**
-     * Returns the number of listeners registered for a specific event type.
+     * returns the number of listeners registered for a specific event type.
      *
-     * @param type the event type to check
+     * @param eventType the event class to check
      * @return the number of registered listeners
      */
-    public int getListenerCount(EventType type) {
-        Array<EventListener<?, ?>> eventListeners = listeners.get(type);
+    public int getListenerCount(Class<? extends Event> eventType) {
+        Array<OwnedListener> eventListeners = listeners.get(eventType);
         return eventListeners != null ? eventListeners.size : 0;
     }
 
     /**
-     * Removes all listeners for a specific event type.
+     * removes all listeners for a specific event type.
      *
-     * @param type the event type to clear
+     * @param eventType the event class to clear
      */
-    public void clearListeners(EventType type) {
-        if (type == null) {
+    public void clearListeners(Class<? extends Event> eventType) {
+        if (eventType == null) {
             return;
         }
 
-        Runnable operation = () -> listeners.remove(type);
+        Runnable operation = () -> listeners.remove(eventType);
 
         if (publishing) {
             pendingOperations.add(operation);
@@ -174,7 +238,7 @@ public class EventManager extends AbstractManager {
     @Override
     public String toString() {
         int totalListeners = 0;
-        for (Array<EventListener<?, ?>> arr : listeners.values()) {
+        for (Array<OwnedListener> arr : listeners.values()) {
             totalListeners += arr.size;
         }
         return "EventManager{eventTypes=" + listeners.size + ", totalListeners=" + totalListeners + "}";
