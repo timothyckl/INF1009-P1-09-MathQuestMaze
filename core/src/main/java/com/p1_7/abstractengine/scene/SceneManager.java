@@ -132,8 +132,15 @@ public class SceneManager extends UpdatableManager {
      * onInit() can enter the scene.
      *
      * @param key the name of the scene to start in
+     * @throws IllegalArgumentException if key is null or blank
      */
     public void setInitialScene(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key cannot be null");
+        }
+        if (key.trim().isEmpty()) {
+            throw new IllegalArgumentException("key cannot be blank");
+        }
         this.currentKey = key;
     }
 

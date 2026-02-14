@@ -73,8 +73,12 @@ public class InputMapping {
      *
      * @param keyCode  the libGDX key code
      * @param actionId the action to associate with the key
+     * @throws IllegalArgumentException if actionId is null
      */
     public void bindKey(int keyCode, ActionId actionId) {
+        if (actionId == null) {
+            throw new IllegalArgumentException("actionId cannot be null");
+        }
         keyBindings.put(keyCode, actionId);
     }
 
@@ -83,8 +87,12 @@ public class InputMapping {
      *
      * @param buttonCode the libGDX button code
      * @param actionId   the action to associate with the button
+     * @throws IllegalArgumentException if actionId is null
      */
     public void bindButton(int buttonCode, ActionId actionId) {
+        if (actionId == null) {
+            throw new IllegalArgumentException("actionId cannot be null");
+        }
         buttonBindings.put(buttonCode, actionId);
     }
 

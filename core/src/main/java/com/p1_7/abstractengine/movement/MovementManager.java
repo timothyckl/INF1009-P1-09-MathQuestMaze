@@ -75,8 +75,29 @@ public class MovementManager extends UpdatableManager {
      *
      * @param min the lower bounds per dimension
      * @param max the upper bounds per dimension
+     * @throws IllegalArgumentException if min or max is null, arrays have different lengths,
+     *                                  arrays are empty, or any min[i] > max[i]
      */
     public void setWorldBounds(float[] min, float[] max) {
+        if (min == null) {
+            throw new IllegalArgumentException("min cannot be null");
+        }
+        if (max == null) {
+            throw new IllegalArgumentException("max cannot be null");
+        }
+        if (min.length != max.length) {
+            throw new IllegalArgumentException("min and max must have the same length");
+        }
+        if (min.length == 0) {
+            throw new IllegalArgumentException("min and max cannot be empty");
+        }
+        for (int i = 0; i < min.length; i++) {
+            if (min[i] > max[i]) {
+                throw new IllegalArgumentException(
+                    "min[" + i + "] (" + min[i] + ") cannot be greater than max[" + i + "] (" + max[i] + ")"
+                );
+            }
+        }
         this.boundsMin = min;
         this.boundsMax = max;
     }

@@ -52,8 +52,12 @@ public class Engine {
      * separately from the update loop.
      *
      * @param renderManager the render manager instance
+     * @throws IllegalArgumentException if renderManager is null
      */
     public void setRenderManager(RenderManager renderManager) {
+        if (renderManager == null) {
+            throw new IllegalArgumentException("renderManager cannot be null");
+        }
         this.renderManager = renderManager;
     }
 
