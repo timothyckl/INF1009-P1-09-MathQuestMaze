@@ -1,4 +1,4 @@
-package com.p1_7.abstractengine;
+package com.p1_7.demo;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
