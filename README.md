@@ -1,33 +1,61 @@
-# INF1009-P1-09-AbstractEngine
+# Abstract Simulation Engine
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+An abstract simulation engine built with [libGDX](https://libgdx.com/), following OOP and SOLID principles.
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
+## Engine Architecture
 
-## Platforms
+The engine is organised around several key abstract classes that define its structure:
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+- **`Engine`** – Central orchestrator managing the lifecycle and update loop of all managers
+- **`Manager`** – Abstract base class providing standard init/shutdown lifecycle for all subsystems
+  - `EntityManager` – handles entity creation, removal, and repository access
+  - `SceneManager` – manages scene transitions and the active scene
+  - `MovementManager` – updates positions of all registered movable entities
+  - `CollisionManager` – detects and handles collisions between collidable entities
+  - `RenderManager` – processes the render queue and draws entities to screen
+  - `InputOutputManager` – maps input events to action identifiers
+- **`Entity`** – Abstract base for all game objects, assigned unique IDs and active state
+- **`Scene`** – Abstract base for game states with lifecycle hooks (onEnter, onExit, update, submitRenderable)
 
-## Gradle
+Entities implement capability interfaces (`IMovable`, `ICollidable`, `IRenderable`, `ITransformable`) and are registered with the appropriate managers, allowing flexible composition of behaviours.
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+## Project Structure
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+```bash
+core/src/main/java/com/p1_7/
+├── abstractengine/    # the core simulation engine
+│   ├── collision/     # collision detection and collidable interface
+│   ├── engine/        # core engine, manager base classes, and settings
+│   ├── entity/        # entity abstraction and entity management
+│   ├── input/         # input mapping and query interfaces
+│   ├── movement/      # movement management and movable interface
+│   ├── render/        # render queue and renderable interface
+│   ├── scene/         # scene abstraction and scene management
+│   └── transform/     # position/rotation/scale transforms
+└── demo/              # "catch the droplet" demo application
+```
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+## Demo: Catch the Droplet
+
+The included demo is a simple arcade game where the player controls a bucket to catch falling water droplets:
+
+- **Objective** – catch falling droplets with your bucket before they hit the ground
+- **Controls** – move the bucket left and right using keyboard or touch input
+- **Lives** – start with 3 lives; miss a droplet and lose a life
+- **Game over** – the game ends when all lives are lost, displaying your final score
+- **Mechanics** – droplets spawn continuously at random positions and fall at a constant speed
+
+The demo showcases the engine's entity system, collision detection, scene management, and input handling.
+
+## Getting Started
+
+Run the demo application:
+
+```bash
+./gradlew run
+```
+
+## Requirements
+
+- Java 8 or higher
+- Gradle
