@@ -44,6 +44,20 @@ public interface SceneContext {
     void changeScene(String key);
 
     /**
+     * requests a deferred suspend transition to the scene identified by key.
+     * unlike changeScene(), this preserves the current scene's state by calling
+     * onSuspend() instead of onExit().
+     *
+     * use this for pause menus, settings overlays, or any transition where
+     * the current scene should resume exactly where it left off.
+     *
+     * the transition is resolved at the top of the next update tick.
+     *
+     * @param key the name of the target scene
+     */
+    void suspendScene(String key);
+
+    /**
      * returns the scene registered under the specified key.
      *
      * useful for inter-scene communication, such as passing data

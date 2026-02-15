@@ -1,6 +1,7 @@
 package com.p1_7.demo;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.MathUtils;
@@ -21,7 +22,7 @@ import com.p1_7.abstractengine.scene.SceneContext;
 public class GameScene extends Scene {
 
     /** initial number of lives */
-    private static final int INITIAL_LIVES = 3;
+    private static final int INITIAL_LIVES = 10;
 
     /** y coordinate where droplets spawn (top of screen) */
     private static final float SPAWN_Y = Settings.WINDOW_HEIGHT;
@@ -36,8 +37,10 @@ public class GameScene extends Scene {
 
     private Bucket bucket;
     private Array<Droplet> droplets = new Array<>();
+    private Array<Cloud> clouds = new Array<>();
     private Background background;
     private LivesDisplay livesDisplay;
+    private ScoreDisplay scoreDisplay;
 
     // ==================== audio ====================
 
@@ -86,6 +89,7 @@ public class GameScene extends Scene {
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.mp3"));
         music = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
         music.setLooping(true);
+        music.setVolume(Settings.MUSIC_VOLUME);
         music.play();
 
         // 2. create background (not an entity)
@@ -94,19 +98,27 @@ public class GameScene extends Scene {
         // 3. create lives display via entity manager
         livesDisplay = (LivesDisplay) entityMutator.createEntity(() -> new LivesDisplay(INITIAL_LIVES));
 
-        // 4. create bucket via entity manager
+        // 4. create score display via entity manager
+        scoreDisplay = (ScoreDisplay) entityMutator.createEntity(
+            () -> new ScoreDisplay(520f, Settings.WINDOW_HEIGHT - 10f, 0)
+        );
+
+        // 5. create bucket via entity manager
         float bucketX = (Settings.WINDOW_WIDTH / 2f) - (Bucket.BUCKET_WIDTH / 2f);
         float bucketY = 20f;
         bucket = (Bucket) entityMutator.createEntity(() -> new Bucket(bucketX, bucketY));
 
-        // 5. register bucket with managers
+        // 6. register bucket with managers
         movementManager.registerMovable(bucket);
         collisionManager.registerCollidable(bucket);
 
         // wire catch handler
         bucket.setCatchHandler(this::handleDropletCatch);
 
-        // 6. spawn initial droplet
+        // 7. create and register cloud deflectors
+        createClouds();
+
+        // 8. spawn initial droplet
         spawnDroplet();
     }
 
@@ -135,14 +147,60 @@ public class GameScene extends Scene {
         }
         droplets.clear();
 
+        // clean up clouds
+        for (int i = 0; i < clouds.size; i++) {
+            Cloud cloud = clouds.get(i);
+            collisionManager.unregisterCollidable(cloud);
+            entityMutator.removeEntity(cloud.getId());
+        }
+        clouds.clear();
+
         // remove lives display entity
         if (livesDisplay != null) {
             entityMutator.removeEntity(livesDisplay.getId());
+        }
+
+        // remove score display entity
+        if (scoreDisplay != null) {
+            scoreDisplay.dispose();
+            entityMutator.removeEntity(scoreDisplay.getId());
+        }
+    }
+
+    @Override
+    public void onSuspend(SceneContext context) {
+        // minimal cleanup for pause - keep all entities and state intact
+        // music keeps playing so volume slider works in pause menu
+    }
+
+    @Override
+    public void onResume(SceneContext context) {
+        // reconnect resources after resuming from pause
+
+        // reapply volume setting (may have changed in pause menu)
+        if (music != null) {
+            music.setVolume(Settings.MUSIC_VOLUME);
         }
     }
 
     @Override
     public void update(float deltaTime, SceneContext context) {
+        // check for pause key press
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+
+            // get pause scene and pass current state
+            PauseScene pauseScene = (PauseScene) context.getScene("pause");
+            if (pauseScene != null) {
+                pauseScene.setGameState(livesDisplay.getLives(), score);
+                pauseScene.setMusicReference(music);
+            }
+
+            // use suspendScene to preserve game state
+            context.suspendScene("pause");
+            return;
+        }
+
         // early exit if game over
         if (gameOver) {
             return;
@@ -164,6 +222,21 @@ public class GameScene extends Scene {
 
             // manually move droplet (not registered with MovementManager)
             droplet.move(deltaTime);
+
+            // reset to straight fall (no horizontal movement)
+            float[] velocity = droplet.getVelocity();
+            velocity[0] = 0f;
+            velocity[1] = -Droplet.FALL_SPEED;
+            droplet.setVelocity(velocity);
+
+            // clamp droplet to horizontal bounds (prevent sliding off-screen)
+            float[] position = droplet.getTransform().getPosition();
+            if (position[0] < 0) {
+                position[0] = 0;
+            } else if (position[0] + Droplet.DROPLET_WIDTH > Settings.WINDOW_WIDTH) {
+                position[0] = Settings.WINDOW_WIDTH - Droplet.DROPLET_WIDTH;
+            }
+            droplet.getTransform().setPosition(position);
 
             // check if caught
             if (droplet.isCaught()) {
@@ -221,8 +294,14 @@ public class GameScene extends Scene {
             context.renderQueue().queue(droplets.get(i));
         }
 
-        // lives display last (draws on top)
+        // clouds (draw above droplets but below ui)
+        for (int i = 0; i < clouds.size; i++) {
+            context.renderQueue().queue(clouds.get(i));
+        }
+
+        // ui displays last (draw on top)
         context.renderQueue().queue(livesDisplay);
+        context.renderQueue().queue(scoreDisplay);
     }
 
     // ==================== helper methods ====================
@@ -262,7 +341,37 @@ public class GameScene extends Scene {
         // increment score
         score++;
 
+        // update score display
+        scoreDisplay.setScore(score);
+
         // play catch sound
         dropSound.play();
+    }
+
+    /**
+     * creates three cloud deflectors positioned to create obstacles
+     * for falling droplets.
+     */
+    private void createClouds() {
+        // left cloud
+        Cloud leftCloud = (Cloud) entityMutator.createEntity(
+            () -> new Cloud(60f, 400f)
+        );
+        clouds.add(leftCloud);
+        collisionManager.registerCollidable(leftCloud);
+
+        // right cloud
+        Cloud rightCloud = (Cloud) entityMutator.createEntity(
+            () -> new Cloud(414f, 400f)
+        );
+        clouds.add(rightCloud);
+        collisionManager.registerCollidable(rightCloud);
+
+        // middle cloud (below the others)
+        Cloud middleCloud = (Cloud) entityMutator.createEntity(
+            () -> new Cloud(242f, 300f)
+        );
+        clouds.add(middleCloud);
+        collisionManager.registerCollidable(middleCloud);
     }
 }

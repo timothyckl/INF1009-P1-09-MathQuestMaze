@@ -36,6 +36,34 @@ public abstract class Scene {
     public abstract void onExit(SceneContext context);
 
     /**
+     * called when this scene is being temporarily suspended (e.g., for pause menu).
+     * default implementation does nothing, preserving scene state.
+     *
+     * OPTIONAL: override ONLY if your scene needs custom suspend logic (e.g., pause audio).
+     * most scenes don't need to override this - the empty default is sufficient.
+     *
+     * @param context the current engine context
+     */
+    public void onSuspend(SceneContext context) {
+        // default: preserve all state, do nothing
+        // scenes override ONLY if needed
+    }
+
+    /**
+     * called when this scene is being resumed after suspension.
+     * default implementation does nothing, assuming state was preserved.
+     *
+     * OPTIONAL: override ONLY if your scene needs to reconnect resources (e.g., resume audio).
+     * most scenes don't need to override this - the empty default is sufficient.
+     *
+     * @param context the current engine context
+     */
+    public void onResume(SceneContext context) {
+        // default: state already preserved, do nothing
+        // scenes override ONLY if needed
+    }
+
+    /**
      * per-frame update hook. not called while the scene is paused.
      *
      * @param deltaTime seconds elapsed since the previous frame

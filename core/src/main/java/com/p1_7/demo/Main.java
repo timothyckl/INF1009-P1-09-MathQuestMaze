@@ -57,6 +57,9 @@ public class Main extends ApplicationAdapter {
         GameOverScene gameOverScene = new GameOverScene();
         sceneManager.registerScene(gameOverScene);
 
+        PauseScene pauseScene = new PauseScene(entityManager);
+        sceneManager.registerScene(pauseScene);
+
         // set menu as initial scene
         sceneManager.setInitialScene("menu");
 

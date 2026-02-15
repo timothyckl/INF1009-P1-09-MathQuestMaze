@@ -11,7 +11,7 @@ import com.p1_7.abstractengine.transform.ITransform;
 
 /**
  * demo-specific render manager that handles text rendering for
- * LivesDisplay and TextDisplay entities.
+ * LivesDisplay, ScoreDisplay, and TextDisplay entities.
  *
  * implements custom procedural rendering logic to support BitmapFont
  * text drawing which requires switching from ShapeRenderer to SpriteBatch
@@ -50,6 +50,21 @@ public class DemoRenderManager extends RenderManager {
             return true;
         }
 
+        // handle text rendering for ScoreDisplay
+        if (item instanceof ScoreDisplay) {
+            ScoreDisplay display = (ScoreDisplay) item;
+            renderText(display.getFont(), display.getText(),
+                      item.getTransform(), batch, shapeRenderer);
+            return true;
+        }
+
+        // handle shape rendering for VolumeSlider
+        if (item instanceof VolumeSlider) {
+            VolumeSlider slider = (VolumeSlider) item;
+            renderVolumeSlider(slider, shapeRenderer);
+            return true;
+        }
+
         // not handled, let RenderManager draw as rectangle
         return false;
     }
@@ -78,5 +93,29 @@ public class DemoRenderManager extends RenderManager {
         font.draw(batch, text, position[0], position[1]);
         batch.end();
         shapeRenderer.begin(ShapeType.Filled);
+    }
+
+    /**
+     * renders a volume slider using ShapeRenderer.
+     * draws background bar in grey and filled portion in green.
+     *
+     * @param slider the volume slider to render
+     * @param shapeRenderer the shape renderer for drawing
+     */
+    private void renderVolumeSlider(VolumeSlider slider, ShapeRenderer shapeRenderer) {
+        float[] position = slider.getTransform().getPosition();
+        float x = position[0];
+        float y = position[1];
+        float width = slider.getWidth();
+        float height = slider.getHeight();
+        float value = slider.getValue();
+
+        // draw background bar (grey)
+        shapeRenderer.setColor(0.3f, 0.3f, 0.3f, 1f);
+        shapeRenderer.rect(x, y, width, height);
+
+        // draw filled portion (green)
+        shapeRenderer.setColor(0.2f, 0.8f, 0.2f, 1f);
+        shapeRenderer.rect(x, y, width * value, height);
     }
 }

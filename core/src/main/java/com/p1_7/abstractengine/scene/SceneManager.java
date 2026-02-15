@@ -26,6 +26,12 @@ public class SceneManager extends UpdatableManager {
     /** the name of the scene to transition to next frame (may be null) */
     private String pendingKey;
 
+    /** the name of the scene to suspend-transition to next frame (may be null) */
+    private String pendingSuspendKey;
+
+    /** tracks which scene was suspended (for resume detection) */
+    private String suspendedSceneKey;
+
     /** the context object passed into scene callbacks */
     private SceneContext context;
 
@@ -87,6 +93,11 @@ public class SceneManager extends UpdatableManager {
             @Override
             public void changeScene(String key) {
                 SceneManager.this.requestChange(key);
+            }
+
+            @Override
+            public void suspendScene(String key) {
+                SceneManager.this.requestSuspend(key);
             }
 
             @Override
@@ -155,6 +166,17 @@ public class SceneManager extends UpdatableManager {
         this.pendingKey = key;
     }
 
+    /**
+     * requests a deferred suspend transition to the scene identified by
+     * key. the transition is resolved at the top of the next
+     * update tick using onSuspend/onResume instead of onExit/onEnter.
+     *
+     * @param key the name of the target scene
+     */
+    public void requestSuspend(String key) {
+        this.pendingSuspendKey = key;
+    }
+
     // ---------------------------------------------------------------
     // accessors
     // ---------------------------------------------------------------
@@ -190,6 +212,31 @@ public class SceneManager extends UpdatableManager {
         return scenes.keys();
     }
 
+    /**
+     * stores the key of the scene that was suspended.
+     *
+     * @param key the scene key
+     */
+    private void storePreviousScene(String key) {
+        this.suspendedSceneKey = key;
+    }
+
+    /**
+     * returns the key of the suspended scene, if any.
+     *
+     * @return the suspended scene key, or null
+     */
+    private String getSuspendedScene() {
+        return suspendedSceneKey;
+    }
+
+    /**
+     * clears the suspended scene tracking.
+     */
+    private void clearSuspendedScene() {
+        this.suspendedSceneKey = null;
+    }
+
     // ---------------------------------------------------------------
     // UpdatableManager hook
     // ---------------------------------------------------------------
@@ -202,18 +249,52 @@ public class SceneManager extends UpdatableManager {
      */
     @Override
     protected void onUpdate(float deltaTime) {
-        // 1. resolve a pending transition if one was requested
-        if (pendingKey != null) {
-            // exit the current scene
+        // 1a. resolve a pending suspend transition if one was requested
+        if (pendingSuspendKey != null) {
+            // suspend the current scene (preserve state)
             if (currentKey != null && scenes.containsKey(currentKey)) {
-                scenes.get(currentKey).onExit(context);
+                scenes.get(currentKey).onSuspend(context);
             }
             // swap to the new scene
-            currentKey = pendingKey;
-            pendingKey = null;
-            // enter the new scene
+            String previousKey = currentKey;
+            currentKey = pendingSuspendKey;
+            pendingSuspendKey = null;
+            // enter the new scene normally (it's starting fresh)
             if (scenes.containsKey(currentKey)) {
                 scenes.get(currentKey).onEnter(context);
+            }
+            // store previous key for resume
+            storePreviousScene(previousKey);
+        }
+
+        // 1b. resolve a pending change transition if one was requested
+        if (pendingKey != null) {
+            // check if we're returning to a suspended scene
+            boolean isResuming = (pendingKey != null && pendingKey.equals(getSuspendedScene()));
+
+            if (isResuming) {
+                // exit current scene normally
+                if (currentKey != null && scenes.containsKey(currentKey)) {
+                    scenes.get(currentKey).onExit(context);
+                }
+                // swap to the suspended scene
+                currentKey = pendingKey;
+                pendingKey = null;
+                clearSuspendedScene();
+                // resume the suspended scene (preserve state)
+                if (scenes.containsKey(currentKey)) {
+                    scenes.get(currentKey).onResume(context);
+                }
+            } else {
+                // normal transition: exit current, enter new
+                if (currentKey != null && scenes.containsKey(currentKey)) {
+                    scenes.get(currentKey).onExit(context);
+                }
+                currentKey = pendingKey;
+                pendingKey = null;
+                if (scenes.containsKey(currentKey)) {
+                    scenes.get(currentKey).onEnter(context);
+                }
             }
         }
 

@@ -15,4 +15,17 @@ public class Settings {
 
     /** height of the application window in pixels */
     public static int WINDOW_HEIGHT = 480;
+
+    /** music volume level (0.0 = silent, 1.0 = maximum) */
+    public static float MUSIC_VOLUME = 0.5f; // default 50% volume
+
+    /**
+     * sets the music volume with validation.
+     * clamps the value between 0.0 (silent) and 1.0 (maximum).
+     *
+     * @param volume the desired volume level
+     */
+    public static void setMusicVolume(float volume) {
+        MUSIC_VOLUME = Math.max(0f, Math.min(1f, volume));
+    }
 }
