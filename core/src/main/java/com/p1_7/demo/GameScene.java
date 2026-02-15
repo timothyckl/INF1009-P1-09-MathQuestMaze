@@ -170,7 +170,11 @@ public class GameScene extends Scene {
     @Override
     public void onSuspend(SceneContext context) {
         // minimal cleanup for pause - keep all entities and state intact
-        // music keeps playing so volume slider works in pause menu
+
+        // pause music during pause menu
+        if (music != null) {
+            music.pause();
+        }
     }
 
     @Override
@@ -180,6 +184,7 @@ public class GameScene extends Scene {
         // reapply volume setting (may have changed in pause menu)
         if (music != null) {
             music.setVolume(Settings.MUSIC_VOLUME);
+            music.play();
         }
     }
 
