@@ -5,6 +5,10 @@ import com.badlogic.gdx.utils.Array;
 /**
  * simple array-backed implementation of IRenderQueue.
  * one instance is held for the lifetime of the RenderManager.
+ *
+ * follows FIFO (first-in-first-out) ordering for rendering sequence:
+ * items queued first are rendered first (back layers),
+ * items queued last are rendered last (front layers).
  */
 class RenderQueue implements IRenderQueue {
 
