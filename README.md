@@ -1,21 +1,27 @@
 # Abstract Simulation Engine
 
-An abstract simulation engine built with [libGDX](https://libgdx.com/), following OOP and SOLID principles.
+An abstract simulation engine built with [libGDX](https://libgdx.com/), following OOP and SOLID principles. The engine is designed to be extended — its core classes are intentionally abstract and provide no runnable behaviour on their own.
 
 ## Engine Architecture
 
-The engine is organised around several key abstract classes that define its structure:
+The engine is organised around a central orchestrator, abstract base classes, and concrete manager implementations:
 
 - **`Engine`** – Central orchestrator managing the lifecycle and update loop of all managers
+
+**Abstract base classes**
+
 - **`Manager`** – Abstract base class providing standard init/shutdown lifecycle for all subsystems
-  - `EntityManager` – handles entity creation, removal, and repository access
-  - `SceneManager` – manages scene transitions and the active scene
-  - `MovementManager` – updates positions of all registered movable entities
-  - `CollisionManager` – detects and handles collisions between collidable entities
-  - `RenderManager` – processes the render queue and draws entities to screen
-  - `InputOutputManager` – maps input events to action identifiers
 - **`Entity`** – Abstract base for all game objects, assigned unique IDs and active state
 - **`Scene`** – Abstract base for game states with lifecycle hooks (onEnter, onExit, update, submitRenderable)
+
+**Concrete manager implementations**
+
+- `EntityManager` – handles entity creation, removal, and repository access
+- `SceneManager` – manages scene transitions and the active scene
+- `MovementManager` – updates positions of all registered movable entities
+- `CollisionManager` – detects and handles collisions between collidable entities
+- `RenderManager` – processes the render queue and draws entities to screen
+- `InputOutputManager` – maps input events to action identifiers
 
 Entities implement capability interfaces (`IMovable`, `ICollidable`, `IRenderable`, `ITransformable`) and are registered with the appropriate managers, allowing flexible composition of behaviours.
 
@@ -37,15 +43,7 @@ core/src/main/java/com/p1_7/
 
 ## Demo: Catch the Droplet
 
-The included demo is a simple arcade game where the player controls a bucket to catch falling water droplets:
-
-- **Objective** – catch falling droplets with your bucket before they hit the ground
-- **Controls** – move the bucket left and right using keyboard or touch input
-- **Lives** – start with 3 lives; miss a droplet and lose a life
-- **Game over** – the game ends when all lives are lost, displaying your final score
-- **Mechanics** – droplets spawn continuously at random positions and fall at a constant speed
-
-The demo showcases the engine's entity system, collision detection, scene management, and input handling.
+The included demo is a simple arcade game that exercises the engine's core systems. It demonstrates entity composition, collision detection, scene transitions, and input handling in a working application built entirely on top of the abstract engine layer.
 
 ## Getting Started
 
@@ -58,4 +56,4 @@ Run the demo application:
 ## Requirements
 
 - Java 8 or higher
-- Gradle
+- Gradle (libGDX is managed automatically as a Gradle dependency — no manual setup required)
