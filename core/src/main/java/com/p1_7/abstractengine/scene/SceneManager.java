@@ -3,7 +3,7 @@ package com.p1_7.abstractengine.scene;
 import com.badlogic.gdx.utils.ObjectMap;
 
 import com.p1_7.abstractengine.engine.UpdatableManager;
-import com.p1_7.abstractengine.entity.IEntityRepository;
+import com.p1_7.abstractengine.entity.IEntityManager;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.render.IRenderQueue;
 
@@ -35,8 +35,8 @@ public class SceneManager extends UpdatableManager {
     /** the context object passed into scene callbacks */
     private SceneContext context;
 
-    /** injected entity repository — used to build the context */
-    private final IEntityRepository entityRepository;
+    /** injected entity manager — used to build the context */
+    private final IEntityManager entityManager;
 
     /** injected render queue — used to build the context */
     private final IRenderQueue renderQueue;
@@ -45,17 +45,17 @@ public class SceneManager extends UpdatableManager {
     private final IInputQuery inputQuery;
 
     /**
-     * constructs a SceneManager with the three dependencies
-     * it needs to assemble a SceneContext.
+     * constructs a SceneManager with the dependencies it needs to
+     * assemble a SceneContext.
      *
-     * @param entityRepository the read-only entity store
-     * @param renderQueue      the single-frame render queue
-     * @param inputQuery       the input query interface
+     * @param entityManager the entity manager providing read and write access
+     * @param renderQueue   the single-frame render queue
+     * @param inputQuery    the input query interface
      */
-    public SceneManager(IEntityRepository entityRepository,
+    public SceneManager(IEntityManager entityManager,
                         IRenderQueue renderQueue,
                         IInputQuery inputQuery) {
-        this.entityRepository = entityRepository;
+        this.entityManager = entityManager;
         this.renderQueue = renderQueue;
         this.inputQuery = inputQuery;
     }
@@ -76,8 +76,8 @@ public class SceneManager extends UpdatableManager {
         // over the injected references
         context = new SceneContext() {
             @Override
-            public IEntityRepository entities() {
-                return entityRepository;
+            public IEntityManager entities() {
+                return entityManager;
             }
 
             @Override

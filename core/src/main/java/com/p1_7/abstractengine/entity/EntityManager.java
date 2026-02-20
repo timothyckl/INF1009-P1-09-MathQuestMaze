@@ -3,17 +3,16 @@ package com.p1_7.abstractengine.entity;
 import java.util.UUID;
 
 import com.badlogic.gdx.utils.Array;
+import com.p1_7.abstractengine.engine.Manager;
 
 /**
- * manages the lifecycle of all entities in the engine. acts as both
- * the read-only repository (IEntityRepository) and the
- * write-side mutator (IEntityMutator).
+ * manages the lifecycle of all entities in the engine. acts as the
+ * unified entity manager (IEntityManager), providing both the
+ * read-only repository and the write-side mutator contracts.
  *
- * this manager extends com.p1_7.abstractengine.engine.Manager
- * directly - it has no per-frame update logic of its own.
+ * this manager has no per-frame update logic of its own.
  */
-public class EntityManager extends com.p1_7.abstractengine.engine.Manager
-        implements IEntityRepository, IEntityMutator {
+public class EntityManager extends Manager implements IEntityManager {
 
     /** the backing store of all live entities */
     private final Array<Entity> entities = new Array<>();
@@ -23,8 +22,7 @@ public class EntityManager extends com.p1_7.abstractengine.engine.Manager
     // ---------------------------------------------------------------
 
     /**
-     * creates an entity via the supplied factory, adds it to the
-     * internal store, and returns it.
+     * creates an entity via the supplied factory, adds it to the internal store, and returns it.
      *
      * @param factory the factory that constructs the concrete entity
      * @return the newly created and registered entity
@@ -54,8 +52,7 @@ public class EntityManager extends com.p1_7.abstractengine.engine.Manager
     }
 
     /**
-     * removes the entity identified by id. performs a linear
-     * scan and removes by index.
+     * removes the entity identified by id. performs a linear scan and removes by index.
      *
      * @param id the UUID of the entity to remove
      */
@@ -74,8 +71,7 @@ public class EntityManager extends com.p1_7.abstractengine.engine.Manager
     // ---------------------------------------------------------------
 
     /**
-     * retrieves a single entity by its unique identifier. performs a
-     * linear scan.
+     * retrieves a single entity by its unique identifier. performs a linear scan.
      *
      * @param id the UUID to look up
      * @return the matching entity, or null if not found
@@ -91,8 +87,7 @@ public class EntityManager extends com.p1_7.abstractengine.engine.Manager
     }
 
     /**
-     * builds and returns a new Array containing the UUIDs of
-     * every entity in the store.
+     * builds and returns a new Array containing the UUIDs of every entity in the store.
      *
      * @return an Array of all entity identifiers
      */
@@ -110,8 +105,7 @@ public class EntityManager extends com.p1_7.abstractengine.engine.Manager
     // ---------------------------------------------------------------
 
     /**
-     * returns a debug string listing the UUIDs of all entities
-     * currently in the store.
+     * returns a debug string listing the UUIDs of all entities currently in the store.
      *
      * @return a human-readable summary of the entity store
      */

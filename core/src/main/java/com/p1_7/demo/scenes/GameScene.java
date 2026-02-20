@@ -69,22 +69,18 @@ public class GameScene extends Scene {
 
     private final MovementManager movementManager;
     private final CollisionManager collisionManager;
-    private final IEntityMutator entityMutator;
 
     /**
      * constructs a game scene with references to required managers.
      *
      * @param movementManager  the movement manager for bucket registration
      * @param collisionManager the collision manager for entity registration
-     * @param entityMutator    the entity mutator for creation and removal
      */
     public GameScene(MovementManager movementManager,
-                     CollisionManager collisionManager,
-                     IEntityMutator entityMutator) {
+                     CollisionManager collisionManager) {
         this.name = "game";
         this.movementManager = movementManager;
         this.collisionManager = collisionManager;
-        this.entityMutator = entityMutator;
     }
 
     // ==================== lifecycle hooks ====================
@@ -108,17 +104,17 @@ public class GameScene extends Scene {
         background = new Background(Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT);
 
         // 3. create lives display via entity manager
-        livesDisplay = (LivesDisplay) entityMutator.createEntity(() -> new LivesDisplay(INITIAL_LIVES));
+        livesDisplay = (LivesDisplay) context.entities().createEntity(() -> new LivesDisplay(INITIAL_LIVES));
 
         // 4. create score display via entity manager
-        scoreDisplay = (ScoreDisplay) entityMutator.createEntity(
+        scoreDisplay = (ScoreDisplay) context.entities().createEntity(
             () -> new ScoreDisplay(520f, Settings.WINDOW_HEIGHT - 10f, 0)
         );
 
         // 5. create bucket via entity manager
         float bucketX = (Settings.WINDOW_WIDTH / 2f) - (Bucket.BUCKET_WIDTH / 2f);
         float bucketY = 20f;
-        bucket = (Bucket) entityMutator.createEntity(() -> new Bucket(bucketX, bucketY));
+        bucket = (Bucket) context.entities().createEntity(() -> new Bucket(bucketX, bucketY));
 
         // 6. register bucket with managers
         movementManager.registerMovable(bucket);
@@ -128,10 +124,10 @@ public class GameScene extends Scene {
         bucket.setCatchHandler(this::handleDropletCatch);
 
         // 7. create and register cloud deflectors
-        createClouds();
+        createClouds(context.entities());
 
         // 8. spawn initial droplet
-        spawnDroplet();
+        spawnDroplet(context.entities());
     }
 
     @Override
@@ -148,14 +144,14 @@ public class GameScene extends Scene {
         if (bucket != null) {
             movementManager.unregisterMovable(bucket);
             collisionManager.unregisterCollidable(bucket);
-            entityMutator.removeEntity(bucket.getId());
+            context.entities().removeEntity(bucket.getId());
         }
 
         // clean up remaining droplets
         for (int i = 0; i < droplets.size; i++) {
             Droplet droplet = droplets.get(i);
             collisionManager.unregisterCollidable(droplet);
-            entityMutator.removeEntity(droplet.getId());
+            context.entities().removeEntity(droplet.getId());
         }
         droplets.clear();
 
@@ -163,19 +159,19 @@ public class GameScene extends Scene {
         for (int i = 0; i < clouds.size; i++) {
             Cloud cloud = clouds.get(i);
             collisionManager.unregisterCollidable(cloud);
-            entityMutator.removeEntity(cloud.getId());
+            context.entities().removeEntity(cloud.getId());
         }
         clouds.clear();
 
         // remove lives display entity
         if (livesDisplay != null) {
-            entityMutator.removeEntity(livesDisplay.getId());
+            context.entities().removeEntity(livesDisplay.getId());
         }
 
         // remove score display entity
         if (scoreDisplay != null) {
             scoreDisplay.dispose();
-            entityMutator.removeEntity(scoreDisplay.getId());
+            context.entities().removeEntity(scoreDisplay.getId());
         }
     }
 
@@ -229,7 +225,7 @@ public class GameScene extends Scene {
         // 2. update spawn timer and spawn new droplets
         spawnTimer += deltaTime;
         if (spawnTimer >= SPAWN_INTERVAL && droplets.size < MAX_DROPLETS) {
-            spawnDroplet();
+            spawnDroplet(context.entities());
             spawnTimer = 0f;
         }
 
@@ -258,7 +254,7 @@ public class GameScene extends Scene {
             // check if caught
             if (droplet.isCaught()) {
                 // remove entity
-                entityMutator.removeEntity(droplet.getId());
+                context.entities().removeEntity(droplet.getId());
 
                 // unregister from collision manager
                 collisionManager.unregisterCollidable(droplet);
@@ -275,7 +271,7 @@ public class GameScene extends Scene {
                 livesDisplay.setLives(currentLives - 1);
 
                 // remove entity
-                entityMutator.removeEntity(droplet.getId());
+                context.entities().removeEntity(droplet.getId());
 
                 // unregister from collision manager
                 collisionManager.unregisterCollidable(droplet);
@@ -325,10 +321,12 @@ public class GameScene extends Scene {
 
     /**
      * spawns a new droplet at a random x position at the top of the screen.
+     *
+     * @param mutator the entity mutator for creating entities
      */
-    private void spawnDroplet() {
+    private void spawnDroplet(IEntityMutator mutator) {
         float x = randomX();
-        Droplet droplet = (Droplet) entityMutator.createEntity(() -> new Droplet(x, SPAWN_Y));
+        Droplet droplet = (Droplet) mutator.createEntity(() -> new Droplet(x, SPAWN_Y));
 
         // add to array
         droplets.add(droplet);
@@ -368,24 +366,26 @@ public class GameScene extends Scene {
     /**
      * creates three cloud deflectors positioned to create obstacles
      * for falling droplets.
+     *
+     * @param mutator the entity mutator for creating entities
      */
-    private void createClouds() {
+    private void createClouds(IEntityMutator mutator) {
         // left cloud
-        Cloud leftCloud = (Cloud) entityMutator.createEntity(
+        Cloud leftCloud = (Cloud) mutator.createEntity(
             () -> new Cloud(60f, 400f)
         );
         clouds.add(leftCloud);
         collisionManager.registerCollidable(leftCloud);
 
         // right cloud
-        Cloud rightCloud = (Cloud) entityMutator.createEntity(
+        Cloud rightCloud = (Cloud) mutator.createEntity(
             () -> new Cloud(414f, 400f)
         );
         clouds.add(rightCloud);
         collisionManager.registerCollidable(rightCloud);
 
         // middle cloud (below the others)
-        Cloud middleCloud = (Cloud) entityMutator.createEntity(
+        Cloud middleCloud = (Cloud) mutator.createEntity(
             () -> new Cloud(242f, 300f)
         );
         clouds.add(middleCloud);

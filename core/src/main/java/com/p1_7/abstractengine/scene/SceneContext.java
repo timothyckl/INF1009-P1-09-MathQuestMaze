@@ -1,25 +1,26 @@
 package com.p1_7.abstractengine.scene;
 
-import com.p1_7.abstractengine.entity.IEntityRepository;
+import com.p1_7.abstractengine.entity.IEntityManager;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.render.IRenderQueue;
 
 /**
- * read-only snapshot of engine state passed into every Scene
- * callback.
+ * snapshot of engine state passed into every Scene callback.
  *
- * a Scene receives a SceneContext so that it can
- * query entities, submit render items and read input without holding
- * direct references to the underlying managers.
+ * a Scene receives a SceneContext so that it can query and mutate
+ * entities, submit render items, read input, and request scene
+ * transitions — without holding direct references to the underlying
+ * managers.
  */
 public interface SceneContext {
 
     /**
-     * returns the read-only entity repository.
+     * returns the entity manager, providing both read and write access
+     * to the entity store.
      *
-     * @return the IEntityRepository; never null
+     * @return the IEntityManager; never null
      */
-    IEntityRepository entities();
+    IEntityManager entities();
 
     /**
      * returns the render queue for submitting items this frame.

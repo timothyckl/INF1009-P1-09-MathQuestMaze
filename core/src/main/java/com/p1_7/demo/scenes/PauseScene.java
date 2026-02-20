@@ -3,7 +3,6 @@ package com.p1_7.demo.scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
-import com.p1_7.abstractengine.entity.IEntityMutator;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.demo.Settings;
@@ -49,17 +48,11 @@ public class PauseScene extends Scene {
     /** current score to display */
     private int currentScore = 0;
 
-    /** entity mutator for creating entities */
-    private final IEntityMutator entityMutator;
-
     /**
      * constructs a pause scene.
-     *
-     * @param entityMutator the entity mutator for creation and removal
      */
-    public PauseScene(IEntityMutator entityMutator) {
+    public PauseScene() {
         this.name = "pause";
-        this.entityMutator = entityMutator;
     }
 
     /**
@@ -116,7 +109,7 @@ public class PauseScene extends Scene {
         // 6. create volume slider
         float sliderX = Settings.WINDOW_WIDTH / 2f - 100f;
         float sliderY = Settings.WINDOW_HEIGHT * 0.27f;
-        volumeSlider = (VolumeSlider) entityMutator.createEntity(
+        volumeSlider = (VolumeSlider) context.entities().createEntity(
             () -> new VolumeSlider(sliderX, sliderY, 200f)
         );
 
@@ -138,7 +131,7 @@ public class PauseScene extends Scene {
 
         // remove volume slider entity
         if (volumeSlider != null) {
-            entityMutator.removeEntity(volumeSlider.getId());
+            context.entities().removeEntity(volumeSlider.getId());
         }
     }
 
