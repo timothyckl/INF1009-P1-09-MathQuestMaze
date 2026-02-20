@@ -2,10 +2,6 @@ package com.p1_7.abstractengine.input;
 
 /**
  * read-only query interface for the current frame's input state.
- *
- * scenes and other engine components receive this interface so
- * that they can interrogate input without coupling to the
- * InputManager directly.
  */
 public interface IInputQuery {
 

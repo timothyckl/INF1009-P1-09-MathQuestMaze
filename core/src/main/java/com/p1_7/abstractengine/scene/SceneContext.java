@@ -5,12 +5,8 @@ import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.render.IRenderQueue;
 
 /**
- * snapshot of engine state passed into every Scene callback.
- *
- * a Scene receives a SceneContext so that it can query and mutate
- * entities, submit render items, read input, and request scene
- * transitions — without holding direct references to the underlying
- * managers.
+ * snapshot of engine state passed into every Scene callback, providing access
+ * to entities, render, input, and scene transitions.
  */
 public interface SceneContext {
 
@@ -37,22 +33,14 @@ public interface SceneContext {
     IInputQuery input();
 
     /**
-     * requests a deferred transition to the scene identified by key.
-     * the transition is resolved at the top of the next update tick.
+     * requests a transition to the scene identified by key.
      *
      * @param key the name of the target scene
      */
     void changeScene(String key);
 
     /**
-     * requests a deferred suspend transition to the scene identified by key.
-     * unlike changeScene(), this preserves the current scene's state by calling
-     * onSuspend() instead of onExit().
-     *
-     * use this for pause menus, settings overlays, or any transition where
-     * the current scene should resume exactly where it left off.
-     *
-     * the transition is resolved at the top of the next update tick.
+     * requests a deferred suspend transition, preserving the current scene's state.
      *
      * @param key the name of the target scene
      */
@@ -60,9 +48,6 @@ public interface SceneContext {
 
     /**
      * returns the scene registered under the specified key.
-     *
-     * useful for inter-scene communication, such as passing data
-     * to the target scene before transitioning.
      *
      * @param key the name of the scene to retrieve
      * @return the Scene, or null if not found

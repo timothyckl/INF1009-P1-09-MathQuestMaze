@@ -1,12 +1,7 @@
 package com.p1_7.abstractengine.render;
 
 /**
- * a single-frame accumulator for items that should be drawn this tick.
- *
- * scenes submit IRenderItem instances each frame via
- * queue(IRenderItem). the RenderManager consumes
- * the queue during the draw pass and then calls clear().
- * implementations are provided internally by the render manager.
+ * single-frame accumulator for render items submitted by scenes each tick.
  */
 public interface IRenderQueue {
 

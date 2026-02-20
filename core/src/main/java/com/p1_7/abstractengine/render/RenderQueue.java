@@ -3,12 +3,7 @@ package com.p1_7.abstractengine.render;
 import com.badlogic.gdx.utils.Array;
 
 /**
- * simple array-backed implementation of IRenderQueue.
- * one instance is held for the lifetime of the RenderManager.
- *
- * follows FIFO (first-in-first-out) ordering for rendering sequence:
- * items queued first are rendered first (back layers),
- * items queued last are rendered last (front layers).
+ * array-backed implementation of IRenderQueue.
  */
 class RenderQueue implements IRenderQueue {
 
@@ -34,8 +29,7 @@ class RenderQueue implements IRenderQueue {
     }
 
     /**
-     * returns the backing array so that the render manager can
-     * iterate it.
+     * returns the queued render items.
      *
      * @return the array of queued render items
      */

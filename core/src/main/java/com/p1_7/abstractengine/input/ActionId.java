@@ -3,16 +3,8 @@ package com.p1_7.abstractengine.input;
 import java.util.Objects;
 
 /**
- * represents a logical input action recognised by the engine.
- *
- * this class uses a string-based identifier system, allowing game
- * code to define custom actions without modifying the core engine.
- * demo implementations can create their own action constants
- * (e.g., new ActionId("LEFT")) and bind them via
- * InputMapping.
- *
- * the engine provides a single default action, NONE,
- * for compatibility with stub code.
+ * represents a logical input action recognised by the engine, identified
+ * by a unique string.
  */
 public class ActionId {
 

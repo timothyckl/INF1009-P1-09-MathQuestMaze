@@ -1,13 +1,8 @@
 package com.p1_7.abstractengine.input;
 
 /**
- * abstract base class for all input events produced by the engine.
- *
- * concrete event types (digital, analogue, pointer, etc.) are
- * context-specific and belong in the demo phase. this class defines
- * the fields and accessors that every event shares: the logical
- * ActionId that triggered it and the system timestamp at
- * which it occurred.
+ * abstract base class for all input events; carries the triggering ActionId
+ * and a system timestamp.
  */
 public abstract class InputEvent {
 

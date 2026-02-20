@@ -1,11 +1,7 @@
 package com.p1_7.abstractengine.collision;
 
 /**
- * stateless utility that checks whether two ICollidable
- * objects overlap.
- *
- * the check is performed by delegating to the IBounds.overlaps()
- * method on the bounds returned by each collidable.
+ * stateless utility that tests two ICollidable objects for overlap.
  */
 public class CollisionDetector {
 

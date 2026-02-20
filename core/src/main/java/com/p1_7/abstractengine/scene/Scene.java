@@ -1,13 +1,8 @@
 package com.p1_7.abstractengine.scene;
 
 /**
- * abstract base class for every scene (game state) in the engine.
- *
- * concrete scenes override the lifecycle and per-frame hooks to
- * implement their own behaviour. a scene's update hook is
- * skipped when the scene is paused, but
- * submitRenderable(SceneContext) is always called so that
- * paused scenes can still render a static frame.
+ * abstract base class for every scene; update is skipped while paused but
+ * submitRenderable is always called.
  */
 public abstract class Scene {
 
@@ -16,10 +11,6 @@ public abstract class Scene {
 
     /** when true the per-frame update hook is skipped */
     protected boolean paused;
-
-    // ---------------------------------------------------------------
-    // lifecycle hooks — implemented by concrete scenes
-    // ---------------------------------------------------------------
 
     /**
      * called once when this scene becomes the active scene.
@@ -36,31 +27,19 @@ public abstract class Scene {
     public abstract void onExit(SceneContext context);
 
     /**
-     * called when this scene is being temporarily suspended (e.g., for pause menu).
-     * default implementation does nothing, preserving scene state.
-     *
-     * OPTIONAL: override ONLY if your scene needs custom suspend logic (e.g., pause audio).
-     * most scenes don't need to override this - the empty default is sufficient.
+     * called when this scene is temporarily suspended; default is a no-op.
      *
      * @param context the current engine context
      */
     public void onSuspend(SceneContext context) {
-        // default: preserve all state, do nothing
-        // scenes override ONLY if needed
     }
 
     /**
-     * called when this scene is being resumed after suspension.
-     * default implementation does nothing, assuming state was preserved.
-     *
-     * OPTIONAL: override ONLY if your scene needs to reconnect resources (e.g., resume audio).
-     * most scenes don't need to override this - the empty default is sufficient.
+     * called when this scene resumes after suspension; default is a no-op.
      *
      * @param context the current engine context
      */
     public void onResume(SceneContext context) {
-        // default: state already preserved, do nothing
-        // scenes override ONLY if needed
     }
 
     /**
@@ -78,10 +57,6 @@ public abstract class Scene {
      * @param context the current engine context
      */
     public abstract void submitRenderable(SceneContext context);
-
-    // ---------------------------------------------------------------
-    // concrete accessors
-    // ---------------------------------------------------------------
 
     /**
      * returns the name (key) of this scene.

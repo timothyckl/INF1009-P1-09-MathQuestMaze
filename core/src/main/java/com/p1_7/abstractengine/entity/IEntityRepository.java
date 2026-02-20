@@ -3,11 +3,8 @@ package com.p1_7.abstractengine.entity;
 import java.util.UUID;
 
 /**
- * read-only view of the entity store.
- *
- * scene and rendering code receives this interface so that it can
- * query entities without being able to mutate the store directly.
- * write operations are exposed through IEntityMutator.
+ * read-only view of the entity store for querying entities without
+ * mutating the store.
  */
 public interface IEntityRepository {
 

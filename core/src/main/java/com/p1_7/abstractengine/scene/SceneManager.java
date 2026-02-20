@@ -8,12 +8,8 @@ import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.render.IRenderQueue;
 
 /**
- * manages the collection of scenes and drives the active scene's
- * lifecycle and per-frame callbacks.
- *
- * scene transitions are deferred: requestChange(String)
- * stores the target key and the actual swap happens at the top of the
- * next update tick. this avoids mutating state mid-frame.
+ * manages the scene registry and drives the active scene's lifecycle and
+ * per-frame callbacks.
  */
 public class SceneManager extends UpdatableManager {
 
@@ -60,20 +56,11 @@ public class SceneManager extends UpdatableManager {
         this.inputQuery = inputQuery;
     }
 
-    // ---------------------------------------------------------------
-    // Manager lifecycle hooks
-    // ---------------------------------------------------------------
-
     /**
-     * assembles the SceneContext from the injected
-     * references. if an initial scene has already been set via
-     * setInitialScene(String), its Scene.onEnter
-     * callback is invoked immediately.
+     * assembles the SceneContext and enters the initial scene if one has been set.
      */
     @Override
     protected void onInit() {
-        // build context as an anonymous implementation that closes
-        // over the injected references
         context = new SceneContext() {
             @Override
             public IEntityManager entities() {
@@ -106,7 +93,6 @@ public class SceneManager extends UpdatableManager {
             }
         };
 
-        // if an initial scene was registered before init, enter it now
         if (currentKey != null && scenes.containsKey(currentKey)) {
             scenes.get(currentKey).onEnter(context);
         }
@@ -124,10 +110,6 @@ public class SceneManager extends UpdatableManager {
         scenes.clear();
     }
 
-    // ---------------------------------------------------------------
-    // scene registration & configuration
-    // ---------------------------------------------------------------
-
     /**
      * adds a scene to the registry, keyed by its name.
      *
@@ -138,9 +120,7 @@ public class SceneManager extends UpdatableManager {
     }
 
     /**
-     * sets the initial scene key. must be called before
-     * com.p1_7.abstractengine.engine.Engine.init() so that
-     * onInit() can enter the scene.
+     * sets the initial scene key; must be called before the engine is initialised.
      *
      * @param key the name of the scene to start in
      * @throws IllegalArgumentException if key is null or blank
@@ -156,9 +136,7 @@ public class SceneManager extends UpdatableManager {
     }
 
     /**
-     * requests a deferred transition to the scene identified by
-     * key. the transition is resolved at the top of the next
-     * update tick.
+     * schedules a transition to the named scene for the next update tick.
      *
      * @param key the name of the target scene
      */
@@ -168,9 +146,7 @@ public class SceneManager extends UpdatableManager {
     }
 
     /**
-     * requests a deferred suspend transition to the scene identified by
-     * key. the transition is resolved at the top of the next
-     * update tick using onSuspend/onResume instead of onExit/onEnter.
+     * schedules a suspend transition to the named scene for the next update tick.
      *
      * @param key the name of the target scene
      */
@@ -196,10 +172,6 @@ public class SceneManager extends UpdatableManager {
             throw new IllegalArgumentException("scene not registered: " + key);
         }
     }
-
-    // ---------------------------------------------------------------
-    // accessors
-    // ---------------------------------------------------------------
 
     /**
      * returns the currently active scene.
@@ -257,10 +229,6 @@ public class SceneManager extends UpdatableManager {
         this.suspendedSceneKey = null;
     }
 
-    // ---------------------------------------------------------------
-    // UpdatableManager hook
-    // ---------------------------------------------------------------
-
     /**
      * resolves any pending scene transition, then drives the active
      * scene's update and render-submission hooks.
@@ -269,44 +237,33 @@ public class SceneManager extends UpdatableManager {
      */
     @Override
     protected void onUpdate(float deltaTime) {
-        // 1a. resolve a pending suspend transition if one was requested
         if (pendingSuspendKey != null) {
-            // suspend the current scene (preserve state)
             if (currentKey != null && scenes.containsKey(currentKey)) {
                 scenes.get(currentKey).onSuspend(context);
             }
-            // swap to the new scene
             String previousKey = currentKey;
             currentKey = pendingSuspendKey;
             pendingSuspendKey = null;
-            // enter the new scene normally (it's starting fresh)
             if (scenes.containsKey(currentKey)) {
                 scenes.get(currentKey).onEnter(context);
             }
-            // store previous key for resume
             storePreviousScene(previousKey);
         }
 
-        // 1b. resolve a pending change transition if one was requested
         if (pendingKey != null) {
-            // check if we're returning to a suspended scene
             boolean isResuming = (pendingKey != null && pendingKey.equals(getSuspendedScene()));
 
             if (isResuming) {
-                // exit current scene normally
                 if (currentKey != null && scenes.containsKey(currentKey)) {
                     scenes.get(currentKey).onExit(context);
                 }
-                // swap to the suspended scene
                 currentKey = pendingKey;
                 pendingKey = null;
                 clearSuspendedScene();
-                // resume the suspended scene (preserve state)
                 if (scenes.containsKey(currentKey)) {
                     scenes.get(currentKey).onResume(context);
                 }
             } else {
-                // normal transition: exit current, enter new
                 if (currentKey != null && scenes.containsKey(currentKey)) {
                     scenes.get(currentKey).onExit(context);
                 }
@@ -323,12 +280,12 @@ public class SceneManager extends UpdatableManager {
             return;
         }
 
-        // 2. update — skipped while paused
+        // skipped while paused
         if (!current.isPaused()) {
             current.update(deltaTime, context);
         }
 
-        // 3. submit renderables — always called
+        // always called
         current.submitRenderable(context);
     }
 }
