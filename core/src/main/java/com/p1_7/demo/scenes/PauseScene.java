@@ -123,11 +123,21 @@ public class PauseScene extends Scene {
     @Override
     public void onExit(SceneContext context) {
         // dispose fonts
-        titleDisplay.dispose();
-        livesDisplay.dispose();
-        scoreDisplay.dispose();
-        volumeLabel.dispose();
-        resumePrompt.dispose();
+        if (titleDisplay != null) {
+            titleDisplay.dispose();
+        }
+        if (livesDisplay != null) {
+            livesDisplay.dispose();
+        }
+        if (scoreDisplay != null) {
+            scoreDisplay.dispose();
+        }
+        if (volumeLabel != null) {
+            volumeLabel.dispose();
+        }
+        if (resumePrompt != null) {
+            resumePrompt.dispose();
+        }
 
         // remove volume slider entity
         if (volumeSlider != null) {
@@ -138,7 +148,9 @@ public class PauseScene extends Scene {
     @Override
     public void update(float deltaTime, SceneContext context) {
         // update volume slider
-        volumeSlider.update(deltaTime);
+        if (volumeSlider != null) {
+            volumeSlider.update(deltaTime);
+        }
 
         // apply volume changes to music in real-time
         if (musicReference != null) {

@@ -7,9 +7,6 @@ import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.demo.Settings;
 import com.p1_7.demo.display.TextDisplay;
 import com.p1_7.demo.entities.Background;
-import com.p1_7.demo.Settings;
-import com.p1_7.demo.display.TextDisplay;
-import com.p1_7.demo.entities.Background;
 
 /**
  * main menu scene shown at game launch.
@@ -56,8 +53,12 @@ public class MenuScene extends Scene {
     @Override
     public void onExit(SceneContext context) {
         // dispose fonts
-        titleDisplay.dispose();
-        promptDisplay.dispose();
+        if (titleDisplay != null) {
+            titleDisplay.dispose();
+        }
+        if (promptDisplay != null) {
+            promptDisplay.dispose();
+        }
     }
 
     @Override

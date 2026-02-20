@@ -2,10 +2,6 @@ package com.p1_7.demo.entities;
 
 import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.collision.ICollidable;
-import com.p1_7.demo.Settings;
-import com.p1_7.demo.core.Rectangle2D;
-import com.p1_7.demo.core.SpriteEntity;
-import com.p1_7.demo.Settings;
 import com.p1_7.demo.core.Rectangle2D;
 import com.p1_7.demo.core.SpriteEntity;
 
@@ -89,10 +85,6 @@ public class Cloud extends SpriteEntity {
             // check if droplet is hitting from above (not from side)
             // compare vertical centres: if droplet centre is above cloud centre, it's a top hit
             boolean isTopCollision = dropletCentreY > collisionCentreY;
-
-            System.out.println("Cloud collision - dropletY: " + dropletCentreY +
-                             ", cloudY: " + collisionCentreY +
-                             ", isTop: " + isTopCollision);
 
             // only apply horizontal push if hitting from above
             if (isTopCollision) {

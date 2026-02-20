@@ -18,11 +18,6 @@ import com.p1_7.demo.entities.Background;
 import com.p1_7.demo.entities.Bucket;
 import com.p1_7.demo.entities.Cloud;
 import com.p1_7.demo.entities.Droplet;
-import com.p1_7.demo.input.DemoActions;
-import com.p1_7.demo.entities.Cloud;
-import com.p1_7.demo.entities.Droplet;
-import com.p1_7.demo.input.DemoActions;
-import com.p1_7.demo.scenes.PauseScene;
 
 /**
  * main game scene for the "catch the droplet" demo.
@@ -44,6 +39,8 @@ public class GameScene extends Scene {
 
     /** seconds between droplet spawns */
     private static final float SPAWN_INTERVAL = 1.0f;
+    private static final float HORIZONTAL_DRAG = 0.9f;
+    private static final float MIN_HORIZONTAL_SPEED = 5f;
 
     // ==================== game entities ====================
 
@@ -133,12 +130,18 @@ public class GameScene extends Scene {
     @Override
     public void onExit(SceneContext context) {
         // stop and dispose audio
-        music.stop();
-        music.dispose();
-        dropSound.dispose();
+        if (music != null) {
+            music.stop();
+            music.dispose();
+        }
+        if (dropSound != null) {
+            dropSound.dispose();
+        }
 
         // dispose font
-        livesDisplay.dispose();
+        if (livesDisplay != null) {
+            livesDisplay.dispose();
+        }
 
         // clean up bucket
         if (bucket != null) {
@@ -238,7 +241,10 @@ public class GameScene extends Scene {
 
             // reset to straight fall (no horizontal movement)
             float[] velocity = droplet.getVelocity();
-            velocity[0] = 0f;
+            velocity[0] *= HORIZONTAL_DRAG;
+            if (Math.abs(velocity[0]) < MIN_HORIZONTAL_SPEED) {
+                velocity[0] = 0f;
+            }
             velocity[1] = -Droplet.FALL_SPEED;
             droplet.setVelocity(velocity);
 
