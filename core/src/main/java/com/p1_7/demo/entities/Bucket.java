@@ -2,8 +2,6 @@ package com.p1_7.demo.entities;
 
 import com.p1_7.abstractengine.collision.ICollidable;
 import com.p1_7.abstractengine.input.IInputQuery;
-import com.p1_7.demo.Settings;
-import com.p1_7.demo.core.Rectangle2D;
 import com.p1_7.demo.core.SpriteEntity;
 import com.p1_7.demo.input.DemoActions;
 import com.p1_7.demo.input.DropletCatchHandler;
