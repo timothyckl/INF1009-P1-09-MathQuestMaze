@@ -2,9 +2,6 @@ package com.p1_7.abstractengine.engine;
 
 /**
  * contract for any object that must be updated once per frame.
- *
- * the engine iterates all registered IUpdatable instances
- * each frame, passing the elapsed time since the previous frame.
  */
 public interface IUpdatable {
 

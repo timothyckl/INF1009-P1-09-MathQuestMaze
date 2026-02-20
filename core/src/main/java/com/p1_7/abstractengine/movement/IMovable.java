@@ -1,14 +1,8 @@
 package com.p1_7.abstractengine.movement;
 
 /**
- * capability interface for any entity that can move under the
- * influence of acceleration and velocity.
- *
- * all vectors are plain float[] arrays whose length matches
- * the dimensionality of the owning entity's
- * com.p1_7.abstractengine.transform.ITransform. the abstract
- * engine does not mandate 2-D; concrete implementations decide the
- * array length.
+ * capability interface for any entity that moves under the influence of
+ * acceleration and velocity; vector lengths match the entity's transform dimensionality.
  */
 public interface IMovable {
 
@@ -41,9 +35,7 @@ public interface IMovable {
     void setVelocity(float[] velocity);
 
     /**
-     * advances the entity by one physics step. concrete
-     * implementations apply acceleration to velocity, then velocity
-     * to position.
+     * advances the entity by one physics step.
      *
      * @param deltaTime seconds elapsed since the previous frame
      */

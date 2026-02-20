@@ -4,14 +4,8 @@ import com.badlogic.gdx.utils.Array;
 import com.p1_7.abstractengine.render.RenderManager;
 
 /**
- * central orchestrator for the abstract engine. manages the lifecycle
- * and per-frame update of all registered IManager and
- * IUpdatable instances, and delegates the explicit render call
- * to the RenderManager.
- *
- * managers are initialised in registration order and shut down in
- * reverse order so that dependencies are torn down after the objects
- * that depend on them.
+ * central orchestrator that manages manager lifecycles, drives the update loop,
+ * and delegates the per-frame render call.
  */
 public class Engine {
 
@@ -47,9 +41,7 @@ public class Engine {
     }
 
     /**
-     * stores the render manager for the explicit render step. the
-     * engine calls RenderManager.render() once per frame
-     * separately from the update loop.
+     * stores the render manager for the explicit per-frame render step.
      *
      * @param renderManager the render manager instance
      * @throws IllegalArgumentException if renderManager is null

@@ -7,15 +7,8 @@ import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.abstractengine.transform.ITransformable;
 
 /**
- * per-frame manager that advances all registered IMovable
- * entities and, optionally, clamps their positions to a set of
- * world-space boundaries.
- *
- * entities must be explicitly registered via
- * registerMovable(IMovable) before they will be updated.
- * boundary clamping is dimension-agnostic: the demo calls
- * setWorldBounds(float[], float[]) with arrays whose length
- * matches the entities' ITransform.getDimensions().
+ * per-frame manager that advances all registered IMovable entities and
+ * optionally clamps their positions to world-space boundaries.
  */
 public class MovementManager extends UpdatableManager {
 
@@ -30,10 +23,6 @@ public class MovementManager extends UpdatableManager {
 
     /** per-dimension upper bound (exclusive before size offset); null until set */
     private float[] boundsMax;
-
-    // ---------------------------------------------------------------
-    // registration
-    // ---------------------------------------------------------------
 
     /**
      * adds an IMovable to the update list.
@@ -53,10 +42,6 @@ public class MovementManager extends UpdatableManager {
         movables.removeValue(movable, true);
     }
 
-    // ---------------------------------------------------------------
-    // configuration
-    // ---------------------------------------------------------------
-
     /**
      * enables or disables boundary clamping after movement.
      *
@@ -67,16 +52,11 @@ public class MovementManager extends UpdatableManager {
     }
 
     /**
-     * sets the per-dimension world-space boundaries. the demo
-     * typically passes arrays derived from com.p1_7.abstractengine.engine.Settings
-     * (e.g. min = {0, 0}, max = {WINDOW_WIDTH, WINDOW_HEIGHT}).
-     * both arrays must be the same length; the engine does not enforce
-     * a specific dimensionality.
+     * sets the per-dimension world-space boundaries used for position clamping.
      *
      * @param min the lower bounds per dimension
      * @param max the upper bounds per dimension
-     * @throws IllegalArgumentException if min or max is null, arrays have different lengths,
-     *                                  arrays are empty, or any min[i] > max[i]
+     * @throws IllegalArgumentException if arrays are null, mismatched, empty, or min[i] > max[i]
      */
     public void setWorldBounds(float[] min, float[] max) {
         if (min == null) {
@@ -102,10 +82,6 @@ public class MovementManager extends UpdatableManager {
         this.boundsMax = max;
     }
 
-    // ---------------------------------------------------------------
-    // UpdatableManager hook
-    // ---------------------------------------------------------------
-
     /**
      * advances every registered movable by one physics step, then
      * clamps positions to the world bounds if enabled.
@@ -117,20 +93,14 @@ public class MovementManager extends UpdatableManager {
         for (int i = 0; i < movables.size; i++) {
             IMovable movable = movables.get(i);
 
-            // step the physics
             movable.move(deltaTime);
 
-            // clamp to world bounds if all conditions are met
             if (boundariesEnabled && boundsMin != null && boundsMax != null
                     && movable instanceof ITransformable) {
                 clampToBounds((ITransformable) movable);
             }
         }
     }
-
-    // ---------------------------------------------------------------
-    // private helpers
-    // ---------------------------------------------------------------
 
     /**
      * clamps each dimension of the entity's position so that the
@@ -146,17 +116,14 @@ public class MovementManager extends UpdatableManager {
         int dimensions = transform.getDimensions();
 
         for (int i = 0; i < dimensions; i++) {
-            // ensure position does not fall below the lower bound
             if (position[i] < boundsMin[i]) {
                 position[i] = boundsMin[i];
             }
-            // ensure position + size does not exceed the upper bound
             if (position[i] + size[i] > boundsMax[i]) {
                 position[i] = boundsMax[i] - size[i];
             }
         }
 
-        // write the clamped values back
         transform.setPosition(position);
     }
 }

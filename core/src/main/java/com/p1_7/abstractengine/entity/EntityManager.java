@@ -6,20 +6,13 @@ import com.badlogic.gdx.utils.Array;
 import com.p1_7.abstractengine.engine.Manager;
 
 /**
- * manages the lifecycle of all entities in the engine. acts as the
- * unified entity manager (IEntityManager), providing both the
- * read-only repository and the write-side mutator contracts.
- *
- * this manager has no per-frame update logic of its own.
+ * concrete entity manager providing both the read-only repository and
+ * write-side mutator contracts.
  */
 public class EntityManager extends Manager implements IEntityManager {
 
     /** the backing store of all live entities */
     private final Array<Entity> entities = new Array<>();
-
-    // ---------------------------------------------------------------
-    // IEntityMutator
-    // ---------------------------------------------------------------
 
     /**
      * creates an entity via the supplied factory, adds it to the internal store, and returns it.
@@ -36,7 +29,6 @@ public class EntityManager extends Manager implements IEntityManager {
 
     /**
      * sets the active flag on the entity identified by id.
-     * performs a linear scan of the entity array.
      *
      * @param id     the UUID of the target entity
      * @param active the desired active state
@@ -52,7 +44,7 @@ public class EntityManager extends Manager implements IEntityManager {
     }
 
     /**
-     * removes the entity identified by id. performs a linear scan and removes by index.
+     * removes the entity identified by id from the store.
      *
      * @param id the UUID of the entity to remove
      */
@@ -66,12 +58,8 @@ public class EntityManager extends Manager implements IEntityManager {
         }
     }
 
-    // ---------------------------------------------------------------
-    // IEntityRepository
-    // ---------------------------------------------------------------
-
     /**
-     * retrieves a single entity by its unique identifier. performs a linear scan.
+     * retrieves a single entity by its unique identifier.
      *
      * @param id the UUID to look up
      * @return the matching entity, or null if not found
@@ -87,7 +75,7 @@ public class EntityManager extends Manager implements IEntityManager {
     }
 
     /**
-     * builds and returns a new Array containing the UUIDs of every entity in the store.
+     * returns the UUIDs of every entity in the store.
      *
      * @return an Array of all entity identifiers
      */
@@ -100,14 +88,8 @@ public class EntityManager extends Manager implements IEntityManager {
         return ids;
     }
 
-    // ---------------------------------------------------------------
-    // diagnostics
-    // ---------------------------------------------------------------
-
     /**
-     * returns a debug string listing the UUIDs of all entities currently in the store.
-     *
-     * @return a human-readable summary of the entity store
+     * returns a debug string listing the UUIDs of all entities.
      */
     @Override
     public String toString() {

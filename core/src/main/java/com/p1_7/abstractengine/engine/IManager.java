@@ -1,11 +1,8 @@
 package com.p1_7.abstractengine.engine;
 
 /**
- * core lifecycle contract for every manager in the abstract engine.
- *
- * implementations are responsible for allocating and releasing any
- * resources they hold during init() and shutdown()
- * respectively.
+ * lifecycle contract for every manager; implementations allocate resources
+ * in init() and release them in shutdown().
  */
 public interface IManager {
 

@@ -5,13 +5,8 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ObjectSet;
 
 /**
- * maintains the mapping between physical input codes (keyboard keys,
+ * maintains the mapping between physical input codes (keyboard keys and
  * controller buttons) and logical ActionId values.
- *
- * no bindings are populated by default because ActionId
- * currently contains only the placeholder ActionId.NONE.
- * the demo phase will call bindKey(int, ActionId) and
- * bindButton(int, ActionId) to wire up real controls.
  */
 public class InputMapping {
 
@@ -21,27 +16,17 @@ public class InputMapping {
     /** maps controller button codes to logical actions */
     private final ObjectMap<Integer, ActionId> buttonBindings = new ObjectMap<>();
 
-    /**
-     * constructs an InputMapping and initialises it to the
-     * default (empty) state.
-     */
     public InputMapping() {
         resetToDefaults();
     }
 
     /**
-     * clears all key and button bindings. called automatically by the
-     * constructor; the demo phase will re-populate bindings after
-     * ActionId gains meaningful values.
+     * clears all key and button bindings.
      */
     public void resetToDefaults() {
         keyBindings.clear();
         buttonBindings.clear();
     }
-
-    // ---------------------------------------------------------------
-    // forward lookups
-    // ---------------------------------------------------------------
 
     /**
      * returns the logical action bound to the given keyboard key code.
@@ -63,10 +48,6 @@ public class InputMapping {
     public ActionId getActionForButton(int buttonCode) {
         return buttonBindings.get(buttonCode);
     }
-
-    // ---------------------------------------------------------------
-    // binding
-    // ---------------------------------------------------------------
 
     /**
      * binds a keyboard key to a logical action.
@@ -96,13 +77,8 @@ public class InputMapping {
         buttonBindings.put(buttonCode, actionId);
     }
 
-    // ---------------------------------------------------------------
-    // reverse lookups
-    // ---------------------------------------------------------------
-
     /**
-     * scans the key-binding map and returns every key code that is
-     * mapped to the supplied action.
+     * returns every key code mapped to the supplied action.
      *
      * @param actionId the action to search for
      * @return an Array of matching key codes (may be empty)
@@ -118,8 +94,7 @@ public class InputMapping {
     }
 
     /**
-     * scans the button-binding map and returns every button code that
-     * is mapped to the supplied action.
+     * returns every button code mapped to the supplied action.
      *
      * @param actionId the action to search for
      * @return an Array of matching button codes (may be empty)
@@ -135,22 +110,19 @@ public class InputMapping {
     }
 
     /**
-     * returns all unique action ids that have been bound to at least
-     * one key or button.
+     * returns all unique action ids that have at least one binding.
      *
      * @return an ObjectSet of all bound actions
      */
     public ObjectSet<ActionId> getAllActions() {
         ObjectSet<ActionId> actions = new ObjectSet<>();
 
-        // collect from key bindings
         for (ObjectMap.Entry<Integer, ActionId> entry : keyBindings) {
             if (entry.value != null) {
                 actions.add(entry.value);
             }
         }
 
-        // collect from button bindings
         for (ObjectMap.Entry<Integer, ActionId> entry : buttonBindings) {
             if (entry.value != null) {
                 actions.add(entry.value);

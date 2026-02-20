@@ -5,21 +5,8 @@ import com.badlogic.gdx.utils.Array;
 import com.p1_7.abstractengine.engine.UpdatableManager;
 
 /**
- * abstract per-frame manager that tests all registered ICollidable
- * entities for pairwise overlap using a two-phase architecture:
- * detection followed by resolution.
- *
- * entities must be explicitly registered via
- * registerCollidable(ICollidable). the detection phase uses a
- * stateless CollisionDetector and iterates unique pairs (O(n²))
- * to identify all collisions in the current frame. the resolution phase
- * processes these detected collisions according to the strategy implemented
- * by concrete subclasses.
- *
- * subclasses can override detect() to implement optimised
- * detection algorithms (spatial partitioning, grid-based, etc.) and must
- * implement resolve(Array) to define collision resolution behaviour
- * (callbacks, physics impulses, layered filtering, etc.).
+ * abstract per-frame manager that tests all registered ICollidable entities
+ * for pairwise overlap and delegates resolution to concrete subclasses.
  */
 public abstract class CollisionManager extends UpdatableManager {
 
@@ -31,10 +18,6 @@ public abstract class CollisionManager extends UpdatableManager {
 
     /** detected collisions from the current frame */
     private final Array<CollisionPair> detectedCollisions = new Array<>();
-
-    // ---------------------------------------------------------------
-    // registration
-    // ---------------------------------------------------------------
 
     /**
      * adds an ICollidable to the detection list.
@@ -54,10 +37,6 @@ public abstract class CollisionManager extends UpdatableManager {
         collidables.removeValue(collidable, true);
     }
 
-    // ---------------------------------------------------------------
-    // UpdatableManager hook
-    // ---------------------------------------------------------------
-
     /**
      * runs collision detection and resolution in two phases:
      * first detects all collisions, then resolves them.
@@ -70,18 +49,8 @@ public abstract class CollisionManager extends UpdatableManager {
         resolve(detectedCollisions);
     }
 
-    // ---------------------------------------------------------------
-    // detection & resolution
-    // ---------------------------------------------------------------
-
     /**
-     * detects all collisions by iterating unique pairs (i, j) where
-     * i < j. detected collisions are stored in detectedCollisions
-     * for processing by resolve(Array).
-     *
-     * this method clears the previous frame's collisions before detection.
-     * subclasses can override this method to implement optimised detection
-     * algorithms (spatial partitioning, quadtrees, etc.).
+     * detects all collisions for the current frame by iterating unique pairs.
      */
     protected void detect() {
         detectedCollisions.clear();
@@ -97,14 +66,7 @@ public abstract class CollisionManager extends UpdatableManager {
     }
 
     /**
-     * resolves detected collisions according to the collision resolution
-     * strategy implemented by concrete subclasses.
-     *
-     * examples of resolution strategies include:
-     * 1. callback-based: invoke ICollidable.onCollision(ICollidable) on both entities
-     * 2. physics-based: apply impulses or forces to separate entities
-     * 3. layered: filter collisions based on entity groups or categories
-     * 4. batched: group collisions by type and handle differently
+     * resolves detected collisions for the current frame.
      *
      * @param collisions the array of detected collision pairs from this frame
      */

@@ -3,12 +3,8 @@ package com.p1_7.abstractengine.entity;
 import java.util.UUID;
 
 /**
- * abstract base class for every entity managed by the engine.
- *
- * each entity is assigned a globally unique identifier at
- * construction time and is active by default. concrete subclasses
- * (created during the demo phase) extend this class to attach
- * transform, movability, collidability and other capabilities.
+ * abstract base class for every entity managed by the engine; assigned a
+ * globally unique identifier at construction and active by default.
  */
 public abstract class Entity {
 
@@ -19,8 +15,7 @@ public abstract class Entity {
     private boolean active;
 
     /**
-     * constructs a new entity with a randomly generated UUID and
-     * active set to true.
+     * constructs a new entity with a randomly generated UUID.
      */
     protected Entity() {
         this.id = UUID.randomUUID();
