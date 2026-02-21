@@ -21,7 +21,7 @@ The engine is organised around a central orchestrator, abstract base classes, an
 - `MovementManager` – updates positions of all registered movable entities
 - `CollisionManager` – detects and handles collisions between collidable entities
 - `RenderManager` – processes the render queue and draws entities to screen
-- `InputOutputManager` – maps input events to action identifiers
+- `InputManager` – maps input events to action identifiers
 
 Entities implement capability interfaces (`IMovable`, `ICollidable`, `IRenderable`, `ITransformable`) and are registered with the appropriate managers, allowing flexible composition of behaviours.
 
