@@ -1,6 +1,7 @@
 package com.p1_7.abstractengine.collision;
 
-import com.badlogic.gdx.utils.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.p1_7.abstractengine.engine.UpdatableManager;
 
@@ -11,13 +12,13 @@ import com.p1_7.abstractengine.engine.UpdatableManager;
 public abstract class CollisionManager extends UpdatableManager {
 
     /** all collidable entities managed by this manager */
-    private final Array<ICollidable> collidables = new Array<>();
+    private final List<ICollidable> collidables = new ArrayList<>();
 
     /** stateless detector that performs the overlap test */
     private final CollisionDetector detector = new CollisionDetector();
 
     /** detected collisions from the current frame */
-    private final Array<CollisionPair> detectedCollisions = new Array<>();
+    private final List<CollisionPair> detectedCollisions = new ArrayList<>();
 
     /**
      * adds an ICollidable to the detection list.
@@ -34,7 +35,7 @@ public abstract class CollisionManager extends UpdatableManager {
      * @param collidable the collidable entity to unregister
      */
     public void unregisterCollidable(ICollidable collidable) {
-        collidables.removeValue(collidable, true);
+        collidables.remove(collidable);
     }
 
     /**
@@ -54,9 +55,9 @@ public abstract class CollisionManager extends UpdatableManager {
      */
     protected void detect() {
         detectedCollisions.clear();
-        for (int i = 0; i < collidables.size - 1; i++) {
+        for (int i = 0; i < collidables.size() - 1; i++) {
             ICollidable a = collidables.get(i);
-            for (int j = i + 1; j < collidables.size; j++) {
+            for (int j = i + 1; j < collidables.size(); j++) {
                 ICollidable b = collidables.get(j);
                 if (detector.checkCollision(a, b)) {
                     detectedCollisions.add(new CollisionPair(a, b));
@@ -68,7 +69,7 @@ public abstract class CollisionManager extends UpdatableManager {
     /**
      * resolves detected collisions for the current frame.
      *
-     * @param collisions the array of detected collision pairs from this frame
+     * @param collisions the list of detected collision pairs from this frame
      */
-    protected abstract void resolve(Array<CollisionPair> collisions);
+    protected abstract void resolve(List<CollisionPair> collisions);
 }

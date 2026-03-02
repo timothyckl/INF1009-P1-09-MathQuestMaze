@@ -1,6 +1,7 @@
 package com.p1_7.abstractengine.scene;
 
-import com.badlogic.gdx.utils.ObjectMap;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.p1_7.abstractengine.engine.IManager;
 import com.p1_7.abstractengine.engine.ManagerResolver;
@@ -19,7 +20,7 @@ import com.p1_7.abstractengine.render.RenderManager;
 public class SceneManager extends UpdatableManager {
 
     /** all registered scenes, keyed by name */
-    private final ObjectMap<String, Scene> scenes = new ObjectMap<>();
+    private final Map<String, Scene> scenes = new HashMap<>();
 
     /** the name of the currently active scene (may be null) */
     private String currentKey;
@@ -215,7 +216,7 @@ public class SceneManager extends UpdatableManager {
      * @return the set of scene keys
      */
     public Iterable<String> getSceneKeys() {
-        return scenes.keys();
+        return scenes.keySet();
     }
 
     /**

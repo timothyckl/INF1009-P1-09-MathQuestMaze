@@ -1,8 +1,11 @@
 package com.p1_7.abstractengine.input;
 
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ObjectMap;
-import com.badlogic.gdx.utils.ObjectSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * maintains the mapping between physical input codes (keyboard keys and
@@ -11,10 +14,10 @@ import com.badlogic.gdx.utils.ObjectSet;
 public class InputMapping {
 
     /** maps keyboard key codes to logical actions */
-    private final ObjectMap<Integer, ActionId> keyBindings = new ObjectMap<>();
+    private final Map<Integer, ActionId> keyBindings = new HashMap<>();
 
     /** maps controller button codes to logical actions */
-    private final ObjectMap<Integer, ActionId> buttonBindings = new ObjectMap<>();
+    private final Map<Integer, ActionId> buttonBindings = new HashMap<>();
 
     public InputMapping() {
         resetToDefaults();
@@ -31,7 +34,7 @@ public class InputMapping {
     /**
      * returns the logical action bound to the given keyboard key code.
      *
-     * @param keyCode the libGDX key code
+     * @param keyCode the key code
      * @return the bound ActionId, or null if unbound
      */
     public ActionId getActionForKey(int keyCode) {
@@ -42,7 +45,7 @@ public class InputMapping {
      * returns the logical action bound to the given controller button
      * code.
      *
-     * @param buttonCode the libGDX button code
+     * @param buttonCode the button code
      * @return the bound ActionId, or null if unbound
      */
     public ActionId getActionForButton(int buttonCode) {
@@ -52,7 +55,7 @@ public class InputMapping {
     /**
      * binds a keyboard key to a logical action.
      *
-     * @param keyCode  the libGDX key code
+     * @param keyCode  the key code
      * @param actionId the action to associate with the key
      * @throws IllegalArgumentException if actionId is null
      */
@@ -66,7 +69,7 @@ public class InputMapping {
     /**
      * binds a controller button to a logical action.
      *
-     * @param buttonCode the libGDX button code
+     * @param buttonCode the button code
      * @param actionId   the action to associate with the button
      * @throws IllegalArgumentException if actionId is null
      */
@@ -81,13 +84,13 @@ public class InputMapping {
      * returns every key code mapped to the supplied action.
      *
      * @param actionId the action to search for
-     * @return an Array of matching key codes (may be empty)
+     * @return a list of matching key codes (may be empty)
      */
-    public Array<Integer> getKeysForAction(ActionId actionId) {
-        Array<Integer> keys = new Array<>();
-        for (ObjectMap.Entry<Integer, ActionId> entry : keyBindings) {
-            if (entry.value != null && entry.value.equals(actionId)) {
-                keys.add(entry.key);
+    public List<Integer> getKeysForAction(ActionId actionId) {
+        List<Integer> keys = new ArrayList<>();
+        for (Map.Entry<Integer, ActionId> entry : keyBindings.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().equals(actionId)) {
+                keys.add(entry.getKey());
             }
         }
         return keys;
@@ -97,13 +100,13 @@ public class InputMapping {
      * returns every button code mapped to the supplied action.
      *
      * @param actionId the action to search for
-     * @return an Array of matching button codes (may be empty)
+     * @return a list of matching button codes (may be empty)
      */
-    public Array<Integer> getButtonsForAction(ActionId actionId) {
-        Array<Integer> buttons = new Array<>();
-        for (ObjectMap.Entry<Integer, ActionId> entry : buttonBindings) {
-            if (entry.value != null && entry.value.equals(actionId)) {
-                buttons.add(entry.key);
+    public List<Integer> getButtonsForAction(ActionId actionId) {
+        List<Integer> buttons = new ArrayList<>();
+        for (Map.Entry<Integer, ActionId> entry : buttonBindings.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().equals(actionId)) {
+                buttons.add(entry.getKey());
             }
         }
         return buttons;
@@ -112,20 +115,20 @@ public class InputMapping {
     /**
      * returns all unique action ids that have at least one binding.
      *
-     * @return an ObjectSet of all bound actions
+     * @return a set of all bound actions
      */
-    public ObjectSet<ActionId> getAllActions() {
-        ObjectSet<ActionId> actions = new ObjectSet<>();
+    public Set<ActionId> getAllActions() {
+        Set<ActionId> actions = new HashSet<>();
 
-        for (ObjectMap.Entry<Integer, ActionId> entry : keyBindings) {
-            if (entry.value != null) {
-                actions.add(entry.value);
+        for (Map.Entry<Integer, ActionId> entry : keyBindings.entrySet()) {
+            if (entry.getValue() != null) {
+                actions.add(entry.getValue());
             }
         }
 
-        for (ObjectMap.Entry<Integer, ActionId> entry : buttonBindings) {
-            if (entry.value != null) {
-                actions.add(entry.value);
+        for (Map.Entry<Integer, ActionId> entry : buttonBindings.entrySet()) {
+            if (entry.getValue() != null) {
+                actions.add(entry.getValue());
             }
         }
 

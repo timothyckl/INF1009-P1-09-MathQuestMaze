@@ -1,8 +1,9 @@
 package com.p1_7.abstractengine.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-import com.badlogic.gdx.utils.Array;
 import com.p1_7.abstractengine.engine.Manager;
 
 /**
@@ -12,7 +13,7 @@ import com.p1_7.abstractengine.engine.Manager;
 public class EntityManager extends Manager implements IEntityManager {
 
     /** the backing store of all live entities */
-    private final Array<Entity> entities = new Array<>();
+    private final List<Entity> entities = new ArrayList<>();
 
     /**
      * creates an entity via the supplied factory, adds it to the internal store, and returns it.
@@ -35,7 +36,7 @@ public class EntityManager extends Manager implements IEntityManager {
      */
     @Override
     public void updateEntity(UUID id, boolean active) {
-        for (int i = 0; i < entities.size; i++) {
+        for (int i = 0; i < entities.size(); i++) {
             if (entities.get(i).getId().equals(id)) {
                 entities.get(i).setActive(active);
                 return;
@@ -50,9 +51,9 @@ public class EntityManager extends Manager implements IEntityManager {
      */
     @Override
     public void removeEntity(UUID id) {
-        for (int i = 0; i < entities.size; i++) {
+        for (int i = 0; i < entities.size(); i++) {
             if (entities.get(i).getId().equals(id)) {
-                entities.removeIndex(i);
+                entities.remove(i);
                 return;
             }
         }
@@ -66,7 +67,7 @@ public class EntityManager extends Manager implements IEntityManager {
      */
     @Override
     public Entity getEntity(UUID id) {
-        for (int i = 0; i < entities.size; i++) {
+        for (int i = 0; i < entities.size(); i++) {
             if (entities.get(i).getId().equals(id)) {
                 return entities.get(i);
             }
@@ -77,12 +78,12 @@ public class EntityManager extends Manager implements IEntityManager {
     /**
      * returns the UUIDs of every entity in the store.
      *
-     * @return an Array of all entity identifiers
+     * @return a list of all entity identifiers
      */
     @Override
-    public Array<UUID> getAllEntityIds() {
-        Array<UUID> ids = new Array<>(entities.size);
-        for (int i = 0; i < entities.size; i++) {
+    public List<UUID> getAllEntityIds() {
+        List<UUID> ids = new ArrayList<>(entities.size());
+        for (int i = 0; i < entities.size(); i++) {
             ids.add(entities.get(i).getId());
         }
         return ids;
@@ -94,7 +95,7 @@ public class EntityManager extends Manager implements IEntityManager {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("EntityManager{");
-        for (int i = 0; i < entities.size; i++) {
+        for (int i = 0; i < entities.size(); i++) {
             if (i > 0) {
                 sb.append(", ");
             }

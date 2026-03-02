@@ -1,14 +1,15 @@
 package com.p1_7.abstractengine.render;
 
-import com.badlogic.gdx.utils.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * array-backed implementation of IRenderQueue.
+ * list-backed implementation of IRenderQueue.
  */
 class RenderQueue implements IRenderQueue {
 
     /** the backing store for queued items */
-    private final Array<IRenderItem> items = new Array<>();
+    private final List<IRenderItem> items = new ArrayList<>();
 
     /**
      * adds an item to the queue for drawing this frame.
@@ -31,10 +32,10 @@ class RenderQueue implements IRenderQueue {
     /**
      * returns the queued render items.
      *
-     * @return the array of queued render items
+     * @return the list of queued render items
      */
     @Override
-    public Array<IRenderItem> items() {
+    public List<IRenderItem> items() {
         return items;
     }
 }

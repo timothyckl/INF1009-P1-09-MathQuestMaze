@@ -1,6 +1,7 @@
 package com.p1_7.abstractengine.movement;
 
-import com.badlogic.gdx.utils.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.p1_7.abstractengine.engine.UpdatableManager;
 import com.p1_7.abstractengine.transform.ITransform;
@@ -13,7 +14,7 @@ import com.p1_7.abstractengine.transform.ITransformable;
 public class MovementManager extends UpdatableManager {
 
     /** all movable entities managed by this manager */
-    private final Array<IMovable> movables = new Array<>();
+    private final List<IMovable> movables = new ArrayList<>();
 
     /** whether boundary clamping is applied after movement */
     private boolean boundariesEnabled = true;
@@ -39,7 +40,7 @@ public class MovementManager extends UpdatableManager {
      * @param movable the movable entity to unregister
      */
     public void unregisterMovable(IMovable movable) {
-        movables.removeValue(movable, true);
+        movables.remove(movable);
     }
 
     /**
@@ -90,7 +91,7 @@ public class MovementManager extends UpdatableManager {
      */
     @Override
     protected void onUpdate(float deltaTime) {
-        for (int i = 0; i < movables.size; i++) {
+        for (int i = 0; i < movables.size(); i++) {
             IMovable movable = movables.get(i);
 
             movable.move(deltaTime);

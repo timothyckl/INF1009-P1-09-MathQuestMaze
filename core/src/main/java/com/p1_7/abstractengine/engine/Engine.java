@@ -1,7 +1,10 @@
 package com.p1_7.abstractengine.engine;
 
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ObjectMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.p1_7.abstractengine.render.RenderManager;
 
 /**
@@ -13,13 +16,13 @@ import com.p1_7.abstractengine.render.RenderManager;
 public class Engine {
 
     /** all managers registered with the engine */
-    private final Array<IManager> managers = new Array<>();
+    private final List<IManager> managers = new ArrayList<>();
 
     /** subset of managers (or standalone updatables) that update each frame */
-    private final Array<IUpdatable> updatables = new Array<>();
+    private final List<IUpdatable> updatables = new ArrayList<>();
 
     /** type-keyed index of registered managers for dependency lookup */
-    private final ObjectMap<Class<? extends IManager>, IManager> managerMap = new ObjectMap<>();
+    private final Map<Class<? extends IManager>, IManager> managerMap = new HashMap<>();
 
     /** the render manager used for the explicit render step */
     private RenderManager renderManager;
@@ -152,7 +155,7 @@ public class Engine {
      */
     public void init() {
         // build sorted order from dependency graph
-        Array<IManager> sorted = topologicalSort();
+        List<IManager> sorted = topologicalSort();
 
         // reorder managers list to sorted result
         managers.clear();
@@ -160,7 +163,7 @@ public class Engine {
 
         // rebuild updatables preserving sorted relative order
         updatables.clear();
-        for (int i = 0; i < managers.size; i++) {
+        for (int i = 0; i < managers.size(); i++) {
             IManager m = managers.get(i);
             if (m instanceof IUpdatable) {
                 updatables.add((IUpdatable) m);
@@ -169,7 +172,7 @@ public class Engine {
 
         // auto-detect render manager
         renderManager = null;
-        for (int i = 0; i < managers.size; i++) {
+        for (int i = 0; i < managers.size(); i++) {
             if (managers.get(i) instanceof RenderManager) {
                 if (renderManager != null) {
                     throw new IllegalStateException(
@@ -186,7 +189,7 @@ public class Engine {
                 return getManager(type);
             }
         };
-        for (int i = 0; i < managers.size; i++) {
+        for (int i = 0; i < managers.size(); i++) {
             IManager m = managers.get(i);
             if (m instanceof Manager) {
                 ((Manager) m).onWire(resolver);
@@ -196,7 +199,7 @@ public class Engine {
         initialised = true;
 
         // initialise in sorted order
-        for (int i = 0; i < managers.size; i++) {
+        for (int i = 0; i < managers.size(); i++) {
             managers.get(i).init();
         }
     }
@@ -209,22 +212,21 @@ public class Engine {
      * @throws IllegalArgumentException if a dependency type is not registered
      * @throws IllegalStateException    if a circular dependency is detected
      */
-    private Array<IManager> topologicalSort() {
-        int n = managers.size;
+    private List<IManager> topologicalSort() {
+        int n = managers.size();
 
         // map each manager to its index for fast lookup
-        ObjectMap<IManager, Integer> indexOf = new ObjectMap<>(n);
+        Map<IManager, Integer> indexOf = new HashMap<>(n);
         for (int i = 0; i < n; i++) {
             indexOf.put(managers.get(i), i);
         }
 
         // build adjacency list and in-degree count
         // edge: dependency -> dependant (dependency must come first)
-        @SuppressWarnings("unchecked")
-        Array<Integer>[] adjacency = new Array[n];
+        List<List<Integer>> adjacency = new ArrayList<>(n);
         int[] inDegree = new int[n];
         for (int i = 0; i < n; i++) {
-            adjacency[i] = new Array<>();
+            adjacency.add(new ArrayList<>());
         }
 
         for (int i = 0; i < n; i++) {
@@ -243,13 +245,13 @@ public class Engine {
                 }
                 Integer depIndex = indexOf.get(depManager);
                 // edge from dependency to dependant
-                adjacency[depIndex].add(i);
+                adjacency.get(depIndex).add(i);
                 inDegree[i]++;
             }
         }
 
         // seed queue with zero-in-degree nodes in registration order (fifo for stability)
-        Array<Integer> queue = new Array<>();
+        List<Integer> queue = new ArrayList<>();
         int head = 0;
         for (int i = 0; i < n; i++) {
             if (inDegree[i] == 0) {
@@ -257,13 +259,13 @@ public class Engine {
             }
         }
 
-        Array<IManager> sorted = new Array<>(n);
-        while (head < queue.size) {
+        List<IManager> sorted = new ArrayList<>(n);
+        while (head < queue.size()) {
             int current = queue.get(head++);
             sorted.add(managers.get(current));
 
-            for (int j = 0; j < adjacency[current].size; j++) {
-                int neighbour = adjacency[current].get(j);
+            for (int j = 0; j < adjacency.get(current).size(); j++) {
+                int neighbour = adjacency.get(current).get(j);
                 inDegree[neighbour]--;
                 if (inDegree[neighbour] == 0) {
                     queue.add(neighbour);
@@ -271,7 +273,7 @@ public class Engine {
             }
         }
 
-        if (sorted.size != n) {
+        if (sorted.size() != n) {
             // identify managers involved in the cycle
             StringBuilder cycleInfo = new StringBuilder("circular dependency detected among: ");
             boolean first = true;
@@ -296,7 +298,7 @@ public class Engine {
      * @param deltaTime seconds elapsed since the previous frame
      */
     public void update(float deltaTime) {
-        for (int i = 0; i < updatables.size; i++) {
+        for (int i = 0; i < updatables.size(); i++) {
             updatables.get(i).update(deltaTime);
         }
     }
@@ -316,7 +318,7 @@ public class Engine {
      * so that dependants are torn down before their dependencies.
      */
     public void shutdown() {
-        for (int i = managers.size - 1; i >= 0; i--) {
+        for (int i = managers.size() - 1; i >= 0; i--) {
             managers.get(i).shutdown();
         }
     }

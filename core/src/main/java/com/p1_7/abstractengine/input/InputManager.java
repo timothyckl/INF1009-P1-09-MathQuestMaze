@@ -1,9 +1,9 @@
 package com.p1_7.abstractengine.input;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ObjectMap;
-import com.badlogic.gdx.utils.ObjectSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.p1_7.abstractengine.engine.UpdatableManager;
 
@@ -13,6 +13,9 @@ import com.p1_7.abstractengine.engine.UpdatableManager;
  */
 public class InputManager extends UpdatableManager implements IInputQuery {
 
+    /** the platform-specific input source for polling key and button state */
+    private final IInputSource inputSource;
+
     /** the key/button ↔ action mapping used for lookups */
     private final InputMapping inputMapping = new InputMapping();
 
@@ -20,10 +23,23 @@ public class InputManager extends UpdatableManager implements IInputQuery {
     private boolean inputEnabled = true;
 
     /** the derived input state for each action this frame */
-    private final ObjectMap<ActionId, InputState> actionStates = new ObjectMap<>();
+    private final Map<ActionId, InputState> actionStates = new HashMap<>();
 
     /** whether each action was physically down last frame */
-    private final ObjectMap<ActionId, Boolean> previousDown = new ObjectMap<>();
+    private final Map<ActionId, Boolean> previousDown = new HashMap<>();
+
+    /**
+     * creates an input manager backed by the given platform input source.
+     *
+     * @param inputSource the platform-specific input polling implementation
+     * @throws IllegalArgumentException if inputSource is null
+     */
+    public InputManager(IInputSource inputSource) {
+        if (inputSource == null) {
+            throw new IllegalArgumentException("inputSource cannot be null");
+        }
+        this.inputSource = inputSource;
+    }
 
     /**
      * polls the physical input devices and computes the logical
@@ -38,11 +54,11 @@ public class InputManager extends UpdatableManager implements IInputQuery {
             return;
         }
 
-        ObjectSet<ActionId> boundActions = getBoundActions();
+        Set<ActionId> boundActions = getBoundActions();
 
         for (ActionId action : boundActions) {
             boolean currentlyDown = isPhysicallyDown(action);
-            boolean wasDown = previousDown.get(action, false);
+            boolean wasDown = previousDown.getOrDefault(action, false);
 
             if (currentlyDown && !wasDown) {
                 actionStates.put(action, InputState.PRESSED);
@@ -103,9 +119,9 @@ public class InputManager extends UpdatableManager implements IInputQuery {
     /**
      * returns all action ids that have at least one key or button binding.
      *
-     * @return an ObjectSet of all bound actions
+     * @return a set of all bound actions
      */
-    private ObjectSet<ActionId> getBoundActions() {
+    private Set<ActionId> getBoundActions() {
         return inputMapping.getAllActions();
     }
 
@@ -116,16 +132,16 @@ public class InputManager extends UpdatableManager implements IInputQuery {
      * @return true if at least one bound input is pressed
      */
     private boolean isPhysicallyDown(ActionId action) {
-        Array<Integer> keys = inputMapping.getKeysForAction(action);
-        for (int i = 0; i < keys.size; i++) {
-            if (Gdx.input.isKeyPressed(keys.get(i))) {
+        List<Integer> keys = inputMapping.getKeysForAction(action);
+        for (int i = 0; i < keys.size(); i++) {
+            if (inputSource.isKeyPressed(keys.get(i))) {
                 return true;
             }
         }
 
-        Array<Integer> buttons = inputMapping.getButtonsForAction(action);
-        for (int i = 0; i < buttons.size; i++) {
-            if (Gdx.input.isButtonPressed(buttons.get(i))) {
+        List<Integer> buttons = inputMapping.getButtonsForAction(action);
+        for (int i = 0; i < buttons.size(); i++) {
+            if (inputSource.isButtonPressed(buttons.get(i))) {
                 return true;
             }
         }
