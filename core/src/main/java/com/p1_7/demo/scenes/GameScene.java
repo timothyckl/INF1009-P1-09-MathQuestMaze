@@ -90,40 +90,46 @@ public class GameScene extends Scene {
         spawnTimer = 0f;
         droplets.clear();
 
-        // 1. load audio
+        // 1. set world bounds for broad-phase collision detection
+        collisionManager.setWorldBounds(
+            new float[]{0, 0},
+            new float[]{Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT}
+        );
+
+        // 2. load audio
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.mp3"));
         music = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
         music.setLooping(true);
         music.setVolume(Settings.MUSIC_VOLUME);
         music.play();
 
-        // 2. create background (not an entity)
+        // 3. create background (not an entity)
         background = new Background(Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT);
 
-        // 3. create lives display via entity manager
+        // 4. create lives display via entity manager
         livesDisplay = (LivesDisplay) context.entities().createEntity(() -> new LivesDisplay(INITIAL_LIVES));
 
-        // 4. create score display via entity manager
+        // 5. create score display via entity manager
         scoreDisplay = (ScoreDisplay) context.entities().createEntity(
             () -> new ScoreDisplay(520f, Settings.WINDOW_HEIGHT - 10f, 0)
         );
 
-        // 5. create bucket via entity manager
+        // 6. create bucket via entity manager
         float bucketX = (Settings.WINDOW_WIDTH / 2f) - (Bucket.BUCKET_WIDTH / 2f);
         float bucketY = 20f;
         bucket = (Bucket) context.entities().createEntity(() -> new Bucket(bucketX, bucketY));
 
-        // 6. register bucket with managers
+        // 7. register bucket with managers
         movementManager.registerMovable(bucket);
         collisionManager.registerCollidable(bucket);
 
         // wire catch handler
         bucket.setCatchHandler(this::handleDropletCatch);
 
-        // 7. create and register cloud deflectors
+        // 8. create and register cloud deflectors
         createClouds(context.entities());
 
-        // 8. spawn initial droplet
+        // 9. spawn initial droplet
         spawnDroplet(context.entities());
     }
 
