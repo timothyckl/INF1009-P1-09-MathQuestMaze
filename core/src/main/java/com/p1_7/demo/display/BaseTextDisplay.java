@@ -55,8 +55,8 @@ public abstract class BaseTextDisplay extends Entity implements IRenderItem, ICu
         ((GdxSpriteBatch) batch).unwrap().begin();
 
         // render the text at the transform position
-        float[] position = transform.getPosition();
-        font.draw(((GdxSpriteBatch) batch).unwrap(), getText(), position[0], position[1]);
+        font.draw(((GdxSpriteBatch) batch).unwrap(), getText(),
+            transform.getPosition(0), transform.getPosition(1));
 
         // restore shaperenderer for subsequent procedural items
         ((GdxSpriteBatch) batch).unwrap().end();

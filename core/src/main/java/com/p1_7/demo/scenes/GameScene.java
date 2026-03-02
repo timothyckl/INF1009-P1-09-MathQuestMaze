@@ -10,6 +10,7 @@ import com.p1_7.abstractengine.collision.CollisionManager;
 import com.p1_7.abstractengine.entity.IEntityMutator;
 import com.p1_7.abstractengine.movement.MovementManager;
 import com.p1_7.abstractengine.scene.Scene;
+import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.demo.Settings;
 import com.p1_7.demo.display.LivesDisplay;
@@ -255,13 +256,13 @@ public class GameScene extends Scene {
             droplet.setVelocity(velocity);
 
             // clamp droplet to horizontal bounds (prevent sliding off-screen)
-            float[] position = droplet.getTransform().getPosition();
-            if (position[0] < 0) {
-                position[0] = 0;
-            } else if (position[0] + Droplet.DROPLET_WIDTH > Settings.WINDOW_WIDTH) {
-                position[0] = Settings.WINDOW_WIDTH - Droplet.DROPLET_WIDTH;
+            ITransform dropletTransform = droplet.getTransform();
+            float dropletX = dropletTransform.getPosition(0);
+            if (dropletX < 0) {
+                dropletTransform.setPosition(0, 0);
+            } else if (dropletX + Droplet.DROPLET_WIDTH > Settings.WINDOW_WIDTH) {
+                dropletTransform.setPosition(0, Settings.WINDOW_WIDTH - Droplet.DROPLET_WIDTH);
             }
-            droplet.getTransform().setPosition(position);
 
             // check if caught
             if (droplet.isCaught()) {
@@ -277,7 +278,7 @@ public class GameScene extends Scene {
             }
 
             // check if missed (fell below screen)
-            if (droplet.getTransform().getPosition()[1] < 0) {
+            if (droplet.getTransform().getPosition(1) < 0) {
                 // decrement lives
                 int currentLives = livesDisplay.getLives();
                 livesDisplay.setLives(currentLives - 1);

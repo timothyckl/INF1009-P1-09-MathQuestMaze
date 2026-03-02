@@ -116,9 +116,9 @@ public abstract class RenderManager extends Manager {
         Object textureHandle = assetStore.loadTexture(assetPath);
 
         ITransform transform = item.getTransform();
-        float[] position = transform.getPosition();
-        float[] size = transform.getSize();
 
-        batch.draw(textureHandle, position[0], position[1], size[0], size[1]);
+        batch.draw(textureHandle,
+            transform.getPosition(0), transform.getPosition(1),
+            transform.getSize(0), transform.getSize(1));
     }
 }

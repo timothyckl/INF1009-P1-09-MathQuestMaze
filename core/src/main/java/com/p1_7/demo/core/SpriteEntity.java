@@ -86,9 +86,8 @@ public abstract class SpriteEntity extends Entity implements IRenderItem, IMovab
         velocity[0] += acceleration[0] * deltaTime;
         velocity[1] += acceleration[1] * deltaTime;
 
-        float[] position = transform.getPosition();
-        position[0] += velocity[0] * deltaTime;
-        position[1] += velocity[1] * deltaTime;
+        transform.setPosition(0, transform.getPosition(0) + velocity[0] * deltaTime);
+        transform.setPosition(1, transform.getPosition(1) + velocity[1] * deltaTime);
     }
 
     // ==================== ICollidable ====================
@@ -96,9 +95,9 @@ public abstract class SpriteEntity extends Entity implements IRenderItem, IMovab
     @Override
     public IBounds getBounds() {
         // derive bounding box from transform (sync cached rectangle)
-        float[] position = transform.getPosition();
-        float[] size = transform.getSize();
-        bounds.set(position[0], position[1], size[0], size[1]);
+        bounds.set(
+            transform.getPosition(0), transform.getPosition(1),
+            transform.getSize(0), transform.getSize(1));
         return bounds;
     }
 
