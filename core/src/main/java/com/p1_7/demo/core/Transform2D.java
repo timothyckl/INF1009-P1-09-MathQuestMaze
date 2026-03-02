@@ -6,7 +6,7 @@ import com.p1_7.abstractengine.transform.ITransform;
  * concrete 2D implementation of ITransform.
  *
  * manages position (x, y) and size (width, height) in 2D space.
- * arrays are copied on set operations to prevent external mutation.
+ * per-axis indexed accessors prevent external mutation of internal arrays.
  */
 public class Transform2D implements ITransform {
 
@@ -32,25 +32,23 @@ public class Transform2D implements ITransform {
     }
 
     @Override
-    public float[] getPosition() {
-        return position;
+    public float getPosition(int axis) {
+        return position[axis];
     }
 
     @Override
-    public void setPosition(float[] position) {
-        // use System.arraycopy to prevent external mutation
-        System.arraycopy(position, 0, this.position, 0, 2);
+    public void setPosition(int axis, float value) {
+        position[axis] = value;
     }
 
     @Override
-    public float[] getSize() {
-        return size;
+    public float getSize(int axis) {
+        return size[axis];
     }
 
     @Override
-    public void setSize(float[] size) {
-        // use System.arraycopy to prevent external mutation
-        System.arraycopy(size, 0, this.size, 0, 2);
+    public void setSize(int axis, float value) {
+        size[axis] = value;
     }
 
     @Override

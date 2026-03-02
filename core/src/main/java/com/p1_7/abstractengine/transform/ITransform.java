@@ -2,41 +2,48 @@ package com.p1_7.abstractengine.transform;
 
 /**
  * dimension-agnostic spatial state for an entity.
+ *
+ * uses per-axis indexed accessors to prevent external mutation of
+ * internal state through leaked array references.
  */
 public interface ITransform {
 
     /**
-     * returns the current position as a float array.
+     * returns the position component for the given axis.
      *
-     * @return the position vector; length equals the number of dimensions
+     * @param axis the axis index (e.g. 0 for x, 1 for y)
+     * @return the position value along that axis
      */
-    float[] getPosition();
+    float getPosition(int axis);
 
     /**
-     * sets the position to the supplied values.
+     * sets the position component for the given axis.
      *
-     * @param position the new position vector
+     * @param axis  the axis index (e.g. 0 for x, 1 for y)
+     * @param value the new position value along that axis
      */
-    void setPosition(float[] position);
+    void setPosition(int axis, float value);
 
     /**
-     * returns the current size (extent in each dimension) as a float array.
+     * returns the size component for the given axis.
      *
-     * @return the size vector; length equals the number of dimensions
+     * @param axis the axis index (e.g. 0 for width, 1 for height)
+     * @return the size value along that axis
      */
-    float[] getSize();
+    float getSize(int axis);
 
     /**
-     * sets the size to the supplied values.
+     * sets the size component for the given axis.
      *
-     * @param size the new size vector
+     * @param axis  the axis index (e.g. 0 for width, 1 for height)
+     * @param value the new size value along that axis
      */
-    void setSize(float[] size);
+    void setSize(int axis, float value);
 
     /**
      * returns the number of spatial dimensions this transform operates in.
      *
-     * @return the dimensionality (length of the position and size arrays)
+     * @return the dimensionality
      */
     int getDimensions();
 }

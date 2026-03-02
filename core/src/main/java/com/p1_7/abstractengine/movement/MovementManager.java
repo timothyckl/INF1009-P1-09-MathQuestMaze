@@ -112,19 +112,20 @@ public class MovementManager extends UpdatableManager {
      */
     private void clampToBounds(ITransformable transformable) {
         ITransform transform = transformable.getTransform();
-        float[] position = transform.getPosition();
-        float[] size = transform.getSize();
         int dimensions = transform.getDimensions();
 
         for (int i = 0; i < dimensions; i++) {
-            if (position[i] < boundsMin[i]) {
-                position[i] = boundsMin[i];
-            }
-            if (position[i] + size[i] > boundsMax[i]) {
-                position[i] = boundsMax[i] - size[i];
-            }
-        }
+            float pos = transform.getPosition(i);
+            float size = transform.getSize(i);
 
-        transform.setPosition(position);
+            if (pos < boundsMin[i]) {
+                pos = boundsMin[i];
+            }
+            if (pos + size > boundsMax[i]) {
+                pos = boundsMax[i] - size;
+            }
+
+            transform.setPosition(i, pos);
+        }
     }
 }

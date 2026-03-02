@@ -51,14 +51,15 @@ public class Cloud extends SpriteEntity {
     @Override
     public IBounds getBounds() {
         // create collision box that matches visible cloud body (not full sprite)
-        float[] position = transform.getPosition();
+        float cloudX = transform.getPosition(0);
+        float cloudY = transform.getPosition(1);
 
         // move box down to skip transparent top pixels
-        float collisionY = position[1] + COLLISION_OFFSET_Y;
+        float collisionY = cloudY + COLLISION_OFFSET_Y;
 
         // use full width but reduced height
         collisionBounds.set(
-            position[0],           // x: same as sprite
+            cloudX,                // x: same as sprite
             collisionY,            // y: offset down
             COLLISION_WIDTH,
             COLLISION_HEIGHT       // height: reduced (50 instead of 81)
@@ -73,14 +74,15 @@ public class Cloud extends SpriteEntity {
             Droplet droplet = (Droplet) other;
 
             // get cloud collision box position
-            float[] cloudPos = transform.getPosition();
-            float collisionY = cloudPos[1] + COLLISION_OFFSET_Y;
+            float cloudX = transform.getPosition(0);
+            float cloudY = transform.getPosition(1);
+            float collisionY = cloudY + COLLISION_OFFSET_Y;
             float collisionCentreY = collisionY + (COLLISION_HEIGHT / 2f);
 
             // get droplet position and centre
-            float[] dropletPos = droplet.getTransform().getPosition();
-            float dropletCentreY = dropletPos[1] + (Droplet.DROPLET_HEIGHT / 2f);
-            float dropletX = dropletPos[0];
+            float dropletX = droplet.getTransform().getPosition(0);
+            float dropletY = droplet.getTransform().getPosition(1);
+            float dropletCentreY = dropletY + (Droplet.DROPLET_HEIGHT / 2f);
 
             // check if droplet is hitting from above (not from side)
             // compare vertical centres: if droplet centre is above cloud centre, it's a top hit
@@ -92,7 +94,7 @@ public class Cloud extends SpriteEntity {
                 float[] velocity = droplet.getVelocity();
 
                 // get cloud centre for push direction
-                float cloudCentreX = cloudPos[0] + (CLOUD_WIDTH / 2f);
+                float cloudCentreX = cloudX + (CLOUD_WIDTH / 2f);
 
                 // push horizontally while allowing slow downward movement
                 // this lets droplets slide across and eventually fall out of collision box

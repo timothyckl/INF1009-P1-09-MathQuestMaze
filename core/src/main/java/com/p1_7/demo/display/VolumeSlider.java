@@ -105,9 +105,8 @@ public class VolumeSlider extends Entity implements IRenderItem, ICustomRenderab
     @Override
     public void renderCustom(ISpriteBatch batch, IShapeRenderer shapeRenderer) {
         ShapeRenderer sr = ((GdxShapeRenderer) shapeRenderer).unwrap();
-        float[] position = transform.getPosition();
-        float x = position[0];
-        float y = position[1];
+        float x = transform.getPosition(0);
+        float y = transform.getPosition(1);
 
         // draw background bar (grey)
         sr.setColor(0.3f, 0.3f, 0.3f, 1f);
