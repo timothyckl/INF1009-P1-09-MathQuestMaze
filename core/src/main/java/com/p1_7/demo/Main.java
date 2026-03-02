@@ -39,7 +39,7 @@ public class Main extends ApplicationAdapter {
         collisionManager = new DemoCollisionManager();
         inputManager = new InputManager();
         renderManager = new RenderManager();
-        sceneManager = new SceneManager(entityManager, renderManager.getRenderQueue(), inputManager);
+        sceneManager = new SceneManager();
 
         float[] worldMinBound = { 0f, 0f };
         float[] worldMaxBound = { Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT };
@@ -68,7 +68,7 @@ public class Main extends ApplicationAdapter {
         // set menu as initial scene
         sceneManager.setInitialScene("menu");
 
-        // 6. register managers with engine (documented order)
+        // 6. register managers with engine (order is irrelevant; dependencies are wired automatically)
         engine.registerManager(entityManager);
         engine.registerManager(movementManager);
         engine.registerManager(collisionManager);
@@ -76,10 +76,7 @@ public class Main extends ApplicationAdapter {
         engine.registerManager(renderManager);
         engine.registerManager(sceneManager);
 
-        // 7. set render manager for explicit render call
-        engine.setRenderManager(renderManager);
-
-        // 8. initialise engine
+        // 7. initialise engine
         engine.init();
     }
 

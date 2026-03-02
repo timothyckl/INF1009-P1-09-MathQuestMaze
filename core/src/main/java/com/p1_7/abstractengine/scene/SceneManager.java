@@ -2,10 +2,15 @@ package com.p1_7.abstractengine.scene;
 
 import com.badlogic.gdx.utils.ObjectMap;
 
+import com.p1_7.abstractengine.engine.IManager;
+import com.p1_7.abstractengine.engine.ManagerResolver;
 import com.p1_7.abstractengine.engine.UpdatableManager;
+import com.p1_7.abstractengine.entity.EntityManager;
 import com.p1_7.abstractengine.entity.IEntityManager;
 import com.p1_7.abstractengine.input.IInputQuery;
+import com.p1_7.abstractengine.input.InputManager;
 import com.p1_7.abstractengine.render.IRenderQueue;
+import com.p1_7.abstractengine.render.RenderManager;
 
 /**
  * manages the scene registry and drives the active scene's lifecycle and
@@ -31,29 +36,38 @@ public class SceneManager extends UpdatableManager {
     /** the context object passed into scene callbacks */
     private SceneContext context;
 
-    /** injected entity manager — used to build the context */
-    private final IEntityManager entityManager;
+    /** entity manager — resolved during wiring */
+    private IEntityManager entityManager;
 
-    /** injected render queue — used to build the context */
-    private final IRenderQueue renderQueue;
+    /** render queue — resolved during wiring */
+    private IRenderQueue renderQueue;
 
-    /** injected input query — used to build the context */
-    private final IInputQuery inputQuery;
+    /** input query — resolved during wiring */
+    private IInputQuery inputQuery;
 
     /**
-     * constructs a SceneManager with the dependencies it needs to
-     * assemble a SceneContext.
-     *
-     * @param entityManager the entity manager providing read and write access
-     * @param renderQueue   the single-frame render queue
-     * @param inputQuery    the input query interface
+     * {@inheritDoc}
      */
-    public SceneManager(IEntityManager entityManager,
-                        IRenderQueue renderQueue,
-                        IInputQuery inputQuery) {
-        this.entityManager = entityManager;
-        this.renderQueue = renderQueue;
-        this.inputQuery = inputQuery;
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<? extends IManager>[] getDependencies() {
+        return new Class[] {
+            EntityManager.class,
+            RenderManager.class,
+            InputManager.class
+        };
+    }
+
+    /**
+     * resolves and stores the entity manager, render queue, and input query.
+     *
+     * @param resolver the resolver used to look up dependency instances
+     */
+    @Override
+    public void onWire(ManagerResolver resolver) {
+        entityManager = resolver.resolve(EntityManager.class);
+        renderQueue = resolver.resolve(RenderManager.class).getRenderQueue();
+        inputQuery = resolver.resolve(InputManager.class);
     }
 
     /**

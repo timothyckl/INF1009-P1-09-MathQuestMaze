@@ -1,11 +1,14 @@
 package com.p1_7.abstractengine.engine;
 
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.p1_7.abstractengine.render.RenderManager;
 
 /**
  * central orchestrator that manages manager lifecycles, drives the update loop,
- * and delegates the per-frame render call.
+ * and delegates the per-frame render call. managers are registered in any order
+ * and the engine resolves the correct initialisation sequence via a topological
+ * sort of declared dependencies.
  */
 public class Engine {
 
@@ -15,20 +18,102 @@ public class Engine {
     /** subset of managers (or standalone updatables) that update each frame */
     private final Array<IUpdatable> updatables = new Array<>();
 
+    /** type-keyed index of registered managers for dependency lookup */
+    private final ObjectMap<Class<? extends IManager>, IManager> managerMap = new ObjectMap<>();
+
     /** the render manager used for the explicit render step */
     private RenderManager renderManager;
 
+    /** guards against post-init registration */
+    private boolean initialised;
+
     /**
-     * registers a manager. if the manager also implements
-     * IUpdatable it is automatically added to the update loop.
+     * registers a manager and indexes it by type for dependency lookup.
      *
      * @param manager the manager to register
+     * @throws IllegalArgumentException if manager is null
+     * @throws IllegalStateException    if called after init()
+     * @throws IllegalStateException    if a type key already maps to a different manager
      */
     public void registerManager(IManager manager) {
+        if (manager == null) {
+            throw new IllegalArgumentException("manager cannot be null");
+        }
+        if (initialised) {
+            throw new IllegalStateException(
+                "cannot register managers after init() has been called");
+        }
+
         managers.add(manager);
         if (manager instanceof IUpdatable) {
             updatables.add((IUpdatable) manager);
         }
+
+        // index by concrete class and superclass chain
+        indexSuperclasses(manager);
+
+        // index by IManager-extending interfaces
+        indexInterfaces(manager);
+    }
+
+    /**
+     * indexes the concrete class and superclasses up to the framework bases.
+     *
+     * @param manager the manager to index
+     */
+    private void indexSuperclasses(IManager manager) {
+        Class<?> cls = manager.getClass();
+        while (cls != null
+               && cls != Manager.class
+               && cls != UpdatableManager.class
+               && cls != Object.class) {
+            if (IManager.class.isAssignableFrom(cls)) {
+                @SuppressWarnings("unchecked")
+                Class<? extends IManager> key = (Class<? extends IManager>) cls;
+                putMapping(key, manager);
+            }
+            cls = cls.getSuperclass();
+        }
+    }
+
+    /**
+     * indexes IManager-extending interfaces (excluding IManager itself).
+     *
+     * @param manager the manager to index
+     */
+    private void indexInterfaces(IManager manager) {
+        Class<?> cls = manager.getClass();
+        while (cls != null && cls != Object.class) {
+            for (Class<?> iface : cls.getInterfaces()) {
+                if (iface == IManager.class || iface == IUpdatable.class) {
+                    continue;
+                }
+                if (IManager.class.isAssignableFrom(iface)) {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends IManager> key = (Class<? extends IManager>) iface;
+                    putMapping(key, manager);
+                }
+            }
+            cls = cls.getSuperclass();
+        }
+    }
+
+    /**
+     * inserts a type mapping; throws on duplicate keys.
+     *
+     * @param key     the type key
+     * @param manager the manager instance
+     * @throws IllegalStateException if the key already maps to a different instance
+     */
+    private void putMapping(Class<? extends IManager> key, IManager manager) {
+        IManager existing = managerMap.get(key);
+        if (existing != null && existing != manager) {
+            throw new IllegalStateException(
+                "duplicate manager mapping for " + key.getSimpleName()
+                + ": " + existing.getClass().getSimpleName()
+                + " and " + manager.getClass().getSimpleName());
+        }
+        managerMap.put(key, manager);
     }
 
     /**
@@ -41,25 +126,168 @@ public class Engine {
     }
 
     /**
-     * stores the render manager for the explicit per-frame render step.
+     * returns the manager registered under the given type key.
      *
-     * @param renderManager the render manager instance
-     * @throws IllegalArgumentException if renderManager is null
+     * @param <T>  the manager type
+     * @param type the class or interface key
+     * @return the matching manager instance
+     * @throws IllegalArgumentException if no manager is registered for the type
      */
-    public void setRenderManager(RenderManager renderManager) {
-        if (renderManager == null) {
-            throw new IllegalArgumentException("renderManager cannot be null");
+    @SuppressWarnings("unchecked")
+    public <T extends IManager> T getManager(Class<T> type) {
+        IManager manager = managerMap.get(type);
+        if (manager == null) {
+            throw new IllegalArgumentException(
+                "no manager registered for " + type.getSimpleName());
         }
-        this.renderManager = renderManager;
+        return (T) manager;
     }
 
     /**
-     * initialises every registered manager in registration order.
+     * sorts managers by dependency order, wires them, and initialises each one.
+     *
+     * @throws IllegalArgumentException if a dependency type is not registered
+     * @throws IllegalStateException    if a circular dependency is detected
+     * @throws IllegalStateException    if more than one RenderManager is found
      */
     public void init() {
+        // build sorted order from dependency graph
+        Array<IManager> sorted = topologicalSort();
+
+        // reorder managers list to sorted result
+        managers.clear();
+        managers.addAll(sorted);
+
+        // rebuild updatables preserving sorted relative order
+        updatables.clear();
+        for (int i = 0; i < managers.size; i++) {
+            IManager m = managers.get(i);
+            if (m instanceof IUpdatable) {
+                updatables.add((IUpdatable) m);
+            }
+        }
+
+        // auto-detect render manager
+        renderManager = null;
+        for (int i = 0; i < managers.size; i++) {
+            if (managers.get(i) instanceof RenderManager) {
+                if (renderManager != null) {
+                    throw new IllegalStateException(
+                        "multiple RenderManager instances registered");
+                }
+                renderManager = (RenderManager) managers.get(i);
+            }
+        }
+
+        // wiring pass — resolve and store dependency references
+        ManagerResolver resolver = new ManagerResolver() {
+            @Override
+            public <T extends IManager> T resolve(Class<T> type) {
+                return getManager(type);
+            }
+        };
+        for (int i = 0; i < managers.size; i++) {
+            IManager m = managers.get(i);
+            if (m instanceof Manager) {
+                ((Manager) m).onWire(resolver);
+            }
+        }
+
+        initialised = true;
+
+        // initialise in sorted order
         for (int i = 0; i < managers.size; i++) {
             managers.get(i).init();
         }
+    }
+
+    /**
+     * topologically sorts managers using kahn's algorithm. managers with no
+     * dependency relationship retain their original registration order.
+     *
+     * @return managers in dependency-resolved order
+     * @throws IllegalArgumentException if a dependency type is not registered
+     * @throws IllegalStateException    if a circular dependency is detected
+     */
+    private Array<IManager> topologicalSort() {
+        int n = managers.size;
+
+        // map each manager to its index for fast lookup
+        ObjectMap<IManager, Integer> indexOf = new ObjectMap<>(n);
+        for (int i = 0; i < n; i++) {
+            indexOf.put(managers.get(i), i);
+        }
+
+        // build adjacency list and in-degree count
+        // edge: dependency -> dependant (dependency must come first)
+        @SuppressWarnings("unchecked")
+        Array<Integer>[] adjacency = new Array[n];
+        int[] inDegree = new int[n];
+        for (int i = 0; i < n; i++) {
+            adjacency[i] = new Array<>();
+        }
+
+        for (int i = 0; i < n; i++) {
+            IManager m = managers.get(i);
+            if (!(m instanceof Manager)) {
+                continue;
+            }
+            Class<? extends IManager>[] deps = ((Manager) m).getDependencies();
+            for (Class<? extends IManager> depType : deps) {
+                IManager depManager = managerMap.get(depType);
+                if (depManager == null) {
+                    throw new IllegalArgumentException(
+                        m.getClass().getSimpleName()
+                        + " depends on " + depType.getSimpleName()
+                        + " but no such manager is registered");
+                }
+                Integer depIndex = indexOf.get(depManager);
+                // edge from dependency to dependant
+                adjacency[depIndex].add(i);
+                inDegree[i]++;
+            }
+        }
+
+        // seed queue with zero-in-degree nodes in registration order (fifo for stability)
+        Array<Integer> queue = new Array<>();
+        int head = 0;
+        for (int i = 0; i < n; i++) {
+            if (inDegree[i] == 0) {
+                queue.add(i);
+            }
+        }
+
+        Array<IManager> sorted = new Array<>(n);
+        while (head < queue.size) {
+            int current = queue.get(head++);
+            sorted.add(managers.get(current));
+
+            for (int j = 0; j < adjacency[current].size; j++) {
+                int neighbour = adjacency[current].get(j);
+                inDegree[neighbour]--;
+                if (inDegree[neighbour] == 0) {
+                    queue.add(neighbour);
+                }
+            }
+        }
+
+        if (sorted.size != n) {
+            // identify managers involved in the cycle
+            StringBuilder cycleInfo = new StringBuilder("circular dependency detected among: ");
+            boolean first = true;
+            for (int i = 0; i < n; i++) {
+                if (inDegree[i] > 0) {
+                    if (!first) {
+                        cycleInfo.append(", ");
+                    }
+                    cycleInfo.append(managers.get(i).getClass().getSimpleName());
+                    first = false;
+                }
+            }
+            throw new IllegalStateException(cycleInfo.toString());
+        }
+
+        return sorted;
     }
 
     /**
@@ -84,8 +312,8 @@ public class Engine {
     }
 
     /**
-     * shuts down every registered manager in reverse registration
-     * order so that dependants are torn down before their dependencies.
+     * shuts down every registered manager in reverse dependency order
+     * so that dependants are torn down before their dependencies.
      */
     public void shutdown() {
         for (int i = managers.size - 1; i >= 0; i--) {
