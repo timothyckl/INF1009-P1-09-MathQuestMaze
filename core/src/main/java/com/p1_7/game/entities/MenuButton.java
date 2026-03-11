@@ -1,4 +1,3 @@
-// MenuButton.java
 package com.p1_7.game.entities;
 
 import com.badlogic.gdx.Gdx;

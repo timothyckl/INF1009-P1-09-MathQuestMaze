@@ -3,8 +3,13 @@ package com.p1_7.game.scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.p1_7.abstractengine.entity.Entity;
 import com.p1_7.abstractengine.render.ICustomRenderable;
 import com.p1_7.abstractengine.render.IRenderItem;
@@ -22,116 +27,119 @@ import com.p1_7.game.platform.GdxSpriteBatch;
 /**
  * Main menu scene for Math Quest Maze.
  *
- * Displays the game title and three buttons:
- *   • Start  → transitions to the game scene (key: "game")
- *   • Settings → transitions to the settings scene (key: "settings")
- *   • Exit   → closes the application
+ * Uses image assets for background + buttons, and Kenney_Future.ttf
+ * loaded via gdx-freetype for crisp text at any size.
  *
- * Input supported:
- *   • Mouse: hover highlights buttons; left-click activates them
- *   • Keyboard: ESC quits the application from the menu
- *
- * Architecture note: buttons are plain entities managed directly by
- * the scene rather than the EntityManager, because they are purely
- * presentational and do not participate in collision or movement.
- * This keeps the menu self-contained and easy to swap out.
+ * Assets required in assets/menu/:
+ *   background.png
+ *   button.png
+ *   button_hover.png
+ *   Kenney_Future.ttf
  */
-public class MenuScene extends Scene {
+public class Menuscene extends Scene {
 
-    // ── layout constants ─────────────────────────────────────────
-    /** Horizontal centre of the screen — buttons are centred here. */
+    // ── asset paths ──────────────────────────────────────────────
+    private static final String BG_ASSET    = "menu/background.png";
+    private static final String BTN_ASSET   = "menu/button.png";
+    private static final String HOVER_ASSET = "menu/button_hover.png";
+    private static final String TTF_ASSET   = "menu/Kenney_Future.ttf";
+
+    // ── layout ───────────────────────────────────────────────────
     private static final float CENTRE_X       = Settings.WINDOW_WIDTH  / 2f;
-
-    /** Y position of the topmost button. */
     private static final float FIRST_BUTTON_Y = Settings.WINDOW_HEIGHT * 0.45f;
-
-    /** Vertical gap between button centres. */
     private static final float BUTTON_SPACING = 80f;
 
+    // ── fonts (generated from TTF, both owned + disposed here) ───
+    private BitmapFont titleFont;
+    private BitmapFont buttonFont;
+
     // ── entities ─────────────────────────────────────────────────
-    private TitleText  titleText;
-    private MenuButton btnStart;
-    private MenuButton btnSettings;
-    private MenuButton btnExit;
-
-    // ── background colour entity ──────────────────────────────────
     private MenuBackground background;
+    private TitleText      titleText;
+    private MenuButton     btnStart;
+    private MenuButton     btnSettings;
+    private MenuButton     btnExit;
 
-    // ── constructor ───────────────────────────────────────────────
-
-    /**
-     * Constructs the menu scene and registers it under the key "menu".
-     */
-    public MenuScene() {
+    public Menuscene() {
         this.name = "menu";
     }
 
-    // ── Scene lifecycle ───────────────────────────────────────────
-
     @Override
     public void onEnter(SceneContext context) {
-        // 1. solid colour background
-        background = new MenuBackground();
+        // ── generate fonts from TTF ──────────────────────────────
+        FreeTypeFontGenerator generator =
+            new FreeTypeFontGenerator(Gdx.files.internal(TTF_ASSET));
 
-        // 2. game title (large, centred near the top)
-        float titleY = Settings.WINDOW_HEIGHT * 0.75f;
-        titleText = new TitleText("MATH QUEST MAZE", CENTRE_X, titleY, 3.0f);
+        // title font — larger, gold colour
+        FreeTypeFontParameter titleParams = new FreeTypeFontParameter();
+        titleParams.size  = 56;                              // pixel size (not scale)
+        titleParams.color = new Color(1f, 0.92f, 0.55f, 1f); // gold
+        titleParams.shadowOffsetX = 2;
+        titleParams.shadowOffsetY = -2;
+        titleParams.shadowColor   = new Color(0f, 0f, 0f, 0.5f);
+        titleFont = generator.generateFont(titleParams);
 
-        // 3. create buttons, evenly spaced downward from FIRST_BUTTON_Y
-        btnStart    = new MenuButton("START",    CENTRE_X, FIRST_BUTTON_Y,                  1.5f);
-        btnSettings = new MenuButton("SETTINGS", CENTRE_X, FIRST_BUTTON_Y - BUTTON_SPACING, 1.5f);
-        btnExit     = new MenuButton("EXIT",     CENTRE_X, FIRST_BUTTON_Y - BUTTON_SPACING * 2, 1.5f);
+        // button font — smaller, white
+        FreeTypeFontParameter buttonParams = new FreeTypeFontParameter();
+        buttonParams.size  = 26;
+        buttonParams.color = Color.WHITE;
+        buttonFont = generator.generateFont(buttonParams);
+
+        // generator can be disposed immediately after generating fonts
+        generator.dispose();
+
+        // ── entities ─────────────────────────────────────────────
+        background = new MenuBackground(BG_ASSET);
+        titleText  = new TitleText("MATH QUEST MAZE", CENTRE_X,
+                                   Settings.WINDOW_HEIGHT * 0.75f, titleFont);
+
+        btnStart    = MenuButton.withTexture("START",
+                        CENTRE_X, FIRST_BUTTON_Y,                       buttonFont, BTN_ASSET, HOVER_ASSET);
+        btnSettings = MenuButton.withTexture("SETTINGS",
+                        CENTRE_X, FIRST_BUTTON_Y - BUTTON_SPACING,      buttonFont, BTN_ASSET, HOVER_ASSET);
+        btnExit     = MenuButton.withTexture("EXIT",
+                        CENTRE_X, FIRST_BUTTON_Y - BUTTON_SPACING * 2f, buttonFont, BTN_ASSET, HOVER_ASSET);
     }
 
     @Override
     public void onExit(SceneContext context) {
-        // release GPU resources held by each button's BitmapFont
         if (btnStart    != null) btnStart.dispose();
         if (btnSettings != null) btnSettings.dispose();
         if (btnExit     != null) btnExit.dispose();
-        if (titleText   != null) titleText.dispose();
+        if (background  != null) background.dispose();
+        if (titleFont   != null) titleFont.dispose();
+        if (buttonFont  != null) buttonFont.dispose();
     }
-
-    // ── per-frame logic ───────────────────────────────────────────
 
     @Override
     public void update(float deltaTime, SceneContext context) {
-
-        // --- keyboard shortcut: ESC exits the application --------
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
             return;
         }
 
-        // --- poll mouse input for every button -------------------
         btnStart.updateInput();
         btnSettings.updateInput();
         btnExit.updateInput();
 
-        // --- handle button clicks --------------------------------
         if (btnStart.isClicked()) {
             btnStart.resetClick();
-            context.changeScene("game");   // TODO: replace "game" with your actual game scene key
+            context.changeScene("game");
             return;
         }
-
         if (btnSettings.isClicked()) {
             btnSettings.resetClick();
             context.changeScene("settings");
             return;
         }
-
         if (btnExit.isClicked()) {
             btnExit.resetClick();
             Gdx.app.exit();
         }
     }
 
-    // ── rendering ─────────────────────────────────────────────────
-
     @Override
     public void submitRenderable(SceneContext context) {
-        // render order: background → title → buttons (front to back)
         context.renderQueue().queue(background);
         context.renderQueue().queue(titleText);
         context.renderQueue().queue(btnStart);
@@ -139,79 +147,51 @@ public class MenuScene extends Scene {
         context.renderQueue().queue(btnExit);
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // Inner helper entities (private, menu-only)
-    // Keeping them here avoids polluting the entities package with
-    // one-off classes only the menu needs.
-    // ══════════════════════════════════════════════════════════════
+    // ── inner entities ────────────────────────────────────────────
 
-    /**
-     * Solid dark-purple background that fills the whole screen.
-     * Drawn as a filled rectangle via ICustomRenderable.
-     */
-    private static class MenuBackground extends Entity implements IRenderItem, ICustomRenderable {
-
+    private static class MenuBackground implements IRenderItem {
         private final Transform2D transform;
-        private static final Color BG_COLOUR = new Color(0.08f, 0.06f, 0.18f, 1f);
+        private final String      assetPath;
+        private final Texture     texture;
 
-        MenuBackground() {
+        MenuBackground(String assetPath) {
+            this.assetPath = assetPath;
+            this.texture   = new Texture(Gdx.files.internal(assetPath));
+            this.texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             this.transform = new Transform2D(0, 0, Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT);
         }
 
-        @Override public String    getAssetPath() { return null; }
+        @Override public String     getAssetPath() { return assetPath; }
+        @Override public ITransform getTransform() { return transform; }
+        void dispose() { if (texture != null) texture.dispose(); }
+    }
+
+    private static class TitleText extends Entity implements IRenderItem, ICustomRenderable {
+        private final Transform2D transform;
+        private final BitmapFont  font;
+        private final String      text;
+
+        TitleText(String text, float cx, float cy, BitmapFont font) {
+            this.text      = text;
+            this.font      = font;
+            this.transform = new Transform2D(cx, cy, 0f, 0f);
+        }
+
+        @Override public String     getAssetPath() { return null; }
         @Override public ITransform getTransform() { return transform; }
 
         @Override
         public void renderCustom(ISpriteBatch batch, IShapeRenderer shapeRenderer) {
             ShapeRenderer sr = ((GdxShapeRenderer) shapeRenderer).unwrap();
-            sr.setColor(BG_COLOUR);
-            sr.rect(0, 0, Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT);
-        }
-    }
-
-    /**
-     * Game title text, centred at a given position.
-     * Uses a scaled BitmapFont rendered through the SpriteBatch.
-     */
-    private static class TitleText extends Entity implements IRenderItem, ICustomRenderable {
-
-        private final Transform2D transform;
-        private final BitmapFont  font;
-        private final String      text;
-
-        TitleText(String text, float centreX, float centreY, float scale) {
-            this.text      = text;
-            this.font      = new BitmapFont();
-            this.font.getData().setScale(scale);
-            this.font.setColor(new Color(0.85f, 0.85f, 1.0f, 1f)); // soft white-blue
-            // Transform position is the draw origin; centring is done in renderCustom
-            this.transform = new Transform2D(centreX, centreY, 0f, 0f);
-        }
-
-        @Override public String     getAssetPath() { return null; }
-        @Override public ITransform getTransform()  { return transform; }
-
-        @Override
-        public void renderCustom(ISpriteBatch batch, IShapeRenderer shapeRenderer) {
-            ShapeRenderer sr = ((GdxShapeRenderer) shapeRenderer).unwrap();
+            SpriteBatch   sb = ((GdxSpriteBatch)   batch).unwrap();
             sr.end();
-
-            com.badlogic.gdx.graphics.g2d.SpriteBatch sb = ((GdxSpriteBatch) batch).unwrap();
             sb.begin();
-
-            // measure text width so we can centre it
-            com.badlogic.gdx.graphics.g2d.GlyphLayout layout =
-                new com.badlogic.gdx.graphics.g2d.GlyphLayout(font, text);
-            float drawX = transform.getPosition(0) - layout.width  / 2f;
-            float drawY = transform.getPosition(1) + layout.height / 2f;
-            font.draw(sb, text, drawX, drawY);
-
+            GlyphLayout layout = new GlyphLayout(font, text);
+            font.draw(sb, text,
+                transform.getPosition(0) - layout.width  / 2f,
+                transform.getPosition(1) + layout.height / 2f);
             sb.end();
             sr.begin(ShapeRenderer.ShapeType.Filled);
-        }
-
-        void dispose() {
-            font.dispose();
         }
     }
 }

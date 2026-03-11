@@ -10,8 +10,8 @@ import com.p1_7.abstractengine.scene.SceneManager;
 
 import com.p1_7.game.platform.GdxInputSource;
 import com.p1_7.game.platform.GdxRenderManager;
-import com.p1_7.game.scenes.MenuScene;
-import com.p1_7.game.scenes.SettingsScene;
+import com.p1_7.game.scenes.Menuscene;
+import com.p1_7.game.scenes.Settingscene;
 
 /**
  * Entry point for the game application.
@@ -42,10 +42,10 @@ public class Main extends ApplicationAdapter {
         SceneManager sceneManager = new SceneManager();
 
         // main menu (shown first)
-        sceneManager.registerScene(new MenuScene());
+        sceneManager.registerScene(new Menuscene());
 
         // settings screen
-        sceneManager.registerScene(new SettingsScene());
+        sceneManager.registerScene(new Settingscene());
 
         sceneManager.setInitialScene("menu"); // start at the main menu
         engine.registerManager(sceneManager);
