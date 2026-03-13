@@ -66,6 +66,11 @@ public class InputMapping {
         keyBindings.put(keyCode, actionId);
     }
 
+    // Unbinds keyboard key from map
+    public void unbindKey(int keyCode) {
+        keyBindings.remove(keyCode);
+    }
+
     /**
      * binds a controller button to a logical action.
      *
@@ -78,6 +83,26 @@ public class InputMapping {
             throw new IllegalArgumentException("actionId cannot be null");
         }
         buttonBindings.put(buttonCode, actionId);
+    }
+
+    // Unbinds button from map
+    public void unbindButton(int buttonCode) {
+        buttonBindings.remove(buttonCode);
+    }
+
+    // Unbinds all keys and buttons mapped to the given action
+    public void unbindAction(ActionId action) {
+        if (action == null) {
+            throw new IllegalArgumentException("action cannot be null");
+        }
+
+        if (keyBindings != null) {
+            keyBindings.entrySet().removeIf(entry -> entry.getValue() != null && entry.getValue().equals(action));
+        }
+
+        if (buttonBindings != null) {
+            buttonBindings.entrySet().removeIf(entry -> entry.getValue() != null && entry.getValue().equals(action));
+        }
     }
 
     /**

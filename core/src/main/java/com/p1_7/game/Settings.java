@@ -1,4 +1,6 @@
 package com.p1_7.game;
+import com.p1_7.abstractengine.input.InputMapping;
+import com.p1_7.game.input.MappableActions;
 
 /**
  * Game application configuration values.
@@ -17,7 +19,9 @@ public class Settings {
     public static int WINDOW_HEIGHT = 720;
 
     /** music volume level (0.0 = silent, 1.0 = maximum) */
-    public static float MUSIC_VOLUME = 0.5f; // default 50% volume
+    public static float VOLUME_LEVEL = 0.5f; // default 50% volume
+
+    public static float BRIGHTNESS_LEVEL = 1.0f; // default 100%
 
     /**
      * Sets the music volume with validation.
@@ -26,6 +30,10 @@ public class Settings {
      * @param volume the desired volume level
      */
     public static void setMusicVolume(float volume) {
-        MUSIC_VOLUME = Math.max(0f, Math.min(1f, volume));
+        VOLUME_LEVEL = Math.max(0f, Math.min(1f, volume));
+    }
+
+    public static void setBrightnessLevel(float brightness) {
+        BRIGHTNESS_LEVEL = Math.max(0f, Math.min(1f, brightness));
     }
 }
