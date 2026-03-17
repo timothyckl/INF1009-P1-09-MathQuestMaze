@@ -3,6 +3,8 @@ package com.p1_7.demo.scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
+import com.p1_7.abstractengine.entity.IEntityManager;
+import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.demo.Settings;
@@ -109,7 +111,7 @@ public class PauseScene extends Scene {
         // 6. create volume slider
         float sliderX = Settings.WINDOW_WIDTH / 2f - 100f;
         float sliderY = Settings.WINDOW_HEIGHT * 0.27f;
-        volumeSlider = (VolumeSlider) context.entities().createEntity(
+        volumeSlider = (VolumeSlider) context.get(IEntityManager.class).createEntity(
             () -> new VolumeSlider(sliderX, sliderY, 200f)
         );
 
@@ -141,7 +143,7 @@ public class PauseScene extends Scene {
 
         // remove volume slider entity
         if (volumeSlider != null) {
-            context.entities().removeEntity(volumeSlider.getId());
+            context.get(IEntityManager.class).removeEntity(volumeSlider.getId());
         }
     }
 
@@ -167,18 +169,18 @@ public class PauseScene extends Scene {
     @Override
     public void submitRenderable(SceneContext context) {
         // queue background first
-        context.renderQueue().queue(background);
+        context.get(IRenderQueue.class).queue(background);
 
         // queue text displays
-        context.renderQueue().queue(titleDisplay);
-        context.renderQueue().queue(livesDisplay);
-        context.renderQueue().queue(scoreDisplay);
-        context.renderQueue().queue(volumeLabel);
+        context.get(IRenderQueue.class).queue(titleDisplay);
+        context.get(IRenderQueue.class).queue(livesDisplay);
+        context.get(IRenderQueue.class).queue(scoreDisplay);
+        context.get(IRenderQueue.class).queue(volumeLabel);
 
         // queue volume slider
-        context.renderQueue().queue(volumeSlider);
+        context.get(IRenderQueue.class).queue(volumeSlider);
 
         // queue resume prompt
-        context.renderQueue().queue(resumePrompt);
+        context.get(IRenderQueue.class).queue(resumePrompt);
     }
 }

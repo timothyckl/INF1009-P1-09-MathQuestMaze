@@ -11,8 +11,7 @@ import com.p1_7.abstractengine.collision.CollisionPair;
  *
  * this implementation provides the simple callback-based resolution
  * strategy used in the demo application. each detected collision results
- * in both entities receiving their {@link com.p1_7.abstractengine.collision.ICollidable#onCollision}
- * callback with a reference to the other entity.
+ * in both entities receiving their onCollision callback with a reference to the other entity.
  *
  * this is the simplest collision resolution strategy and is suitable
  * for applications where entities manage their own collision response logic.
@@ -22,7 +21,7 @@ import com.p1_7.abstractengine.collision.CollisionPair;
 public class DemoCollisionManager extends CollisionManager {
 
     /**
-     * resolves collisions by invoking {@code onCollision()} callbacks
+     * resolves collisions by invoking onCollision() callbacks
      * on both entities in each collision pair.
      *
      * @param collisions the array of detected collision pairs from this frame

@@ -15,6 +15,7 @@ import com.p1_7.abstractengine.render.ICustomRenderable;
 import com.p1_7.abstractengine.render.IRenderItem;
 import com.p1_7.abstractengine.render.IShapeRenderer;
 import com.p1_7.abstractengine.render.ISpriteBatch;
+import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.abstractengine.transform.ITransform;
@@ -142,12 +143,12 @@ public class SettingScene extends Scene {
 
     @Override
     public void submitRenderable(SceneContext context) {
-        context.renderQueue().queue(background);
-        context.renderQueue().queue(heading);
-        context.renderQueue().queue(volumeLabel);
-        context.renderQueue().queue(btnVolumeDown);
-        context.renderQueue().queue(btnVolumeUp);
-        context.renderQueue().queue(btnBack);
+        context.get(IRenderQueue.class).queue(background);
+        context.get(IRenderQueue.class).queue(heading);
+        context.get(IRenderQueue.class).queue(volumeLabel);
+        context.get(IRenderQueue.class).queue(btnVolumeDown);
+        context.get(IRenderQueue.class).queue(btnVolumeUp);
+        context.get(IRenderQueue.class).queue(btnBack);
     }
 
     private String volumeText() {

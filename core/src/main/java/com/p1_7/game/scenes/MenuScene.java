@@ -15,6 +15,7 @@ import com.p1_7.abstractengine.render.ICustomRenderable;
 import com.p1_7.abstractengine.render.IRenderItem;
 import com.p1_7.abstractengine.render.IShapeRenderer;
 import com.p1_7.abstractengine.render.ISpriteBatch;
+import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.abstractengine.transform.ITransform;
@@ -140,11 +141,11 @@ public class MenuScene extends Scene {
 
     @Override
     public void submitRenderable(SceneContext context) {
-        context.renderQueue().queue(background);
-        context.renderQueue().queue(titleText);
-        context.renderQueue().queue(btnStart);
-        context.renderQueue().queue(btnSettings);
-        context.renderQueue().queue(btnExit);
+        context.get(IRenderQueue.class).queue(background);
+        context.get(IRenderQueue.class).queue(titleText);
+        context.get(IRenderQueue.class).queue(btnStart);
+        context.get(IRenderQueue.class).queue(btnSettings);
+        context.get(IRenderQueue.class).queue(btnExit);
     }
 
     // ── inner entities ────────────────────────────────────────────

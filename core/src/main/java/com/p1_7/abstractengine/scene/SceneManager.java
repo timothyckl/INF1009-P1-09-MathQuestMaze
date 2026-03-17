@@ -22,6 +22,9 @@ public class SceneManager extends UpdatableManager {
     /** all registered scenes, keyed by name */
     private final Map<String, Scene> scenes = new HashMap<>();
 
+    /** services available to scenes via SceneContext.get() */
+    private final Map<Class<?>, Object> serviceMap = new HashMap<>();
+
     /** the name of the currently active scene (may be null) */
     private String currentKey;
 
@@ -37,15 +40,6 @@ public class SceneManager extends UpdatableManager {
     /** the context object passed into scene callbacks */
     private SceneContext context;
 
-    /** entity manager — resolved during wiring */
-    private IEntityManager entityManager;
-
-    /** render queue — resolved during wiring */
-    private IRenderQueue renderQueue;
-
-    /** input query — resolved during wiring */
-    private IInputQuery inputQuery;
-
     /**
      * {@inheritDoc}
      */
@@ -60,15 +54,26 @@ public class SceneManager extends UpdatableManager {
     }
 
     /**
-     * resolves and stores the entity manager, render queue, and input query.
+     * binds a service instance under the given type key for lookup via SceneContext.get().
+     * must be called before engine.init().
+     *
+     * @param type    the class key to register under
+     * @param service the service instance
+     */
+    public <T> void registerService(Class<T> type, T service) {
+        serviceMap.put(type, service);
+    }
+
+    /**
+     * populates the service map with engine-provided services resolved from wiring.
      *
      * @param resolver the resolver used to look up dependency instances
      */
     @Override
     public void onWire(ManagerResolver resolver) {
-        entityManager = resolver.resolve(EntityManager.class);
-        renderQueue = resolver.resolve(RenderManager.class).getRenderQueue();
-        inputQuery = resolver.resolve(InputManager.class);
+        serviceMap.put(IEntityManager.class, resolver.resolve(EntityManager.class));
+        serviceMap.put(IRenderQueue.class,   resolver.resolve(RenderManager.class).getRenderQueue());
+        serviceMap.put(IInputQuery.class,    resolver.resolve(InputManager.class));
     }
 
     /**
@@ -78,18 +83,13 @@ public class SceneManager extends UpdatableManager {
     protected void onInit() {
         context = new SceneContext() {
             @Override
-            public IEntityManager entities() {
-                return entityManager;
-            }
-
-            @Override
-            public IRenderQueue renderQueue() {
-                return renderQueue;
-            }
-
-            @Override
-            public IInputQuery input() {
-                return inputQuery;
+            public <T> T get(Class<T> type) {
+                Object svc = serviceMap.get(type);
+                if (svc == null) {
+                    throw new IllegalArgumentException(
+                        "no service registered for " + type.getSimpleName());
+                }
+                return type.cast(svc);
             }
 
             @Override

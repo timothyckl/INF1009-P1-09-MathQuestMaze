@@ -34,8 +34,8 @@ public class DirectedAcyclicGraph<T> {
     }
 
     /**
-     * adds a directed edge indicating that {@code from} must come before {@code to}.
-     * increments the in-degree of {@code to}.
+     * adds a directed edge indicating that from must come before to.
+     * increments the in-degree of to.
      *
      * @param from the predecessor node
      * @param to   the successor node

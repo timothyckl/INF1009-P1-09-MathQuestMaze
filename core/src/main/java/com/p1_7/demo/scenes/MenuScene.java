@@ -2,6 +2,7 @@ package com.p1_7.demo.scenes;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.demo.Settings;
@@ -73,10 +74,10 @@ public class MenuScene extends Scene {
     @Override
     public void submitRenderable(SceneContext context) {
         // queue background first
-        context.renderQueue().queue(background);
+        context.get(IRenderQueue.class).queue(background);
 
         // queue text displays
-        context.renderQueue().queue(titleDisplay);
-        context.renderQueue().queue(promptDisplay);
+        context.get(IRenderQueue.class).queue(titleDisplay);
+        context.get(IRenderQueue.class).queue(promptDisplay);
     }
 }

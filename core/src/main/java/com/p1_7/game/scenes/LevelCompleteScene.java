@@ -14,6 +14,7 @@ import com.p1_7.abstractengine.render.ICustomRenderable;
 import com.p1_7.abstractengine.render.IRenderItem;
 import com.p1_7.abstractengine.render.IShapeRenderer;
 import com.p1_7.abstractengine.render.ISpriteBatch;
+import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.abstractengine.transform.ITransform;
@@ -132,13 +133,13 @@ public class LevelCompleteScene extends Scene {
 
     @Override
     public void submitRenderable(SceneContext context) {
-        context.renderQueue().queue(background);
-        context.renderQueue().queue(title);
-        context.renderQueue().queue(promptStatus);
-        context.renderQueue().queue(btnContinue);
-        context.renderQueue().queue(btnMainMenu);
-        context.renderQueue().queue(hintSpace);
-        context.renderQueue().queue(hintEsc);
+        context.get(IRenderQueue.class).queue(background);
+        context.get(IRenderQueue.class).queue(title);
+        context.get(IRenderQueue.class).queue(promptStatus);
+        context.get(IRenderQueue.class).queue(btnContinue);
+        context.get(IRenderQueue.class).queue(btnMainMenu);
+        context.get(IRenderQueue.class).queue(hintSpace);
+        context.get(IRenderQueue.class).queue(hintEsc);
     }
 
     private boolean isLastLevel() {

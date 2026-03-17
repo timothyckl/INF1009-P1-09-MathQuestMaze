@@ -1,5 +1,6 @@
 package com.p1_7.game.scenes;
 
+import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.game.Settings;
@@ -61,6 +62,6 @@ public class HelloWorldScene extends Scene {
      */
     @Override
     public void submitRenderable(SceneContext context) {
-        context.renderQueue().queue(helloText);
+        context.get(IRenderQueue.class).queue(helloText);
     }
 }

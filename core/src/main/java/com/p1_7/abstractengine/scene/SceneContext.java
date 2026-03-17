@@ -1,36 +1,20 @@
 package com.p1_7.abstractengine.scene;
 
-import com.p1_7.abstractengine.entity.IEntityManager;
-import com.p1_7.abstractengine.input.IInputQuery;
-import com.p1_7.abstractengine.render.IRenderQueue;
-
 /**
  * snapshot of engine state passed into every Scene callback, providing access
- * to entities, render, input, and scene transitions.
+ * to registered services and scene transitions.
  */
 public interface SceneContext {
 
     /**
-     * returns the entity manager, providing both read and write access
-     * to the entity store.
+     * looks up a service registered under the given type key.
      *
-     * @return the IEntityManager; never null
+     * @param type the class key to look up
+     * @param <T>  the service type
+     * @return the registered service instance; never null
+     * @throws IllegalArgumentException if no service is registered for the given type
      */
-    IEntityManager entities();
-
-    /**
-     * returns the render queue for submitting items this frame.
-     *
-     * @return the IRenderQueue; never null
-     */
-    IRenderQueue renderQueue();
-
-    /**
-     * returns the input query interface for the current frame.
-     *
-     * @return the IInputQuery; never null
-     */
-    IInputQuery input();
+    <T> T get(Class<T> type);
 
     /**
      * requests a transition to the scene identified by key.

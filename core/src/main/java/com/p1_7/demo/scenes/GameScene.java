@@ -7,8 +7,11 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.p1_7.abstractengine.collision.CollisionManager;
+import com.p1_7.abstractengine.entity.IEntityManager;
 import com.p1_7.abstractengine.entity.IEntityMutator;
+import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.movement.MovementManager;
+import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.abstractengine.scene.SceneContext;
@@ -108,17 +111,17 @@ public class GameScene extends Scene {
         background = new Background(Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT);
 
         // 4. create lives display via entity manager
-        livesDisplay = (LivesDisplay) context.entities().createEntity(() -> new LivesDisplay(INITIAL_LIVES));
+        livesDisplay = (LivesDisplay) context.get(IEntityManager.class).createEntity(() -> new LivesDisplay(INITIAL_LIVES));
 
         // 5. create score display via entity manager
-        scoreDisplay = (ScoreDisplay) context.entities().createEntity(
+        scoreDisplay = (ScoreDisplay) context.get(IEntityManager.class).createEntity(
             () -> new ScoreDisplay(520f, Settings.WINDOW_HEIGHT - 10f, 0)
         );
 
         // 6. create bucket via entity manager
         float bucketX = (Settings.WINDOW_WIDTH / 2f) - (Bucket.BUCKET_WIDTH / 2f);
         float bucketY = 20f;
-        bucket = (Bucket) context.entities().createEntity(() -> new Bucket(bucketX, bucketY));
+        bucket = (Bucket) context.get(IEntityManager.class).createEntity(() -> new Bucket(bucketX, bucketY));
 
         // 7. register bucket with managers
         movementManager.registerMovable(bucket);
@@ -128,10 +131,10 @@ public class GameScene extends Scene {
         bucket.setCatchHandler(this::handleDropletCatch);
 
         // 8. create and register cloud deflectors
-        createClouds(context.entities());
+        createClouds(context.get(IEntityManager.class));
 
         // 9. spawn initial droplet
-        spawnDroplet(context.entities());
+        spawnDroplet(context.get(IEntityManager.class));
     }
 
     @Override
@@ -154,14 +157,14 @@ public class GameScene extends Scene {
         if (bucket != null) {
             movementManager.unregisterMovable(bucket);
             collisionManager.unregisterCollidable(bucket);
-            context.entities().removeEntity(bucket.getId());
+            context.get(IEntityManager.class).removeEntity(bucket.getId());
         }
 
         // clean up remaining droplets
         for (int i = 0; i < droplets.size; i++) {
             Droplet droplet = droplets.get(i);
             collisionManager.unregisterCollidable(droplet);
-            context.entities().removeEntity(droplet.getId());
+            context.get(IEntityManager.class).removeEntity(droplet.getId());
         }
         droplets.clear();
 
@@ -169,19 +172,19 @@ public class GameScene extends Scene {
         for (int i = 0; i < clouds.size; i++) {
             Cloud cloud = clouds.get(i);
             collisionManager.unregisterCollidable(cloud);
-            context.entities().removeEntity(cloud.getId());
+            context.get(IEntityManager.class).removeEntity(cloud.getId());
         }
         clouds.clear();
 
         // remove lives display entity
         if (livesDisplay != null) {
-            context.entities().removeEntity(livesDisplay.getId());
+            context.get(IEntityManager.class).removeEntity(livesDisplay.getId());
         }
 
         // remove score display entity
         if (scoreDisplay != null) {
             scoreDisplay.dispose();
-            context.entities().removeEntity(scoreDisplay.getId());
+            context.get(IEntityManager.class).removeEntity(scoreDisplay.getId());
         }
     }
 
@@ -230,12 +233,12 @@ public class GameScene extends Scene {
         }
 
         // 1. update bucket movement
-        bucket.updateMovement(context.input());
+        bucket.updateMovement(context.get(IInputQuery.class));
 
         // 2. update spawn timer and spawn new droplets
         spawnTimer += deltaTime;
         if (spawnTimer >= SPAWN_INTERVAL && droplets.size < MAX_DROPLETS) {
-            spawnDroplet(context.entities());
+            spawnDroplet(context.get(IEntityManager.class));
             spawnTimer = 0f;
         }
 
@@ -267,7 +270,7 @@ public class GameScene extends Scene {
             // check if caught
             if (droplet.isCaught()) {
                 // remove entity
-                context.entities().removeEntity(droplet.getId());
+                context.get(IEntityManager.class).removeEntity(droplet.getId());
 
                 // unregister from collision manager
                 collisionManager.unregisterCollidable(droplet);
@@ -284,7 +287,7 @@ public class GameScene extends Scene {
                 livesDisplay.setLives(currentLives - 1);
 
                 // remove entity
-                context.entities().removeEntity(droplet.getId());
+                context.get(IEntityManager.class).removeEntity(droplet.getId());
 
                 // unregister from collision manager
                 collisionManager.unregisterCollidable(droplet);
@@ -310,24 +313,24 @@ public class GameScene extends Scene {
     @Override
     public void submitRenderable(SceneContext context) {
         // background first (draws behind)
-        context.renderQueue().queue(background);
+        context.get(IRenderQueue.class).queue(background);
 
         // bucket
-        context.renderQueue().queue(bucket);
+        context.get(IRenderQueue.class).queue(bucket);
 
         // all active droplets
         for (int i = 0; i < droplets.size; i++) {
-            context.renderQueue().queue(droplets.get(i));
+            context.get(IRenderQueue.class).queue(droplets.get(i));
         }
 
         // clouds (draw above droplets but below ui)
         for (int i = 0; i < clouds.size; i++) {
-            context.renderQueue().queue(clouds.get(i));
+            context.get(IRenderQueue.class).queue(clouds.get(i));
         }
 
         // ui displays last (draw on top)
-        context.renderQueue().queue(livesDisplay);
-        context.renderQueue().queue(scoreDisplay);
+        context.get(IRenderQueue.class).queue(livesDisplay);
+        context.get(IRenderQueue.class).queue(scoreDisplay);
     }
 
     // ==================== helper methods ====================

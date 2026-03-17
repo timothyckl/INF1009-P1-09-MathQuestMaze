@@ -8,6 +8,8 @@ import com.p1_7.abstractengine.entity.EntityManager;
 import com.p1_7.abstractengine.input.InputManager;
 import com.p1_7.abstractengine.scene.SceneManager;
 
+import com.p1_7.game.managers.AudioManager;
+import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.platform.GdxInputSource;
 import com.p1_7.game.platform.GdxRenderManager;
 import com.p1_7.game.scenes.LevelCompleteScene;
@@ -33,14 +35,18 @@ public class Main extends ApplicationAdapter {
     public void create() {
         engine = new Engine();
 
+        AudioManager audioManager = new AudioManager();
+
         // core managers, registration order does not matter;
         // engine reorders managers via topological sort on a directed acyclic graph.
         engine.registerManager(new EntityManager());
         engine.registerManager(new InputManager(new GdxInputSource()));
         engine.registerManager(new GdxRenderManager());
+        engine.registerManager(audioManager);
 
         // scene setup
         SceneManager sceneManager = new SceneManager();
+        sceneManager.registerService(IAudioManager.class, audioManager);
 
         // main menu (shown first)
         sceneManager.registerScene(new MenuScene());
@@ -55,6 +61,10 @@ public class Main extends ApplicationAdapter {
         engine.registerManager(sceneManager);
 
         engine.init();
+
+        // audio setup — load and start background music
+        audioManager.loadMusic("bgMusic", "demo_archive/music.mp3");
+        audioManager.playMusic("bgMusic", true);
     }
 
     /**
