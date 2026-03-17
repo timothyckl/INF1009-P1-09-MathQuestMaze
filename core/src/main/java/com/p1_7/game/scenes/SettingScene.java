@@ -21,6 +21,7 @@ import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.Settings;
 import com.p1_7.game.core.Transform2D;
+import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.entities.MenuButton;
 import com.p1_7.game.platform.GdxShapeRenderer;
 import com.p1_7.game.platform.GdxSpriteBatch;
@@ -53,6 +54,9 @@ public class SettingScene extends Scene {
     private BitmapFont buttonFont;
 
     // ── entities ─────────────────────────────────────────────────
+    /** audio manager resolved once on scene entry */
+    private IAudioManager      audio;
+
     private SettingsBackground background;
     private LabelText          heading;
     private LabelText          volumeLabel;
@@ -90,11 +94,13 @@ public class SettingScene extends Scene {
 
         generator.dispose(); // safe to dispose after generating all fonts
 
+        audio = context.get(IAudioManager.class);
+
         // ── entities ─────────────────────────────────────────────
         background  = new SettingsBackground(BG_ASSET);
         heading     = new LabelText("SETTINGS",   CENTRE_X, Settings.WINDOW_HEIGHT * 0.72f,
                                     headingFont);
-        volumeLabel = new LabelText(volumeText(), CENTRE_X, CENTRE_Y + 60f,
+        volumeLabel = new LabelText(volumeText(audio), CENTRE_X, CENTRE_Y + 60f,
                                     labelFont);
 
         btnVolumeDown = MenuButton.withTexture("-",    CENTRE_X - 170f, CENTRE_Y - 10f,  buttonFont, BTN_ASSET, HOVER_ASSET);
@@ -111,6 +117,7 @@ public class SettingScene extends Scene {
         if (headingFont   != null) headingFont.dispose();
         if (labelFont     != null) labelFont.dispose();
         if (buttonFont    != null) buttonFont.dispose();
+        audio = null;
     }
 
     @Override
@@ -127,13 +134,13 @@ public class SettingScene extends Scene {
 
         if (btnVolumeDown.isClicked()) {
             btnVolumeDown.resetClick();
-            Settings.setMusicVolume(Settings.MUSIC_VOLUME - 0.1f);
-            volumeLabel.setText(volumeText());
+            audio.setMusicVolume(audio.getMusicVolume() - 0.1f);
+            volumeLabel.setText(volumeText(audio));
         }
         if (btnVolumeUp.isClicked()) {
             btnVolumeUp.resetClick();
-            Settings.setMusicVolume(Settings.MUSIC_VOLUME + 0.1f);
-            volumeLabel.setText(volumeText());
+            audio.setMusicVolume(audio.getMusicVolume() + 0.1f);
+            volumeLabel.setText(volumeText(audio));
         }
         if (btnBack.isClicked()) {
             btnBack.resetClick();
@@ -143,16 +150,17 @@ public class SettingScene extends Scene {
 
     @Override
     public void submitRenderable(SceneContext context) {
-        context.get(IRenderQueue.class).queue(background);
-        context.get(IRenderQueue.class).queue(heading);
-        context.get(IRenderQueue.class).queue(volumeLabel);
-        context.get(IRenderQueue.class).queue(btnVolumeDown);
-        context.get(IRenderQueue.class).queue(btnVolumeUp);
-        context.get(IRenderQueue.class).queue(btnBack);
+        IRenderQueue renderQueue = context.get(IRenderQueue.class);
+        renderQueue.queue(background);
+        renderQueue.queue(heading);
+        renderQueue.queue(volumeLabel);
+        renderQueue.queue(btnVolumeDown);
+        renderQueue.queue(btnVolumeUp);
+        renderQueue.queue(btnBack);
     }
 
-    private String volumeText() {
-        return "Music Volume:  " + Math.round(Settings.MUSIC_VOLUME * 100) + "%";
+    private String volumeText(IAudioManager audio) {
+        return "Music Volume:  " + Math.round(audio.getMusicVolume() * 100) + "%";
     }
 
     // ── inner entities ────────────────────────────────────────────

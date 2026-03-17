@@ -63,7 +63,7 @@ public class Main extends ApplicationAdapter {
         engine.init();
 
         // audio setup — load and start background music
-        audioManager.loadMusic("bgMusic", "demo_archive/music.mp3");
+        audioManager.loadMusic("bgMusic", "music.mp3");
         audioManager.playMusic("bgMusic", true);
     }
 
