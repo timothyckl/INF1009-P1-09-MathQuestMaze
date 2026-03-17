@@ -12,9 +12,9 @@ import java.util.Map;
 /**
  * game-level manager for music and sound effect playback.
  *
- * integrates with the engine lifecycle via {@link Manager}; assets are loaded
+ * integrates with the engine lifecycle via Manager; assets are loaded
  * explicitly after engine initialisation and disposed automatically on shutdown.
- * volume changes are applied directly via {@link #setMusicVolume(float)} rather
+ * volume changes are applied directly via setMusicVolume(float) rather
  * than being polled each frame.
  */
 public class AudioManager extends Manager implements IAudioManager {
