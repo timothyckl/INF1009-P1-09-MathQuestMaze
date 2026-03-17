@@ -41,6 +41,8 @@ public class AudioManager extends Manager implements IAudioManager {
     public void loadMusic(String key, String filePath) {
         if (!musicCache.containsKey(key)) {
             musicCache.put(key, Gdx.audio.newMusic(Gdx.files.internal(filePath)));
+        } else {
+            Gdx.app.log("AudioManager", "loadMusic: key '" + key + "' already loaded, ignoring");
         }
     }
 
@@ -54,6 +56,8 @@ public class AudioManager extends Manager implements IAudioManager {
     public void loadSound(String key, String filePath) {
         if (!soundCache.containsKey(key)) {
             soundCache.put(key, Gdx.audio.newSound(Gdx.files.internal(filePath)));
+        } else {
+            Gdx.app.log("AudioManager", "loadSound: key '" + key + "' already loaded, ignoring");
         }
     }
 
@@ -65,12 +69,19 @@ public class AudioManager extends Manager implements IAudioManager {
      * @param loop whether the track should loop continuously
      */
     public void playMusic(String key, boolean loop) {
+        if (key == null) {
+            throw new IllegalArgumentException("music key must not be null");
+        }
         if (key.equals(currentMusicKey)) {
             return;
         }
 
         if (currentMusic != null) {
             currentMusic.stop();
+            // clear state before the cache lookup so a cache miss does not
+            // leave stale references pointing at the stopped track
+            currentMusic = null;
+            currentMusicKey = null;
         }
 
         Music next = musicCache.get(key);
@@ -78,33 +89,52 @@ public class AudioManager extends Manager implements IAudioManager {
             currentMusic = next;
             currentMusicKey = key;
             currentMusic.setLooping(loop);
-            currentMusic.setVolume(Settings.MUSIC_VOLUME);
+            currentMusic.setVolume(Settings.musicVolume);
             currentMusic.play();
+        } else {
+            Gdx.app.log("AudioManager", "playMusic: key '" + key + "' not found in cache, ignoring");
         }
     }
 
     /**
-     * plays a cached sound effect once at the current music volume.
+     * plays a cached sound effect once at full volume.
+     * a dedicated SFX volume setting is not yet implemented;
+     * when one is added this method should read from it instead.
      *
      * @param key the name of the sound to play
      */
     public void playSound(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("sound key must not be null");
+        }
         Sound sound = soundCache.get(key);
         if (sound != null) {
-            sound.play(Settings.MUSIC_VOLUME);
+            sound.play(1.0f);
+        } else {
+            Gdx.app.log("AudioManager", "playSound: key '" + key + "' not found in cache, ignoring");
         }
     }
 
     /**
-     * sets the volume on the currently playing music track.
-     * call this when the player adjusts the volume setting.
+     * clamps the given volume, stores it in Settings.musicVolume,
+     * and applies it to the currently playing music track.
      *
      * @param volume the desired volume level (0.0 = silent, 1.0 = maximum)
      */
     public void setMusicVolume(float volume) {
+        Settings.musicVolume = Math.max(0f, Math.min(1f, volume));
         if (currentMusic != null) {
-            currentMusic.setVolume(volume);
+            currentMusic.setVolume(Settings.musicVolume);
         }
+    }
+
+    /**
+     * returns the current music volume as stored in settings.
+     *
+     * @return the current volume level in the range [0.0, 1.0]
+     */
+    public float getMusicVolume() {
+        return Settings.musicVolume;
     }
 
     /**
@@ -112,6 +142,7 @@ public class AudioManager extends Manager implements IAudioManager {
      */
     @Override
     protected void onShutdown() {
+        // Music.dispose() implicitly stops; no separate stop call needed
         for (Music music : musicCache.values()) {
             music.dispose();
         }

@@ -3,7 +3,7 @@ package com.p1_7.game.managers;
 import com.p1_7.abstractengine.engine.IManager;
 
 /**
- * contract for game-level audio management.
+ * Contract for game-level audio management.
  *
  * implementations handle loading and playback of music tracks and
  * sound effects, and expose volume control for the active track.
@@ -46,8 +46,18 @@ public interface IAudioManager extends IManager {
 
     /**
      * sets the volume on the currently playing music track.
+     * the value is clamped to [0.0, 1.0] before being applied.
+     * as a side-effect, the clamped value is persisted to Settings.musicVolume
+     * so that any track started later inherits the same volume.
      *
      * @param volume the desired volume level (0.0 = silent, 1.0 = maximum)
      */
     void setMusicVolume(float volume);
+
+    /**
+     * returns the current music volume as stored in settings.
+     *
+     * @return the current volume level in the range [0.0, 1.0]
+     */
+    float getMusicVolume();
 }
