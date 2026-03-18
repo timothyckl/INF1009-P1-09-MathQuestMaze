@@ -1,14 +1,12 @@
 package com.p1_7.game.managers;
 
-import com.p1_7.abstractengine.engine.IManager;
-
 /**
  * Contract for game-level audio management.
  *
  * implementations handle loading and playback of music tracks and
  * sound effects, and expose volume control for the active track.
  */
-public interface IAudioManager extends IManager {
+public interface IAudioManager {
 
     /**
      * loads a music track into the cache under the given key.
