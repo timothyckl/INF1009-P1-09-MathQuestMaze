@@ -74,7 +74,10 @@ public class MenuScene extends Scene {
         firstButtonY  = Settings.getWindowHeight() * 0.45f;
 
         IInputExtensionRegistry inputRegistry = context.get(IInputExtensionRegistry.class);
-        cursorSource = inputRegistry.getExtension(ICursorSource.class);
+        if (inputRegistry.hasExtension(ICursorSource.class)) {
+            cursorSource = inputRegistry.getExtension(ICursorSource.class);
+        }
+        // cursorSource stays null if not registered; update() guard handles it cleanly
 
         IAudioManager audio = context.get(IAudioManager.class);
 

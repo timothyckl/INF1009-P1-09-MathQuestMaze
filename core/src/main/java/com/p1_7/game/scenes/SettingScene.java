@@ -51,7 +51,6 @@ public class SettingScene extends Scene {
     private BitmapFont labelFont;
     private BitmapFont buttonFont;
 
-    // ── entities ─────────────────────────────────────────────────
     // ── input ────────────────────────────────────────────────────
     private ICursorSource cursorSource;
 
@@ -100,7 +99,10 @@ public class SettingScene extends Scene {
         generator.dispose(); // safe to dispose after generating all fonts
 
         IInputExtensionRegistry inputRegistry = context.get(IInputExtensionRegistry.class);
-        cursorSource = inputRegistry.getExtension(ICursorSource.class);
+        if (inputRegistry.hasExtension(ICursorSource.class)) {
+            cursorSource = inputRegistry.getExtension(ICursorSource.class);
+        }
+        // cursorSource stays null if not registered; update() guard handles it cleanly
 
         audio = context.get(IAudioManager.class);
 

@@ -79,7 +79,10 @@ public class LevelCompleteScene extends Scene {
         generator.dispose();
 
         IInputExtensionRegistry inputRegistry = context.get(IInputExtensionRegistry.class);
-        cursorSource = inputRegistry.getExtension(ICursorSource.class);
+        if (inputRegistry.hasExtension(ICursorSource.class)) {
+            cursorSource = inputRegistry.getExtension(ICursorSource.class);
+        }
+        // cursorSource stays null if not registered; update() guard handles it cleanly
 
         float cx = Settings.getWindowWidth() / 2f;
         float cy = Settings.getWindowHeight() / 2f;
