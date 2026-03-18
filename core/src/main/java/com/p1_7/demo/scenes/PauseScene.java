@@ -167,20 +167,20 @@ public class PauseScene extends Scene {
     }
 
     @Override
-    public void submitRenderable(SceneContext context) {
+    public void submitRenderable(IRenderQueue renderQueue) {
         // queue background first
-        context.get(IRenderQueue.class).queue(background);
+        renderQueue.queue(background);
 
         // queue text displays
-        context.get(IRenderQueue.class).queue(titleDisplay);
-        context.get(IRenderQueue.class).queue(livesDisplay);
-        context.get(IRenderQueue.class).queue(scoreDisplay);
-        context.get(IRenderQueue.class).queue(volumeLabel);
+        renderQueue.queue(titleDisplay);
+        renderQueue.queue(livesDisplay);
+        renderQueue.queue(scoreDisplay);
+        renderQueue.queue(volumeLabel);
 
         // queue volume slider
-        context.get(IRenderQueue.class).queue(volumeSlider);
+        renderQueue.queue(volumeSlider);
 
         // queue resume prompt
-        context.get(IRenderQueue.class).queue(resumePrompt);
+        renderQueue.queue(resumePrompt);
     }
 }

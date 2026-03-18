@@ -98,13 +98,13 @@ public class GameOverScene extends Scene {
     }
 
     @Override
-    public void submitRenderable(SceneContext context) {
+    public void submitRenderable(IRenderQueue renderQueue) {
         // queue background first
-        context.get(IRenderQueue.class).queue(background);
+        renderQueue.queue(background);
 
         // queue text displays
-        context.get(IRenderQueue.class).queue(titleDisplay);
-        context.get(IRenderQueue.class).queue(scoreDisplay);
-        context.get(IRenderQueue.class).queue(promptDisplay);
+        renderQueue.queue(titleDisplay);
+        renderQueue.queue(scoreDisplay);
+        renderQueue.queue(promptDisplay);
     }
 }

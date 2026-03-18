@@ -300,7 +300,8 @@ public class SceneManager extends UpdatableManager {
             current.update(deltaTime, context);
         }
 
-        // always called
-        current.submitRenderable(context);
+        // resolve queue once and pass directly to avoid scene accessing full context
+        IRenderQueue renderQueue = (IRenderQueue) serviceMap.get(IRenderQueue.class);
+        current.submitRenderable(renderQueue);
     }
 }

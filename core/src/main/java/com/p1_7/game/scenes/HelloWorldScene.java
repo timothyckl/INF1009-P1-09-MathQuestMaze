@@ -61,7 +61,7 @@ public class HelloWorldScene extends Scene {
      * @param context provides access to the render queue
      */
     @Override
-    public void submitRenderable(SceneContext context) {
-        context.get(IRenderQueue.class).queue(helloText);
+    public void submitRenderable(IRenderQueue renderQueue) {
+        renderQueue.queue(helloText);
     }
 }

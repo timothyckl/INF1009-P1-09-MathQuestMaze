@@ -311,26 +311,26 @@ public class GameScene extends Scene {
     }
 
     @Override
-    public void submitRenderable(SceneContext context) {
+    public void submitRenderable(IRenderQueue renderQueue) {
         // background first (draws behind)
-        context.get(IRenderQueue.class).queue(background);
+        renderQueue.queue(background);
 
         // bucket
-        context.get(IRenderQueue.class).queue(bucket);
+        renderQueue.queue(bucket);
 
         // all active droplets
         for (int i = 0; i < droplets.size; i++) {
-            context.get(IRenderQueue.class).queue(droplets.get(i));
+            renderQueue.queue(droplets.get(i));
         }
 
         // clouds (draw above droplets but below ui)
         for (int i = 0; i < clouds.size; i++) {
-            context.get(IRenderQueue.class).queue(clouds.get(i));
+            renderQueue.queue(clouds.get(i));
         }
 
         // ui displays last (draw on top)
-        context.get(IRenderQueue.class).queue(livesDisplay);
-        context.get(IRenderQueue.class).queue(scoreDisplay);
+        renderQueue.queue(livesDisplay);
+        renderQueue.queue(scoreDisplay);
     }
 
     // ==================== helper methods ====================

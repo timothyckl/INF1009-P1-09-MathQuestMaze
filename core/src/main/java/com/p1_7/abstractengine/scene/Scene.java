@@ -1,5 +1,7 @@
 package com.p1_7.abstractengine.scene;
 
+import com.p1_7.abstractengine.render.IRenderQueue;
+
 /**
  * abstract base class for every scene; update is skipped while paused but
  * submitRenderable is always called.
@@ -54,9 +56,9 @@ public abstract class Scene {
      * per-frame hook where the scene pushes its visible entities into
      * the render queue. always called, even when the scene is paused.
      *
-     * @param context the current engine context
+     * @param renderQueue the render queue to submit items to
      */
-    public abstract void submitRenderable(SceneContext context);
+    public abstract void submitRenderable(IRenderQueue renderQueue);
 
     /**
      * returns the name (key) of this scene.

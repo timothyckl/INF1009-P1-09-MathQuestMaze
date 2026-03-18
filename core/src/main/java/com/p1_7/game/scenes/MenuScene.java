@@ -140,12 +140,12 @@ public class MenuScene extends Scene {
     }
 
     @Override
-    public void submitRenderable(SceneContext context) {
-        context.get(IRenderQueue.class).queue(background);
-        context.get(IRenderQueue.class).queue(titleText);
-        context.get(IRenderQueue.class).queue(btnStart);
-        context.get(IRenderQueue.class).queue(btnSettings);
-        context.get(IRenderQueue.class).queue(btnExit);
+    public void submitRenderable(IRenderQueue renderQueue) {
+        renderQueue.queue(background);
+        renderQueue.queue(titleText);
+        renderQueue.queue(btnStart);
+        renderQueue.queue(btnSettings);
+        renderQueue.queue(btnExit);
     }
 
     // ── inner entities ────────────────────────────────────────────

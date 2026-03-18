@@ -132,14 +132,14 @@ public class LevelCompleteScene extends Scene {
     }
 
     @Override
-    public void submitRenderable(SceneContext context) {
-        context.get(IRenderQueue.class).queue(background);
-        context.get(IRenderQueue.class).queue(title);
-        context.get(IRenderQueue.class).queue(promptStatus);
-        context.get(IRenderQueue.class).queue(btnContinue);
-        context.get(IRenderQueue.class).queue(btnMainMenu);
-        context.get(IRenderQueue.class).queue(hintSpace);
-        context.get(IRenderQueue.class).queue(hintEsc);
+    public void submitRenderable(IRenderQueue renderQueue) {
+        renderQueue.queue(background);
+        renderQueue.queue(title);
+        renderQueue.queue(promptStatus);
+        renderQueue.queue(btnContinue);
+        renderQueue.queue(btnMainMenu);
+        renderQueue.queue(hintSpace);
+        renderQueue.queue(hintEsc);
     }
 
     private boolean isLastLevel() {
