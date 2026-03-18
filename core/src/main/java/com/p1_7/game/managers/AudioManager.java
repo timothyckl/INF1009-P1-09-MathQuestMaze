@@ -63,7 +63,7 @@ public class AudioManager extends Manager implements IAudioManager {
      */
     public void resumeMusic() {
         if (currentMusic != null) {
-            currentMusic.setVolume(Settings.musicVolume);
+            currentMusic.setVolume(Settings.getMusicVolume());
             currentMusic.play();
         }
     }
@@ -126,7 +126,7 @@ public class AudioManager extends Manager implements IAudioManager {
             currentMusic = next;
             currentMusicKey = key;
             currentMusic.setLooping(loop);
-            currentMusic.setVolume(Settings.musicVolume);
+            currentMusic.setVolume(Settings.getMusicVolume());
             currentMusic.play();
         } else {
             Gdx.app.log("AudioManager", "playMusic: key '" + key + "' not found in cache, ignoring");
@@ -153,15 +153,15 @@ public class AudioManager extends Manager implements IAudioManager {
     }
 
     /**
-     * clamps the given volume, stores it in Settings.musicVolume,
+     * clamps the given volume via Settings.setMusicVolume(float),
      * and applies it to the currently playing music track.
      *
      * @param volume the desired volume level (0.0 = silent, 1.0 = maximum)
      */
     public void setMusicVolume(float volume) {
-        Settings.musicVolume = Math.max(0f, Math.min(1f, volume));
+        Settings.setMusicVolume(volume);
         if (currentMusic != null) {
-            currentMusic.setVolume(Settings.musicVolume);
+            currentMusic.setVolume(Settings.getMusicVolume());
         }
     }
 
@@ -171,7 +171,7 @@ public class AudioManager extends Manager implements IAudioManager {
      * @return the current volume level in the range [0.0, 1.0]
      */
     public float getMusicVolume() {
-        return Settings.musicVolume;
+        return Settings.getMusicVolume();
     }
 
     /**

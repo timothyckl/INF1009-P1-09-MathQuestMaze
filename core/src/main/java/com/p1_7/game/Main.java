@@ -20,7 +20,7 @@ import com.p1_7.game.scenes.SettingScene;
  * Entry point for the game application.
  *
  * Bootstraps the engine with the minimum set of managers required to
- * display the hello-world scene: entity management, rendering, and
+ * run the game: entity management, rendering, input, audio, and
  * scene orchestration.
  */
 public class Main extends ApplicationAdapter {

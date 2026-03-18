@@ -45,8 +45,9 @@ public class SettingScene extends Scene {
     private static final String TTF_ASSET   = "menu/Kenney_Future.ttf";
 
     // ── layout ───────────────────────────────────────────────────
-    private static final float CENTRE_X = Settings.windowWidth  / 2f;
-    private static final float CENTRE_Y = Settings.windowHeight / 2f;
+    // computed in onEnter so they reflect the resolution at scene entry time
+    private float centreX;
+    private float centreY;
 
     // ── fonts ─────────────────────────────────────────────────────
     private BitmapFont headingFont;
@@ -70,6 +71,10 @@ public class SettingScene extends Scene {
 
     @Override
     public void onEnter(SceneContext context) {
+        // compute layout from the current resolution so changes via setResolution take effect
+        centreX = Settings.getWindowWidth()  / 2f;
+        centreY = Settings.getWindowHeight() / 2f;
+
         // ── generate all fonts from the same TTF ──────────────────
         FreeTypeFontGenerator generator =
             new FreeTypeFontGenerator(Gdx.files.internal(TTF_ASSET));
@@ -98,14 +103,14 @@ public class SettingScene extends Scene {
 
         // ── entities ─────────────────────────────────────────────
         background  = new SettingsBackground(BG_ASSET);
-        heading     = new LabelText("SETTINGS",   CENTRE_X, Settings.windowHeight * 0.72f,
+        heading     = new LabelText("SETTINGS",   centreX, Settings.getWindowHeight() * 0.72f,
                                     headingFont);
-        volumeLabel = new LabelText(volumeText(audio), CENTRE_X, CENTRE_Y + 60f,
+        volumeLabel = new LabelText(volumeText(audio), centreX, centreY + 60f,
                                     labelFont);
 
-        btnVolumeDown = MenuButton.withTexture("-",    CENTRE_X - 170f, CENTRE_Y - 10f,  buttonFont, BTN_ASSET, HOVER_ASSET);
-        btnVolumeUp   = MenuButton.withTexture("+",    CENTRE_X + 170f, CENTRE_Y - 10f,  buttonFont, BTN_ASSET, HOVER_ASSET);
-        btnBack       = MenuButton.withTexture("BACK", CENTRE_X,        CENTRE_Y - 120f, buttonFont, BTN_ASSET, HOVER_ASSET);
+        btnVolumeDown = MenuButton.withTexture("-",    centreX - 170f, centreY - 10f,  buttonFont, BTN_ASSET, HOVER_ASSET);
+        btnVolumeUp   = MenuButton.withTexture("+",    centreX + 170f, centreY - 10f,  buttonFont, BTN_ASSET, HOVER_ASSET);
+        btnBack       = MenuButton.withTexture("BACK", centreX,        centreY - 120f, buttonFont, BTN_ASSET, HOVER_ASSET);
     }
 
     @Override
@@ -173,7 +178,7 @@ public class SettingScene extends Scene {
             this.assetPath = assetPath;
             this.texture   = new Texture(Gdx.files.internal(assetPath));
             this.texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-            this.transform = new Transform2D(0, 0, Settings.windowWidth, Settings.windowHeight);
+            this.transform = new Transform2D(0, 0, Settings.getWindowWidth(), Settings.getWindowHeight());
         }
 
         @Override public String     getAssetPath() { return assetPath; }

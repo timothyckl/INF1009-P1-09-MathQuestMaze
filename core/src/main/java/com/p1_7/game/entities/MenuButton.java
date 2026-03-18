@@ -134,7 +134,7 @@ public class MenuButton extends Entity implements IRenderItem, ICustomRenderable
      */
     public void updateInput() {
         float mx = Gdx.input.getX();
-        float my = Settings.windowHeight - Gdx.input.getY();
+        float my = Settings.getWindowHeight() - Gdx.input.getY();
 
         float bx = transform.getPosition(0);
         float by = transform.getPosition(1);

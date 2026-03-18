@@ -3,19 +3,90 @@ package com.p1_7.game;
 /**
  * Game application configuration values.
  *
- * All fields are public static so that any game class can read or
- * override them at startup. The default values mirror those set in
- * Lwjgl3Launcher; if the launcher changes the window size the game
- * should update these fields accordingly.
+ * All mutable fields are private; callers must use the provided getters
+ * and setters rather than accessing fields directly. The default values
+ * mirror those set in Lwjgl3Launcher; if the launcher changes the window
+ * size the game should call setResolution(int, int) accordingly.
  */
 public class Settings {
 
-    /** width of the application window in pixels */
-    public static int windowWidth = 1280;
+    /**
+     * Preset resolution options available to the player.
+     *
+     * Each inner array is a {width, height} pair in pixels.
+     * These map directly to the integer arguments accepted by
+     * setResolution(int, int), avoiding string parsing at the call site.
+     */
+    private static final int[][] RESOLUTIONS = {
+        {800,  600},
+        {1280, 720},
+        {1600, 900},
+        {1920, 1080}
+    };
 
-    /** height of the application window in pixels */
-    public static int windowHeight = 720;
+    /**
+     * Returns a defensive copy of the preset resolution table.
+     *
+     * Each element is a two-element {width, height} pair in pixels.
+     * The returned array is independent of the internal table; callers may
+     * modify it freely without affecting the canonical values.
+     *
+     * @return a new int[][] containing the preset {width, height} pairs
+     */
+    public static int[][] getResolutions() {
+        int[][] copy = new int[RESOLUTIONS.length][];
+        for (int i = 0; i < RESOLUTIONS.length; i++) {
+            copy[i] = RESOLUTIONS[i].clone();
+        }
+        return copy;
+    }
 
-    /** music volume level (0.0 = silent, 1.0 = maximum) */
-    public static float musicVolume = 0.5f;
+    private static int   windowWidth     = 1280;
+    private static int   windowHeight    = 720;
+    private static float musicVolume     = 0.5f;
+    private static float brightnessLevel = 0.0f;
+
+    /** returns the window width in pixels */
+    public static int getWindowWidth() { return windowWidth; }
+
+    /** returns the window height in pixels */
+    public static int getWindowHeight() { return windowHeight; }
+
+    /** returns the music volume in the range [0.0, 1.0] */
+    public static float getMusicVolume() { return musicVolume; }
+
+    /** returns the brightness overlay level in the range [0.0, 1.0] */
+    public static float getBrightnessLevel() { return brightnessLevel; }
+
+    /**
+     * Sets the music volume, clamped to the valid range [0.0, 1.0].
+     *
+     * @param volume the desired volume level; values outside [0.0, 1.0] are clamped
+     */
+    public static void setMusicVolume(float volume) {
+        musicVolume = Math.max(0.0f, Math.min(1.0f, volume));
+    }
+
+    /**
+     * Sets the brightness overlay level, clamped to the valid range [0.0, 1.0].
+     *
+     * @param level the desired brightness level; values outside [0.0, 1.0] are clamped
+     */
+    public static void setBrightnessLevel(float level) {
+        brightnessLevel = Math.max(0.0f, Math.min(1.0f, level));
+    }
+
+    /**
+     * Sets the window resolution by updating windowWidth and windowHeight.
+     *
+     * This method only updates the stored values. The caller is responsible for
+     * applying the change to the platform window (e.g. via the libGDX graphics backend).
+     *
+     * @param width  the desired window width in pixels
+     * @param height the desired window height in pixels
+     */
+    public static void setResolution(int width, int height) {
+        windowWidth  = width;
+        windowHeight = height;
+    }
 }

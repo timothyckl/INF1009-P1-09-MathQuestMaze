@@ -78,8 +78,8 @@ public class LevelCompleteScene extends Scene {
 
         generator.dispose();
 
-        float cx = Settings.windowWidth / 2f;
-        float cy = Settings.windowHeight / 2f;
+        float cx = Settings.getWindowWidth() / 2f;
+        float cy = Settings.getWindowHeight() / 2f;
         boolean lastLevel = isLastLevel();
         int nextLevel = lastLevel ? 1 : currentLevel + 1;
         String continueLabel = lastLevel ? "PLAY AGAIN" : "CONTINUE";
@@ -152,7 +152,7 @@ public class LevelCompleteScene extends Scene {
 
         Background(String assetPath) {
             this.assetPath = assetPath;
-            this.transform = new Transform2D(0, 0, Settings.windowWidth, Settings.windowHeight);
+            this.transform = new Transform2D(0, 0, Settings.getWindowWidth(), Settings.getWindowHeight());
         }
 
         @Override public String getAssetPath() { return assetPath; }

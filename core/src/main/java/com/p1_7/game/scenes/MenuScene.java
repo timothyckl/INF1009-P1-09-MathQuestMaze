@@ -47,8 +47,9 @@ public class MenuScene extends Scene {
     private static final String TTF_ASSET   = "menu/Kenney_Future.ttf";
 
     // ── layout ───────────────────────────────────────────────────
-    private static final float CENTRE_X       = Settings.windowWidth  / 2f;
-    private static final float FIRST_BUTTON_Y = Settings.windowHeight * 0.45f;
+    // computed in onEnter so they reflect the resolution at scene entry time
+    private float centreX;
+    private float firstButtonY;
     private static final float BUTTON_SPACING = 80f;
 
     // ── fonts (generated from TTF, both owned + disposed here) ───
@@ -68,6 +69,10 @@ public class MenuScene extends Scene {
 
     @Override
     public void onEnter(SceneContext context) {
+        // compute layout from the current resolution so changes via setResolution take effect
+        centreX       = Settings.getWindowWidth()  / 2f;
+        firstButtonY  = Settings.getWindowHeight() * 0.45f;
+
         IAudioManager audio = context.get(IAudioManager.class);
 
         // start background music (asset pre-loaded in AudioManager.onInit)
@@ -97,15 +102,15 @@ public class MenuScene extends Scene {
 
         // ── entities ─────────────────────────────────────────────
         background = new MenuBackground(BG_ASSET);
-        titleText  = new TitleText("MATH QUEST MAZE", CENTRE_X,
-                                   Settings.windowHeight * 0.75f, titleFont);
+        titleText  = new TitleText("MATH QUEST MAZE", centreX,
+                                   Settings.getWindowHeight() * 0.75f, titleFont);
 
         btnStart    = MenuButton.withTexture("START",
-                        CENTRE_X, FIRST_BUTTON_Y,                       buttonFont, BTN_ASSET, HOVER_ASSET);
+                        centreX, firstButtonY,                       buttonFont, BTN_ASSET, HOVER_ASSET);
         btnSettings = MenuButton.withTexture("SETTINGS",
-                        CENTRE_X, FIRST_BUTTON_Y - BUTTON_SPACING,      buttonFont, BTN_ASSET, HOVER_ASSET);
+                        centreX, firstButtonY - BUTTON_SPACING,      buttonFont, BTN_ASSET, HOVER_ASSET);
         btnExit     = MenuButton.withTexture("EXIT",
-                        CENTRE_X, FIRST_BUTTON_Y - BUTTON_SPACING * 2f, buttonFont, BTN_ASSET, HOVER_ASSET);
+                        centreX, firstButtonY - BUTTON_SPACING * 2f, buttonFont, BTN_ASSET, HOVER_ASSET);
     }
 
     @Override
@@ -165,7 +170,7 @@ public class MenuScene extends Scene {
             this.assetPath = assetPath;
             this.texture   = new Texture(Gdx.files.internal(assetPath));
             this.texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-            this.transform = new Transform2D(0, 0, Settings.windowWidth, Settings.windowHeight);
+            this.transform = new Transform2D(0, 0, Settings.getWindowWidth(), Settings.getWindowHeight());
         }
 
         @Override public String     getAssetPath() { return assetPath; }

@@ -45,7 +45,7 @@ public interface IAudioManager {
     /**
      * sets the volume on the currently playing music track.
      * the value is clamped to [0.0, 1.0] before being applied.
-     * as a side-effect, the clamped value is persisted to Settings.musicVolume
+     * as a side-effect, the clamped value is persisted via Settings.setMusicVolume(float)
      * so that any track started later inherits the same volume.
      *
      * @param volume the desired volume level (0.0 = silent, 1.0 = maximum)
