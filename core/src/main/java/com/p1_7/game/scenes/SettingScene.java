@@ -21,6 +21,7 @@ import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.entities.MenuButton;
+import com.p1_7.game.entities.VolumeSlider;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
@@ -60,8 +61,7 @@ public class SettingScene extends Scene {
     private SettingsBackground background;
     private LabelText          heading;
     private LabelText          volumeLabel;
-    private MenuButton         volumeDownButton;
-    private MenuButton         volumeUpButton;
+    private VolumeSlider       volumeSlider;
     private MenuButton         backButton;
 
     public SettingScene() {
@@ -113,16 +113,14 @@ public class SettingScene extends Scene {
         volumeLabel = new LabelText(volumeText(audio), centreX, centreY + 60f,
                                     labelFont);
 
-        volumeDownButton = MenuButton.withTexture("-",    centreX - 170f, centreY - 10f,  buttonFont, BTN_ASSET, HOVER_ASSET);
-        volumeUpButton   = MenuButton.withTexture("+",    centreX + 170f, centreY - 10f,  buttonFont, BTN_ASSET, HOVER_ASSET);
-        backButton       = MenuButton.withTexture("BACK", centreX,        centreY - 120f, buttonFont, BTN_ASSET, HOVER_ASSET);
+        volumeSlider = new VolumeSlider(centreX, centreY - 10f, 340f, audio.getMusicVolume());
+        backButton   = MenuButton.withTexture("BACK", centreX, centreY - 120f, buttonFont, BTN_ASSET, HOVER_ASSET);
     }
 
     @Override
     public void onExit(SceneContext context) {
-        if (volumeDownButton != null) volumeDownButton.dispose();
-        if (volumeUpButton   != null) volumeUpButton.dispose();
-        if (backButton       != null) backButton.dispose();
+        if (volumeSlider != null) volumeSlider.dispose();
+        if (backButton   != null) backButton.dispose();
         if (background       != null) background.dispose();
         if (headingFont      != null) headingFont.dispose();
         if (labelFont        != null) labelFont.dispose();
@@ -140,19 +138,13 @@ public class SettingScene extends Scene {
         }
 
         if (cursorSource == null) return;
-        volumeDownButton.updateInput(cursorSource);
-        volumeUpButton.updateInput(cursorSource);
+        volumeSlider.updateInput(cursorSource);
         backButton.updateInput(cursorSource);
 
-        if (volumeDownButton.isClicked()) {
-            volumeDownButton.resetClick();
-            audio.setMusicVolume(audio.getMusicVolume() - 0.1f);
+        if (volumeSlider.hasMoved()) {
+            audio.setMusicVolume(volumeSlider.getValue());
             volumeLabel.setText(volumeText(audio));
-        }
-        if (volumeUpButton.isClicked()) {
-            volumeUpButton.resetClick();
-            audio.setMusicVolume(audio.getMusicVolume() + 0.1f);
-            volumeLabel.setText(volumeText(audio));
+            volumeSlider.resetMoved();
         }
         if (backButton.isClicked()) {
             backButton.resetClick();
@@ -165,8 +157,7 @@ public class SettingScene extends Scene {
         renderQueue.queue(background);
         renderQueue.queue(heading);
         renderQueue.queue(volumeLabel);
-        renderQueue.queue(volumeDownButton);
-        renderQueue.queue(volumeUpButton);
+        renderQueue.queue(volumeSlider);
         renderQueue.queue(backButton);
     }
 

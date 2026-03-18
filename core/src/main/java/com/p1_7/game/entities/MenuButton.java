@@ -173,12 +173,12 @@ public class MenuButton extends Entity implements IRenderable {
                                   x, y, BUTTON_WIDTH, BUTTON_HEIGHT);
         } else {
             // ── procedural fallback ────────────────────────────
-            gdxCtx.fillRect(COLOUR_BORDER,
-                            x - BORDER_THICK, y - BORDER_THICK,
-                            BUTTON_WIDTH  + BORDER_THICK * 2,
-                            BUTTON_HEIGHT + BORDER_THICK * 2);
-            gdxCtx.fillRect(hovered ? COLOUR_HOVER : COLOUR_NORMAL,
-                            x, y, BUTTON_WIDTH, BUTTON_HEIGHT);
+            gdxCtx.rect(COLOUR_BORDER,
+                        x - BORDER_THICK, y - BORDER_THICK,
+                        BUTTON_WIDTH  + BORDER_THICK * 2,
+                        BUTTON_HEIGHT + BORDER_THICK * 2, true);
+            gdxCtx.rect(hovered ? COLOUR_HOVER : COLOUR_NORMAL,
+                        x, y, BUTTON_WIDTH, BUTTON_HEIGHT, true);
         }
 
         // label drawn in both modes, centred over the button body

@@ -26,7 +26,8 @@ public class GdxDrawContext implements IDrawContext {
     private final ShapeRenderer shapeRenderer;
     private final IAssetStore   assetStore;
 
-    private Pass currentPass = Pass.NONE;
+    private Pass                     currentPass      = Pass.NONE;
+    private ShapeRenderer.ShapeType  activeShapeType  = null;
 
     /**
      * constructs a draw context backed by the provided libgdx resources.
@@ -53,7 +54,8 @@ public class GdxDrawContext implements IDrawContext {
         } else if (currentPass == Pass.SHAPE) {
             shapeRenderer.end();
         }
-        currentPass = Pass.NONE;
+        currentPass     = Pass.NONE;
+        activeShapeType = null;
     }
 
     /**
@@ -104,18 +106,34 @@ public class GdxDrawContext implements IDrawContext {
     }
 
     /**
-     * fills a rectangle with the given colour.
+     * draws a rectangle with the given colour.
      *
-     * @param color the fill colour
-     * @param x     left edge in world coordinates
-     * @param y     bottom edge in world coordinates
-     * @param w     rectangle width
-     * @param h     rectangle height
+     * @param color  the colour
+     * @param x      left edge in world coordinates
+     * @param y      bottom edge in world coordinates
+     * @param w      width
+     * @param h      height
+     * @param filled true for a solid fill, false for an outline
      */
-    public void fillRect(Color color, float x, float y, float w, float h) {
-        openShape();
+    public void rect(Color color, float x, float y, float w, float h, boolean filled) {
+        openShape(filled ? ShapeRenderer.ShapeType.Filled : ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(color);
         shapeRenderer.rect(x, y, w, h);
+    }
+
+    /**
+     * draws a circle with the given colour.
+     *
+     * @param color  the colour
+     * @param x      centre x in world coordinates
+     * @param y      centre y in world coordinates
+     * @param radius circle radius
+     * @param filled true for a solid fill, false for an outline
+     */
+    public void circle(Color color, float x, float y, float radius, boolean filled) {
+        openShape(filled ? ShapeRenderer.ShapeType.Filled : ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(color);
+        shapeRenderer.circle(x, y, radius);
     }
 
     // ── private pass management ───────────────────────────────────
@@ -135,16 +153,17 @@ public class GdxDrawContext implements IDrawContext {
     }
 
     /**
-     * ensures the shape renderer pass is open, closing the batch pass first if needed.
+     * ensures the shape renderer pass is open for the given shape type.
+     * re-opens the renderer if the type changes mid-frame.
+     *
+     * @param type the desired ShapeType (Filled or Line)
      */
-    private void openShape() {
-        if (currentPass == Pass.SHAPE) {
-            return;
-        }
-        if (currentPass == Pass.BATCH) {
-            batch.end();
-        }
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        currentPass = Pass.SHAPE;
+    private void openShape(ShapeRenderer.ShapeType type) {
+        if (currentPass == Pass.SHAPE && activeShapeType == type) return;
+        if (currentPass == Pass.SHAPE) shapeRenderer.end();
+        else if (currentPass == Pass.BATCH) batch.end();
+        shapeRenderer.begin(type);
+        currentPass     = Pass.SHAPE;
+        activeShapeType = type;
     }
 }
