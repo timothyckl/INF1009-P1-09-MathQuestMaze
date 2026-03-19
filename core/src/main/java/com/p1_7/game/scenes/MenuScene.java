@@ -3,28 +3,22 @@ package com.p1_7.game.scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
-import com.p1_7.abstractengine.entity.Entity;
 import com.p1_7.abstractengine.input.IInputExtensionRegistry;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.input.InputState;
-import com.p1_7.abstractengine.render.IDrawContext;
-import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
-import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.Settings;
-import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.entities.BackgroundImage;
 import com.p1_7.game.entities.BrightnessOverlay;
+import com.p1_7.game.entities.Text;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.entities.MenuButton;
-import com.p1_7.game.platform.GdxDrawContext;
 
 /**
  * Main menu scene for Math Quest Maze.
@@ -62,7 +56,7 @@ public class MenuScene extends Scene {
 
     // ── entities ─────────────────────────────────────────────────
     private BackgroundImage background;
-    private TitleText      titleText;
+    private Text           titleText;
     private MenuButton     startButton;
     private MenuButton     settingsButton;
     private MenuButton     exitButton;
@@ -114,7 +108,7 @@ public class MenuScene extends Scene {
 
         // ── entities ─────────────────────────────────────────────
         background = new BackgroundImage(BG_ASSET);
-        titleText  = new TitleText("MATH QUEST MAZE", centreX,
+        titleText  = new Text("MATH QUEST MAZE", centreX,
                                    Settings.getWindowHeight() * 0.75f, titleFont);
 
         startButton    = MenuButton.withTexture("START",
@@ -174,31 +168,5 @@ public class MenuScene extends Scene {
         renderQueue.queue(settingsButton);
         renderQueue.queue(exitButton);
         renderQueue.queue(brightnessOverlay);
-    }
-
-    // ── inner entities ────────────────────────────────────────────
-
-    private static class TitleText extends Entity implements IRenderable {
-        private final Transform2D transform;
-        private final BitmapFont  font;
-        private final String      text;
-
-        TitleText(String text, float cx, float cy, BitmapFont font) {
-            this.text      = text;
-            this.font      = font;
-            this.transform = new Transform2D(cx, cy, 0f, 0f);
-        }
-
-        @Override public String     getAssetPath() { return null; }
-        @Override public ITransform getTransform() { return transform; }
-
-        @Override
-        public void render(IDrawContext ctx) {
-            GdxDrawContext gdxCtx = (GdxDrawContext) ctx;
-            GlyphLayout layout = new GlyphLayout(font, text);
-            gdxCtx.drawFont(font, text,
-                transform.getPosition(0) - layout.width  / 2f,
-                transform.getPosition(1) + layout.height / 2f);
-        }
     }
 }

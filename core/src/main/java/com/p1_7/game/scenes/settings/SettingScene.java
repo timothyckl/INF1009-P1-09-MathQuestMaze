@@ -23,8 +23,8 @@ import com.p1_7.game.Settings;
 import com.p1_7.game.entities.BackgroundImage;
 import com.p1_7.game.entities.BrightnessOverlay;
 import com.p1_7.game.entities.BrightnessSlider;
-import com.p1_7.game.entities.LabelText;
 import com.p1_7.game.entities.MenuButton;
+import com.p1_7.game.entities.Text;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IAudioManager;
@@ -69,16 +69,16 @@ public class SettingScene extends Scene {
     private IAudioManager audio;
 
     private BackgroundImage background;
-    private LabelText heading;
-    private LabelText volumeLabel;
+    private Text heading;
+    private Text volumeLabel;
     private VolumeSlider volumeSlider;
-    private LabelText brightnessLabel;
+    private Text brightnessLabel;
     private BrightnessSlider brightnessSlider;
-    private LabelText controlsHeading;
-    private LabelText remapHint;
-    private LabelText actionHeader;
-    private LabelText primaryHeader;
-    private LabelText alternateHeader;
+    private Text controlsHeading;
+    private Text remapHint;
+    private Text actionHeader;
+    private Text primaryHeader;
+    private Text alternateHeader;
     private MenuButton backButton;
     private BrightnessOverlay brightnessOverlay;
     private final List<RemapSlot> remapSlots = new ArrayList<>();
@@ -224,21 +224,21 @@ public class SettingScene extends Scene {
         buildRemapSlots(firstRowY, rowSpacing);
     }
 
-    private LabelText createCenteredLabel(String text, float centreYPosition, BitmapFont font) {
-        return new LabelText(text, centreX, centreYPosition, font);
+    private Text createCenteredLabel(String text, float centreYPosition, BitmapFont font) {
+        return new Text(text, centreX, centreYPosition, font);
     }
 
     private void createRemapHeaders(float tableHeaderY) {
         float tableLeft = centreX - RemapSlot.TABLE_WIDTH / 2f;
-        actionHeader = new LabelText("ACTION",
+        actionHeader = new Text("ACTION",
             tableLeft + RemapSlot.ACTION_COLUMN_WIDTH / 2f,
             tableHeaderY,
             tableFont);
-        primaryHeader = new LabelText("PRIMARY",
+        primaryHeader = new Text("PRIMARY",
             tableLeft + RemapSlot.ACTION_COLUMN_WIDTH + RemapSlot.CELL_GAP + RemapSlot.KEY_COLUMN_WIDTH / 2f,
             tableHeaderY,
             tableFont);
-        alternateHeader = new LabelText("ALTERNATE",
+        alternateHeader = new Text("ALTERNATE",
             tableLeft + RemapSlot.ACTION_COLUMN_WIDTH + RemapSlot.CELL_GAP * 2f
                 + RemapSlot.KEY_COLUMN_WIDTH * 1.5f,
             tableHeaderY,

@@ -14,8 +14,8 @@ import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.game.Settings;
 import com.p1_7.game.entities.BackgroundImage;
 import com.p1_7.game.entities.BrightnessOverlay;
-import com.p1_7.game.entities.LabelText;
 import com.p1_7.game.entities.MenuButton;
+import com.p1_7.game.entities.Text;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 
@@ -36,10 +36,10 @@ public class LevelCompleteScene extends Scene {
     private BitmapFont promptFont;
     private BitmapFont buttonFont;
     private BackgroundImage background;
-    private LabelText title;
-    private LabelText promptStatus;
-    private LabelText hintSpace;
-    private LabelText hintEsc;
+    private Text title;
+    private Text promptStatus;
+    private Text hintSpace;
+    private Text hintEsc;
     private MenuButton continueButton;
     private MenuButton mainMenuButton;
     private BrightnessOverlay brightnessOverlay;
@@ -92,12 +92,12 @@ public class LevelCompleteScene extends Scene {
         String continueLabel = lastLevel ? "PLAY AGAIN" : "CONTINUE";
         String spaceHint = lastLevel ? "SPACE - Play Again" : "SPACE - Continue";
         background = new BackgroundImage(BG_ASSET);
-        title = new LabelText("LEVEL " + currentLevel + " COMPLETE!", cx, cy + 120f, titleFont);
-        promptStatus = new LabelText("Next up: Level " + nextLevel, cx, cy + 55f, promptFont);
+        title = new Text("LEVEL " + currentLevel + " COMPLETE!", cx, cy + 120f, titleFont);
+        promptStatus = new Text("Next up: Level " + nextLevel, cx, cy + 55f, promptFont);
         continueButton = MenuButton.withTexture(continueLabel, cx, cy - 10f, buttonFont, BTN_ASSET, HOVER_ASSET);
         mainMenuButton = MenuButton.withTexture("MAIN MENU", cx, cy - 85f, buttonFont, BTN_ASSET, HOVER_ASSET);
-        hintSpace = new LabelText(spaceHint, cx, cy - 175f, promptFont);
-        hintEsc = new LabelText("ESC - Main Menu", cx, cy - 220f, promptFont);
+        hintSpace = new Text(spaceHint, cx, cy - 175f, promptFont);
+        hintEsc = new Text("ESC - Main Menu", cx, cy - 220f, promptFont);
         brightnessOverlay = new BrightnessOverlay();
 
         inputCooldown = INPUT_COOLDOWN_SECONDS;

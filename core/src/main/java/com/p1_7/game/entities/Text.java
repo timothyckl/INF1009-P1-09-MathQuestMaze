@@ -10,15 +10,15 @@ import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
- * Reusable centered text entity for scene UI labels.
+ * Reusable centered text renderable for game and scene text.
  */
-public class LabelText extends Entity implements IRenderable {
+public class Text extends Entity implements IRenderable {
 
     private final Transform2D transform;
     private final BitmapFont font;
     private String text;
 
-    public LabelText(String text, float centreX, float centreY, BitmapFont font) {
+    public Text(String text, float centreX, float centreY, BitmapFont font) {
         this.text = text;
         this.font = font;
         this.transform = new Transform2D(centreX, centreY, 0f, 0f);
