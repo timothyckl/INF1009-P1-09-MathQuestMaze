@@ -1,6 +1,7 @@
 package com.p1_7.abstractengine.input;
 
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,10 +39,26 @@ public class InputManager extends UpdatableManager implements IInputManager, IIn
      * @throws IllegalArgumentException if inputSource is null
      */
     public InputManager(IInputSource inputSource) {
+        this(inputSource, Collections.<InputBindingSpec>emptyList());
+    }
+
+    /**
+     * creates an input manager backed by the given platform input source and
+     * seeds it with the provided initial bindings.
+     *
+     * @param inputSource      the platform-specific input polling implementation
+     * @param initialBindings  initial bindings to apply through the manager
+     * @throws IllegalArgumentException if inputSource or initialBindings is null
+     */
+    public InputManager(IInputSource inputSource, Iterable<InputBindingSpec> initialBindings) {
         if (inputSource == null) {
             throw new IllegalArgumentException("inputSource cannot be null");
         }
+        if (initialBindings == null) {
+            throw new IllegalArgumentException("initialBindings cannot be null");
+        }
         this.inputSource = inputSource;
+        applyInitialBindings(initialBindings);
     }
 
     /**
@@ -247,6 +264,24 @@ public class InputManager extends UpdatableManager implements IInputManager, IIn
      */
     private Set<ActionId> getBoundActions() {
         return inputMapping.getAllActions();
+    }
+
+    private void applyInitialBindings(Iterable<InputBindingSpec> initialBindings) {
+        for (InputBindingSpec binding : initialBindings) {
+            if (binding == null) {
+                throw new IllegalArgumentException("initialBindings cannot contain null");
+            }
+
+            List<Integer> keyCodes = binding.getKeyCodes();
+            for (int i = 0; i < keyCodes.size(); i++) {
+                bindKey(keyCodes.get(i), binding.getActionId());
+            }
+
+            List<Integer> buttonCodes = binding.getButtonCodes();
+            for (int i = 0; i < buttonCodes.size(); i++) {
+                bindButton(buttonCodes.get(i), binding.getActionId());
+            }
+        }
     }
 
     /**

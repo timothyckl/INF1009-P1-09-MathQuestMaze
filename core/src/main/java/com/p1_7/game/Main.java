@@ -8,6 +8,7 @@ import com.p1_7.abstractengine.entity.EntityManager;
 import com.p1_7.abstractengine.input.InputManager;
 import com.p1_7.abstractengine.scene.SceneManager;
 
+import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.AudioManager;
 import com.p1_7.game.managers.IAudioManager;
@@ -41,7 +42,8 @@ public class Main extends ApplicationAdapter {
 
         // build and configure the input manager before handing it to the engine
         // so extensions are available to scenes from the first frame
-        InputManager inputManager = new InputManager(new GdxInputSource());
+        InputManager inputManager =
+            new InputManager(new GdxInputSource(), GameActions.getDefaultBindings());
         inputManager.registerExtension(ICursorSource.class, new GdxCursorSource());
 
         // core managers, registration order does not matter;
