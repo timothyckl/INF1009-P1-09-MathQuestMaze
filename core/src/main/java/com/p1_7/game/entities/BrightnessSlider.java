@@ -1,14 +1,15 @@
 package com.p1_7.game.entities;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.p1_7.abstractengine.entity.Entity;
+import com.p1_7.abstractengine.input.IInputQuery;
+import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.Settings;
 import com.p1_7.game.core.Transform2D;
+import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.platform.GdxDrawContext;
 
@@ -68,15 +69,17 @@ public class BrightnessSlider extends Entity implements IRenderable {
      * Call once per frame from the scene's update().
      *
      * @param cursor the world-space cursor source (Y-flip already applied)
+     * @param inputQuery the logical input query for this frame
      */
-    public void updateInput(ICursorSource cursor) {
+    public void updateInput(ICursorSource cursor, IInputQuery inputQuery) {
         float mx    = cursor.getCursorX();
         float my    = cursor.getCursorY();
         float knobX = trackLeft + normalizedValue() * trackWidth;
+        InputState pointerState = inputQuery.getActionState(GameActions.POINTER_PRIMARY);
 
         moved = false;
 
-        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+        if (pointerState == InputState.PRESSED) {
             float dx        = mx - knobX;
             float dy        = my - trackCentreY;
             float hitRadius = knobRadius * 1.5f;
@@ -85,7 +88,7 @@ public class BrightnessSlider extends Entity implements IRenderable {
             }
         }
 
-        if (dragging && Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+        if (dragging && (pointerState == InputState.PRESSED || pointerState == InputState.HELD)) {
             float clampedTrackX = Math.max(trackLeft, Math.min(trackLeft + trackWidth, mx));
             float normalized    = (clampedTrackX - trackLeft) / trackWidth;
             value = clampBrightness(MIN_VALUE + normalized * VALUE_RANGE);
@@ -93,7 +96,7 @@ public class BrightnessSlider extends Entity implements IRenderable {
             moved = true;
         }
 
-        if (!Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+        if (pointerState == null || pointerState == InputState.RELEASED) {
             dragging = false;
         }
     }

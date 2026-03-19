@@ -14,6 +14,8 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.p1_7.abstractengine.input.IInputExtensionRegistry;
 import com.p1_7.abstractengine.input.IInputManager;
+import com.p1_7.abstractengine.input.IInputQuery;
+import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
@@ -45,6 +47,7 @@ public class SettingScene extends Scene {
     private BitmapFont buttonFont;
 
     private ICursorSource cursorSource;
+    private IInputQuery inputQuery;
     private IInputManager inputManager;
     private InputProcessor previousInputProcessor;
     private final InputProcessor remapInputProcessor = new InputAdapter() {
@@ -144,6 +147,7 @@ public class SettingScene extends Scene {
         }
 
         inputManager = context.get(IInputManager.class);
+        inputQuery = context.get(IInputQuery.class);
         audio = context.get(IAudioManager.class);
     }
 
@@ -301,13 +305,13 @@ public class SettingScene extends Scene {
     private void clearResolvedServices() {
         audio = null;
         cursorSource = null;
+        inputQuery = null;
         inputManager = null;
         previousInputProcessor = null;
     }
 
     private boolean handleSceneExit(SceneContext context) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)
-            || Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)) {
+        if (inputQuery.getActionState(GameActions.MENU_BACK) == InputState.PRESSED) {
             context.changeScene("menu");
             return true;
         }
@@ -315,12 +319,12 @@ public class SettingScene extends Scene {
     }
 
     private void updateSliderInputs() {
-        volumeSlider.updateInput(cursorSource);
-        brightnessSlider.updateInput(cursorSource);
+        volumeSlider.updateInput(cursorSource, inputQuery);
+        brightnessSlider.updateInput(cursorSource, inputQuery);
     }
 
     private void updateBackButtonInput() {
-        backButton.updateInput(cursorSource);
+        backButton.updateInput(cursorSource, inputQuery);
     }
 
     private void applySliderChanges() {
@@ -425,7 +429,8 @@ public class SettingScene extends Scene {
     private void updateRemapInput() {
         float mx = cursorSource.getCursorX();
         float my = cursorSource.getCursorY();
-        boolean clickStarted = Gdx.input.isButtonJustPressed(Input.Buttons.LEFT);
+        boolean clickStarted =
+            inputQuery.getActionState(GameActions.POINTER_PRIMARY) == InputState.PRESSED;
 
         for (int i = 0; i < remapSlots.size(); i++) {
             RemapSlot slot = remapSlots.get(i);
@@ -461,6 +466,13 @@ public class SettingScene extends Scene {
             return;
         }
 
+        String reservedUiKeyMessage = getReservedUiKeyMessage(keyCode);
+        if (reservedUiKeyMessage != null) {
+            remapHint.setText(reservedUiKeyMessage);
+            refreshRemapVisualState();
+            return;
+        }
+
         int previousKeyCode = activeRemapSlot.getKeyCode(activeRemapColumn);
         int siblingKeyCode = activeRemapSlot.getOtherKeyCode(activeRemapColumn);
 
@@ -488,6 +500,16 @@ public class SettingScene extends Scene {
 
         syncRemapBindings();
         stopListening();
+    }
+
+    private String getReservedUiKeyMessage(int keyCode) {
+        if (keyCode == Input.Keys.SPACE) {
+            return Input.Keys.toString(keyCode) + " is reserved for menu confirm";
+        }
+        if (keyCode == Input.Keys.ESCAPE || keyCode == Input.Keys.BACKSPACE) {
+            return Input.Keys.toString(keyCode) + " is reserved for menu back";
+        }
+        return null;
     }
 
     private void syncRemapBindings() {

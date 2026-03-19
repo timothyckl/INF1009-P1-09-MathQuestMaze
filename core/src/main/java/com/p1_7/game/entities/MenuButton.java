@@ -7,10 +7,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.p1_7.abstractengine.entity.Entity;
+import com.p1_7.abstractengine.input.IInputQuery;
+import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.core.Transform2D;
+import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.platform.GdxDrawContext;
 
@@ -125,8 +128,9 @@ public class MenuButton extends Entity implements IRenderable {
      * Call once per frame from the scene's update().
      *
      * @param cursor the world-space cursor source (Y-flip already applied)
+     * @param inputQuery the logical input query for this frame
      */
-    public void updateInput(ICursorSource cursor) {
+    public void updateInput(ICursorSource cursor, IInputQuery inputQuery) {
         float mx = cursor.getCursorX();
         float my = cursor.getCursorY();
 
@@ -136,7 +140,8 @@ public class MenuButton extends Entity implements IRenderable {
         hovered = mx >= bx && mx <= bx + BUTTON_WIDTH
                && my >= by && my <= by + BUTTON_HEIGHT;
 
-        if (hovered && Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+        if (hovered
+            && inputQuery.getActionState(GameActions.POINTER_PRIMARY) == InputState.PRESSED) {
             clicked = true;
         }
     }

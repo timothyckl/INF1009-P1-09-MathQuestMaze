@@ -1,5 +1,6 @@
 package com.p1_7.game.input;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,7 +10,8 @@ import com.p1_7.abstractengine.input.ActionId;
 import com.p1_7.abstractengine.input.InputBindingSpec;
 
 /**
- * Canonical remappable game actions and their default keyboard bindings.
+ * Canonical gameplay and UI actions plus their default input bindings.
+ * The settings remap table still exposes only the movement subset.
  */
 public final class GameActions {
 
@@ -17,8 +19,12 @@ public final class GameActions {
     public static final ActionId MOVE_DOWN  = new ActionId("MOVE_DOWN");
     public static final ActionId MOVE_LEFT  = new ActionId("MOVE_LEFT");
     public static final ActionId MOVE_RIGHT = new ActionId("MOVE_RIGHT");
+    public static final ActionId MENU_BACK = new ActionId("MENU_BACK");
+    public static final ActionId MENU_CONFIRM = new ActionId("MENU_CONFIRM");
+    public static final ActionId POINTER_PRIMARY = new ActionId("POINTER_PRIMARY");
 
     private static final List<BindingSpec> MOVEMENT_BINDINGS = createMovementBindings();
+    private static final List<UiBindingSpec> UI_BINDINGS = createUiBindings();
 
     private GameActions() { }
 
@@ -32,8 +38,8 @@ public final class GameActions {
     }
 
     /**
-     * Returns the default movement bindings in an engine-level format that can
-     * be applied by InputManager during construction.
+     * Returns the default gameplay and UI bindings in an engine-level format
+     * that can be applied by InputManager during construction.
      *
      * @return immutable engine-level default bindings
      */
@@ -45,6 +51,9 @@ public final class GameActions {
                 binding.getPrimaryKeyCode(),
                 binding.getAlternateKeyCode()));
         }
+        for (int i = 0; i < UI_BINDINGS.size(); i++) {
+            bindings.add(UI_BINDINGS.get(i).toInputBindingSpec());
+        }
         return Collections.unmodifiableList(bindings);
     }
 
@@ -54,6 +63,14 @@ public final class GameActions {
         bindings.add(new BindingSpec("Move Down", MOVE_DOWN, Input.Keys.S, Input.Keys.DOWN));
         bindings.add(new BindingSpec("Move Left", MOVE_LEFT, Input.Keys.A, Input.Keys.LEFT));
         bindings.add(new BindingSpec("Move Right", MOVE_RIGHT, Input.Keys.D, Input.Keys.RIGHT));
+        return Collections.unmodifiableList(bindings);
+    }
+
+    private static List<UiBindingSpec> createUiBindings() {
+        List<UiBindingSpec> bindings = new ArrayList<>();
+        bindings.add(UiBindingSpec.keys("menu back", MENU_BACK, Input.Keys.ESCAPE, Input.Keys.BACKSPACE));
+        bindings.add(UiBindingSpec.keys("menu confirm", MENU_CONFIRM, Input.Keys.SPACE));
+        bindings.add(UiBindingSpec.buttons("primary click", POINTER_PRIMARY, Input.Buttons.LEFT));
         return Collections.unmodifiableList(bindings);
     }
 
@@ -87,6 +104,40 @@ public final class GameActions {
 
         public int getAlternateKeyCode() {
             return alternateKeyCode;
+        }
+    }
+
+    private static final class UiBindingSpec {
+        private final String label;
+        private final ActionId actionId;
+        private final List<Integer> keyCodes;
+        private final List<Integer> buttonCodes;
+
+        private UiBindingSpec(String label, ActionId actionId, List<Integer> keyCodes,
+                              List<Integer> buttonCodes) {
+            this.label = label;
+            this.actionId = actionId;
+            this.keyCodes = Collections.unmodifiableList(new ArrayList<>(keyCodes));
+            this.buttonCodes = Collections.unmodifiableList(new ArrayList<>(buttonCodes));
+        }
+
+        private static UiBindingSpec keys(String label, ActionId actionId, int... keyCodes) {
+            List<Integer> codes = new ArrayList<>();
+            for (int i = 0; i < keyCodes.length; i++) {
+                codes.add(keyCodes[i]);
+            }
+            return new UiBindingSpec(label, actionId, codes, Collections.<Integer>emptyList());
+        }
+
+        private static UiBindingSpec buttons(String label, ActionId actionId, int... buttonCodes) {
+            List<Integer> codes = new ArrayList<>();
+            for (int i = 0; i < buttonCodes.length; i++) {
+                codes.add(buttonCodes[i]);
+            }
+            return new UiBindingSpec(label, actionId, Collections.<Integer>emptyList(), codes);
+        }
+        private InputBindingSpec toInputBindingSpec() {
+            return new InputBindingSpec(actionId, keyCodes, buttonCodes);
         }
     }
 }

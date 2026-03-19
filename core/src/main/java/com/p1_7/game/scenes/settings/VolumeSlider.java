@@ -1,13 +1,14 @@
 package com.p1_7.game.scenes.settings;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.p1_7.abstractengine.entity.Entity;
+import com.p1_7.abstractengine.input.IInputQuery;
+import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.core.Transform2D;
+import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.platform.GdxDrawContext;
 
@@ -48,14 +49,15 @@ final class VolumeSlider extends Entity implements IRenderable {
         );
     }
 
-    void updateInput(ICursorSource cursor) {
+    void updateInput(ICursorSource cursor, IInputQuery inputQuery) {
         float mx = cursor.getCursorX();
         float my = cursor.getCursorY();
         float knobX = trackLeft + value * trackWidth;
+        InputState pointerState = inputQuery.getActionState(GameActions.POINTER_PRIMARY);
 
         moved = false;
 
-        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+        if (pointerState == InputState.PRESSED) {
             float dx = mx - knobX;
             float dy = my - trackCentreY;
             float hitRadius = knobRadius * 1.5f;
@@ -64,13 +66,13 @@ final class VolumeSlider extends Entity implements IRenderable {
             }
         }
 
-        if (dragging && Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+        if (dragging && (pointerState == InputState.PRESSED || pointerState == InputState.HELD)) {
             float clamped = Math.max(trackLeft, Math.min(trackLeft + trackWidth, mx));
             value = (clamped - trackLeft) / trackWidth;
             moved = true;
         }
 
-        if (!Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+        if (pointerState == null || pointerState == InputState.RELEASED) {
             dragging = false;
         }
     }

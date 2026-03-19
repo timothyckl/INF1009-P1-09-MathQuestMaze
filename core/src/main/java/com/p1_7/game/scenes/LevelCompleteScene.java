@@ -1,12 +1,13 @@
 package com.p1_7.game.scenes;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.p1_7.abstractengine.input.IInputExtensionRegistry;
+import com.p1_7.abstractengine.input.IInputQuery;
+import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.render.IRenderQueue;
@@ -18,6 +19,7 @@ import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.entities.BrightnessOverlay;
 import com.p1_7.game.entities.LabelText;
 import com.p1_7.game.entities.MenuButton;
+import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.platform.GdxDrawContext;
 
@@ -32,6 +34,7 @@ public class LevelCompleteScene extends Scene {
 
     // ── input ────────────────────────────────────────────────────
     private ICursorSource cursorSource;
+    private IInputQuery inputQuery;
 
     private BitmapFont titleFont;
     private BitmapFont promptFont;
@@ -80,6 +83,7 @@ public class LevelCompleteScene extends Scene {
         generator.dispose();
 
         IInputExtensionRegistry inputRegistry = context.get(IInputExtensionRegistry.class);
+        inputQuery = context.get(IInputQuery.class);
         if (inputRegistry.hasExtension(ICursorSource.class)) {
             cursorSource = inputRegistry.getExtension(ICursorSource.class);
         }
@@ -111,6 +115,7 @@ public class LevelCompleteScene extends Scene {
         if (titleFont      != null) titleFont.dispose();
         if (promptFont     != null) promptFont.dispose();
         if (buttonFont     != null) buttonFont.dispose();
+        inputQuery = null;
         cursorSource = null;
     }
 
@@ -121,17 +126,22 @@ public class LevelCompleteScene extends Scene {
             return;
         }
 
-        if (cursorSource == null) return;
-        continueButton.updateInput(cursorSource);
-        mainMenuButton.updateInput(cursorSource);
+        if (cursorSource != null) {
+            continueButton.updateInput(cursorSource, inputQuery);
+            mainMenuButton.updateInput(cursorSource, inputQuery);
+        }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || mainMenuButton.isClicked()) {
+        boolean backPressed = inputQuery.getActionState(GameActions.MENU_BACK) == InputState.PRESSED;
+        boolean confirmPressed =
+            inputQuery.getActionState(GameActions.MENU_CONFIRM) == InputState.PRESSED;
+
+        if (backPressed || mainMenuButton.isClicked()) {
             mainMenuButton.resetClick();
             context.changeScene("menu");
             return;
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || continueButton.isClicked()) {
+        if (confirmPressed || continueButton.isClicked()) {
             continueButton.resetClick();
             if (isLastLevel()) {
                 currentLevel = 1;

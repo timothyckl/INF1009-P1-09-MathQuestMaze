@@ -10,6 +10,7 @@ import com.p1_7.abstractengine.entity.EntityManager;
 import com.p1_7.abstractengine.entity.IEntityManager;
 import com.p1_7.abstractengine.input.IInputExtensionRegistry;
 import com.p1_7.abstractengine.input.IInputManager;
+import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.input.InputManager;
 import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.render.RenderManager;
@@ -75,6 +76,7 @@ public class SceneManager extends UpdatableManager {
         InputManager inputManager = resolver.resolve(InputManager.class);
         serviceMap.put(IEntityManager.class,        resolver.resolve(EntityManager.class));
         serviceMap.put(IRenderQueue.class,           resolver.resolve(RenderManager.class).getRenderQueue());
+        serviceMap.put(IInputQuery.class,            inputManager);
         serviceMap.put(IInputManager.class,          inputManager);
         serviceMap.put(IInputExtensionRegistry.class, inputManager);
     }
