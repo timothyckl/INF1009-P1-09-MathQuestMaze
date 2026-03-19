@@ -1,10 +1,7 @@
 package com.p1_7.game.scenes;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.p1_7.abstractengine.input.IInputExtensionRegistry;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.input.InputState;
@@ -18,6 +15,7 @@ import com.p1_7.game.entities.MenuButton;
 import com.p1_7.game.entities.Text;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
+import com.p1_7.game.managers.IFontManager;
 
 public class LevelCompleteScene extends Scene {
 
@@ -26,7 +24,6 @@ public class LevelCompleteScene extends Scene {
     private static final String BG_ASSET = "menu/background.png";
     private static final String BTN_ASSET = "menu/button.png";
     private static final String HOVER_ASSET = "menu/button_hover.png";
-    private static final String TTF_ASSET = "menu/Kenney_Future.ttf";
 
     // ── input ────────────────────────────────────────────────────
     private ICursorSource cursorSource;
@@ -52,31 +49,10 @@ public class LevelCompleteScene extends Scene {
 
     @Override
     public void onEnter(SceneContext context) {
-        FreeTypeFontGenerator generator =
-            new FreeTypeFontGenerator(Gdx.files.internal(TTF_ASSET));
-
-        FreeTypeFontParameter titleParams = new FreeTypeFontParameter();
-        titleParams.size = 54;
-        titleParams.color = new Color(1f, 0.92f, 0.55f, 1f);
-        titleParams.shadowOffsetX = 2;
-        titleParams.shadowOffsetY = -2;
-        titleParams.shadowColor = new Color(0f, 0f, 0f, 0.5f);
-        titleFont = generator.generateFont(titleParams);
-
-        FreeTypeFontParameter promptParams = new FreeTypeFontParameter();
-        promptParams.size = 28;
-        promptParams.color = new Color(0.10f, 0.16f, 0.24f, 1f); // dark navy for better contrast
-        promptParams.shadowOffsetX = 1;
-        promptParams.shadowOffsetY = -1;
-        promptParams.shadowColor = new Color(1f, 1f, 1f, 0.35f);
-        promptFont = generator.generateFont(promptParams);
-
-        FreeTypeFontParameter buttonParams = new FreeTypeFontParameter();
-        buttonParams.size = 22;
-        buttonParams.color = new Color(0.10f, 0.16f, 0.24f, 1f);
-        buttonFont = generator.generateFont(buttonParams);
-
-        generator.dispose();
+        IFontManager fontManager = context.get(IFontManager.class);
+        titleFont = fontManager.getGoldDisplayFont(54);
+        promptFont = fontManager.getPromptFont();
+        buttonFont = fontManager.getDarkTextFont(22);
 
         IInputExtensionRegistry inputRegistry = context.get(IInputExtensionRegistry.class);
         inputQuery = context.get(IInputQuery.class);
@@ -108,9 +84,9 @@ public class LevelCompleteScene extends Scene {
         if (continueButton != null) continueButton.dispose();
         if (mainMenuButton != null) mainMenuButton.dispose();
         if (brightnessOverlay != null) brightnessOverlay.dispose();
-        if (titleFont      != null) titleFont.dispose();
-        if (promptFont     != null) promptFont.dispose();
-        if (buttonFont     != null) buttonFont.dispose();
+        titleFont = null;
+        promptFont = null;
+        buttonFont = null;
         inputQuery = null;
         cursorSource = null;
     }

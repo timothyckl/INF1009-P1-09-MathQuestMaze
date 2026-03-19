@@ -6,12 +6,13 @@ import com.badlogic.gdx.Gdx;
 import com.p1_7.abstractengine.engine.Engine;
 import com.p1_7.abstractengine.entity.EntityManager;
 import com.p1_7.abstractengine.input.InputManager;
-import com.p1_7.abstractengine.scene.SceneManager;
 
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.AudioManager;
 import com.p1_7.game.managers.IAudioManager;
+import com.p1_7.game.managers.FontManager;
+import com.p1_7.game.managers.IFontManager;
 import com.p1_7.game.platform.GdxCursorSource;
 import com.p1_7.game.platform.GdxInputSource;
 import com.p1_7.game.platform.GdxRenderManager;
@@ -39,6 +40,7 @@ public class Main extends ApplicationAdapter {
         engine = new Engine();
 
         AudioManager audioManager = new AudioManager();
+        FontManager fontManager = new FontManager();
 
         // build and configure the input manager before handing it to the engine
         // so extensions are available to scenes from the first frame
@@ -46,16 +48,17 @@ public class Main extends ApplicationAdapter {
             new InputManager(new GdxInputSource(), GameActions.getDefaultBindings());
         inputManager.registerExtension(ICursorSource.class, new GdxCursorSource());
 
-        // core managers, registration order does not matter;
-        // engine reorders managers via topological sort on a directed acyclic graph.
+        // core managers are ordered by their declared dependencies during init.
         engine.registerManager(new EntityManager());
         engine.registerManager(inputManager);
         engine.registerManager(new GdxRenderManager());
         engine.registerManager(audioManager);
+        engine.registerManager(fontManager);
 
         // scene setup
-        SceneManager sceneManager = new SceneManager();
+        GameSceneManager sceneManager = new GameSceneManager();
         sceneManager.registerService(IAudioManager.class, audioManager);
+        sceneManager.registerService(IFontManager.class, fontManager);
 
         // main menu (shown first)
         sceneManager.registerScene(new MenuScene());
