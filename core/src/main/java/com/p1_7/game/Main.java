@@ -22,6 +22,7 @@ import com.p1_7.game.platform.GdxCursorSource;
 import com.p1_7.game.platform.GdxInputSource;
 import com.p1_7.game.platform.GdxRenderManager;
 import com.p1_7.game.scenes.GameScene;
+import com.p1_7.game.scenes.GameOverScene;
 import com.p1_7.game.scenes.LevelCompleteScene;
 import com.p1_7.game.scenes.MenuScene;
 import com.p1_7.game.scenes.settings.SettingScene;
@@ -82,8 +83,9 @@ public class Main extends ApplicationAdapter {
         // settings screen
         sceneManager.registerScene(new SettingScene());
 
-        // temporary level-complete screen for flow testing
+        // level-complete and game-over exit scenes
         sceneManager.registerScene(new LevelCompleteScene());
+        sceneManager.registerScene(new GameOverScene());
 
         // core gameplay scene
         sceneManager.registerScene(new GameScene());

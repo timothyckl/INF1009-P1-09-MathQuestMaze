@@ -16,6 +16,7 @@ import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.core.Transform2D;
+import com.p1_7.game.entities.BrightnessOverlay;
 import com.p1_7.game.entities.QuestionPanel;
 import com.p1_7.game.gameplay.Difficulty;
 import com.p1_7.game.gameplay.ILevelOrchestrator;
@@ -51,6 +52,12 @@ public class GameScene extends Scene {
 
     /** hold time in seconds for the FEEDBACK phase — longer to allow the player to read the result */
     private static final float FEEDBACK_HOLD_SECONDS = 2.0f;
+
+    /** width of the centre trigger zone within each answer room in pixels */
+    private static final float TRIGGER_WIDTH  = 100f;
+
+    /** height of the centre trigger zone within each answer room in pixels */
+    private static final float TRIGGER_HEIGHT = 80f;
 
     /** pre-allocated overlay colours — reused every frame to avoid per-frame allocation */
     private static final Color OVERLAY_CORRECT    = new Color(0.08f, 0.62f, 0.22f, 0.42f);
@@ -125,6 +132,9 @@ public class GameScene extends Scene {
     /** full-screen tinted overlay with result text; visible only during FEEDBACK */
     private IRenderable feedbackOverlay;
 
+    /** full-screen brightness overlay; must be queued last so it composites over all other elements */
+    private BrightnessOverlay brightnessOverlay;
+
     /** score counter rendered in the top-right corner */
     private IRenderable scoreDisplay;
 
@@ -192,6 +202,9 @@ public class GameScene extends Scene {
             roomAnswerLayouts[i] = new GlyphLayout();
         }
 
+        // create the brightness overlay early so submitRenderable never sees a null reference
+        this.brightnessOverlay = new BrightnessOverlay();
+
         // build one renderable per answer room — grey outline + centred answer label
         this.roomRenderables = new ArrayList<>(4);
         List<float[]> allRooms = layout.getAllRoomBounds();
@@ -253,7 +266,12 @@ public class GameScene extends Scene {
 
             @Override
             public void render(IDrawContext ctx) {
-                if (orch.getPhase() != RoundPhase.FEEDBACK) return;
+                // show for FEEDBACK, LEVEL_COMPLETE and GAME_OVER — terminal phases
+                // inherit the same overlay so the result is visible before the scene transition
+                RoundPhase p = orch.getPhase();
+                if (p != RoundPhase.FEEDBACK
+                        && p != RoundPhase.LEVEL_COMPLETE
+                        && p != RoundPhase.GAME_OVER) return;
                 boolean correct = orch.isLastAnswerCorrect();
                 // reuse pre-allocated colour and layout objects — no allocation in this hot path
                 overlayColour.set(correct ? OVERLAY_CORRECT : OVERLAY_WRONG);
@@ -335,6 +353,8 @@ public class GameScene extends Scene {
         feedbackOverlay    = null;
         scoreDisplay       = null;
         healthDisplay      = null;
+        if (brightnessOverlay != null) brightnessOverlay.dispose();
+        brightnessOverlay  = null;
 
         layout           = null;
         player           = null;
@@ -373,9 +393,12 @@ public class GameScene extends Scene {
             if (phase == RoundPhase.QUESTION_INTRO) {
                 questionPanel.update(deltaTime);
             }
-            if (!isTerminalPhase(phase)) {
-                phaseHoldTimer -= deltaTime;
-                if (phaseHoldTimer <= 0f) {
+            phaseHoldTimer -= deltaTime;
+            if (phaseHoldTimer <= 0f) {
+                if (isTerminalPhase(phase)) {
+                    // level_complete or game_over — exit to the appropriate scene
+                    context.changeScene(phase == RoundPhase.LEVEL_COMPLETE ? "level-complete" : "game-over");
+                } else {
                     orchestrator.advance();
                     // re-read and process the resulting phase in the same frame so
                     // reactions like player.resetToSpawn() are not delayed by one tick
@@ -396,9 +419,11 @@ public class GameScene extends Scene {
 
     /**
      * submits all renderables to the queue in painter's order:
-     * room outlines and answer labels → player → question panel → score → health → feedback overlay.
+     * room outlines and answer labels → player → question panel → score → health →
+     * feedback overlay → brightness overlay.
      *
-     * the feedback overlay is queued last so it composites over all other elements.
+     * the brightness overlay is queued last so it dims the entire composited frame
+     * uniformly per the user's brightness setting.
      *
      * @param renderQueue the render queue accumulator for this frame
      */
@@ -412,7 +437,8 @@ public class GameScene extends Scene {
         renderQueue.queue(questionPanel);   // slides above the world during QUESTION_INTRO
         renderQueue.queue(scoreDisplay);
         renderQueue.queue(healthDisplay);
-        renderQueue.queue(feedbackOverlay); // topmost — composites over all others
+        renderQueue.queue(feedbackOverlay);
+        renderQueue.queue(brightnessOverlay); // topmost — dims the whole frame per settings
     }
 
     // ── private helpers ───────────────────────────────────────────────────────
@@ -420,8 +446,6 @@ public class GameScene extends Scene {
     /**
      * called whenever the round phase changes. resets the player to spawn on ROUND_RESET
      * and starts the hold timer for non-interactive phases.
-     *
-     * 'from' is unused here but retained for future HUD transitions in issue #100.
      *
      * @param from the previous phase (null on first frame)
      * @param to   the new phase
@@ -438,9 +462,11 @@ public class GameScene extends Scene {
             refreshRoomAnswerCache();
             questionPanel.beginIntro(orchestrator.getCurrentQuestion().getPrompt());
         }
-        if (!isTerminalPhase(to) && to != RoundPhase.CHOOSING) {
-            // FEEDBACK uses a longer hold so the player can read the result
-            phaseHoldTimer = (to == RoundPhase.FEEDBACK) ? FEEDBACK_HOLD_SECONDS : PHASE_HOLD_SECONDS;
+        if (to != RoundPhase.CHOOSING) {
+            // terminal phases share the feedback hold so the overlay is visible before transitioning
+            phaseHoldTimer = (to == RoundPhase.FEEDBACK || isTerminalPhase(to))
+                ? FEEDBACK_HOLD_SECONDS
+                : PHASE_HOLD_SECONDS;
         }
     }
 
@@ -487,14 +513,16 @@ public class GameScene extends Scene {
      * @return true if the two AABBs overlap on both axes
      */
     private boolean overlapsRoom(IBounds playerBounds, float[] room) {
+        // compute the centre trigger zone — smaller than the full room to require deliberate entry
+        float triggerX = room[0] + (room[2] - TRIGGER_WIDTH)  / 2f;
+        float triggerY = room[1] + (room[3] - TRIGGER_HEIGHT) / 2f;
+
         float[] pMin = playerBounds.getMinPosition();
         float[] pExt = playerBounds.getExtent();
         float pMaxX = pMin[0] + pExt[0];
         float pMaxY = pMin[1] + pExt[1];
-        float rMaxX = room[0] + room[2];
-        float rMaxY = room[1] + room[3];
-        return pMaxX > room[0] && pMin[0] < rMaxX
-            && pMaxY > room[1] && pMin[1] < rMaxY;
+        return pMaxX > triggerX                 && pMin[0] < triggerX + TRIGGER_WIDTH
+            && pMaxY > triggerY                 && pMin[1] < triggerY + TRIGGER_HEIGHT;
     }
 
     /**

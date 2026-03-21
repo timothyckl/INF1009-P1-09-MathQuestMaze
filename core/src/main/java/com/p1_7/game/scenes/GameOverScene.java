@@ -1,6 +1,5 @@
 package com.p1_7.game.scenes;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.p1_7.abstractengine.input.IInputExtensionRegistry;
 import com.p1_7.abstractengine.input.IInputQuery;
@@ -17,18 +16,24 @@ import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IFontManager;
 
-public class LevelCompleteScene extends Scene {
+/**
+ * Shown when the player's health reaches zero and the game ends.
+ *
+ * Offers a RETRY button to restart the game and a MAIN MENU button
+ * to return to the main menu.
+ */
+public class GameOverScene extends Scene {
 
-    private static final int MAX_LEVEL = 3;
     private static final float INPUT_COOLDOWN_SECONDS = 0.18f;
     private static final String BG_ASSET = "menu/background.png";
     private static final String BTN_ASSET = "menu/button.png";
     private static final String HOVER_ASSET = "menu/button_hover.png";
 
-    // ── input ────────────────────────────────────────────────────
+    // ── input ──────────────────────────────────────────────────────────────────
     private ICursorSource cursorSource;
     private IInputQuery inputQuery;
 
+    // ── ui elements ────────────────────────────────────────────────────────────
     private BitmapFont titleFont;
     private BitmapFont promptFont;
     private BitmapFont buttonFont;
@@ -37,16 +42,21 @@ public class LevelCompleteScene extends Scene {
     private Text promptStatus;
     private Text hintSpace;
     private Text hintEsc;
-    private MenuButton continueButton;
+    private MenuButton retryButton;
     private MenuButton mainMenuButton;
     private BrightnessOverlay brightnessOverlay;
-    private int currentLevel = 1;
+
     private float inputCooldown;
 
-    public LevelCompleteScene() {
-        this.name = "level-complete";
+    public GameOverScene() {
+        this.name = "game-over";
     }
 
+    /**
+     * initialises fonts, input, and all UI elements for the game-over screen.
+     *
+     * @param context the scene context used to resolve shared services
+     */
     @Override
     public void onEnter(SceneContext context) {
         IFontManager fontManager = context.get(IFontManager.class);
@@ -63,34 +73,49 @@ public class LevelCompleteScene extends Scene {
 
         float cx = Settings.getWindowWidth() / 2f;
         float cy = Settings.getWindowHeight() / 2f;
-        boolean lastLevel = isLastLevel();
-        int nextLevel = lastLevel ? 1 : currentLevel + 1;
-        String continueLabel = lastLevel ? "PLAY AGAIN" : "CONTINUE";
-        String spaceHint = lastLevel ? "SPACE - Play Again" : "SPACE - Continue";
         background = new BackgroundImage(BG_ASSET);
-        title = new Text("LEVEL " + currentLevel + " COMPLETE!", cx, cy + 120f, titleFont);
-        promptStatus = new Text("Next up: Level " + nextLevel, cx, cy + 55f, promptFont);
-        continueButton = MenuButton.withTexture(continueLabel, cx, cy - 10f, buttonFont, BTN_ASSET, HOVER_ASSET);
+        title = new Text("GAME OVER", cx, cy + 120f, titleFont);
+        promptStatus = new Text("Better luck next time!", cx, cy + 55f, promptFont);
+        retryButton = MenuButton.withTexture("RETRY", cx, cy - 10f, buttonFont, BTN_ASSET, HOVER_ASSET);
         mainMenuButton = MenuButton.withTexture("MAIN MENU", cx, cy - 85f, buttonFont, BTN_ASSET, HOVER_ASSET);
-        hintSpace = new Text(spaceHint, cx, cy - 175f, promptFont);
+        hintSpace = new Text("SPACE - Retry", cx, cy - 175f, promptFont);
         hintEsc = new Text("ESC - Main Menu", cx, cy - 220f, promptFont);
         brightnessOverlay = new BrightnessOverlay();
 
         inputCooldown = INPUT_COOLDOWN_SECONDS;
     }
 
+    /**
+     * disposes resources and releases all field references to aid garbage collection.
+     *
+     * @param context the scene context (not used during disposal)
+     */
     @Override
     public void onExit(SceneContext context) {
-        if (continueButton != null) continueButton.dispose();
+        if (retryButton != null) retryButton.dispose();
         if (mainMenuButton != null) mainMenuButton.dispose();
         if (brightnessOverlay != null) brightnessOverlay.dispose();
-        titleFont = null;
-        promptFont = null;
-        buttonFont = null;
-        inputQuery = null;
+        background   = null;
+        title        = null;
+        promptStatus = null;
+        hintSpace    = null;
+        hintEsc      = null;
+        retryButton    = null;
+        mainMenuButton = null;
+        brightnessOverlay = null;
+        titleFont    = null;
+        promptFont   = null;
+        buttonFont   = null;
+        inputQuery   = null;
         cursorSource = null;
     }
 
+    /**
+     * handles input cooldown and button/keyboard interactions each frame.
+     *
+     * @param deltaTime elapsed time in seconds since the last frame
+     * @param context   the scene context used to trigger scene changes
+     */
     @Override
     public void update(float deltaTime, SceneContext context) {
         if (inputCooldown > 0f) {
@@ -99,7 +124,7 @@ public class LevelCompleteScene extends Scene {
         }
 
         if (cursorSource != null) {
-            continueButton.updateInput(cursorSource, inputQuery);
+            retryButton.updateInput(cursorSource, inputQuery);
             mainMenuButton.updateInput(cursorSource, inputQuery);
         }
 
@@ -113,30 +138,26 @@ public class LevelCompleteScene extends Scene {
             return;
         }
 
-        if (confirmPressed || continueButton.isClicked()) {
-            continueButton.resetClick();
-            if (isLastLevel()) {
-                currentLevel = 1;
-            } else {
-                currentLevel++;
-            }
+        if (confirmPressed || retryButton.isClicked()) {
+            retryButton.resetClick();
             context.changeScene("game");
         }
     }
 
+    /**
+     * queues all UI elements to the render queue in painter's order.
+     *
+     * @param renderQueue the render queue accumulator for this frame
+     */
     @Override
     public void submitRenderable(IRenderQueue renderQueue) {
         renderQueue.queue(background);
         renderQueue.queue(title);
         renderQueue.queue(promptStatus);
-        renderQueue.queue(continueButton);
+        renderQueue.queue(retryButton);
         renderQueue.queue(mainMenuButton);
         renderQueue.queue(hintSpace);
         renderQueue.queue(hintEsc);
         renderQueue.queue(brightnessOverlay);
-    }
-
-    private boolean isLastLevel() {
-        return currentLevel >= MAX_LEVEL;
     }
 }
