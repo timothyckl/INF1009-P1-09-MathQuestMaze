@@ -56,6 +56,12 @@ public class QuestionPanel extends Entity implements IRenderable {
     private float animProgress;
 
     /**
+     * cached glyph layout for questionText; recomputed in beginIntro so render never allocates.
+     * GlyphLayout is reusable — setText() updates it in-place.
+     */
+    private final GlyphLayout layout = new GlyphLayout();
+
+    /**
      * constructs a question panel with the given font.
      *
      * the panel starts at rest (END_Y) with no text and animation complete,
@@ -80,6 +86,8 @@ public class QuestionPanel extends Entity implements IRenderable {
      */
     public void beginIntro(String questionText) {
         this.questionText = questionText;
+        // recompute layout once per question so render() never allocates
+        layout.setText(font, questionText);
         this.currentY     = START_Y;
         this.animProgress = 0f;
     }
@@ -118,7 +126,7 @@ public class QuestionPanel extends Entity implements IRenderable {
     public void render(IDrawContext ctx) {
         GdxDrawContext gdx = (GdxDrawContext) ctx;
         gdx.drawTintedQuad(PANEL_BG, PANEL_X, currentY, PANEL_W, PANEL_H);
-        GlyphLayout layout = new GlyphLayout(font, questionText);
+        // layout was pre-computed in beginIntro — no allocation here
         gdx.drawFont(font, questionText,
             PANEL_X + (PANEL_W - layout.width) / 2f,
             currentY + PANEL_H / 2f + layout.height / 2f);

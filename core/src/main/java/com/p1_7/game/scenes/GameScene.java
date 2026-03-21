@@ -52,6 +52,11 @@ public class GameScene extends Scene {
     /** hold time in seconds for the FEEDBACK phase — longer to allow the player to read the result */
     private static final float FEEDBACK_HOLD_SECONDS = 2.0f;
 
+    /** pre-allocated overlay colours — reused every frame to avoid per-frame allocation */
+    private static final Color OVERLAY_CORRECT    = new Color(0f, 0.7f, 0f, 0.35f);
+    private static final Color OVERLAY_WRONG      = new Color(0.8f, 0f, 0f, 0.35f);
+    private static final Color HEALTH_LOST_COLOUR = new Color(0.3f, 0.3f, 0.3f, 1f);
+
     /** the fixed spatial layout providing spawn point, room bounds, and wall bounds */
     private MazeLayout layout;
 
@@ -93,6 +98,14 @@ public class GameScene extends Scene {
 
     /** one IRenderable per answer room — renders a grey outline and answer label each frame */
     private List<IRenderable> roomRenderables;
+
+    /**
+     * per-room answer strings and their pre-computed glyph layouts.
+     * refreshed once per question (when entering QUESTION_INTRO) so room renderables
+     * never allocate during render.
+     */
+    private String[]      roomAnswerTexts;
+    private GlyphLayout[] roomAnswerLayouts;
 
     /** animated panel that slides to the bottom of the screen during QUESTION_INTRO */
     private QuestionPanel questionPanel;
@@ -166,13 +179,23 @@ public class GameScene extends Scene {
         this.promptFont = fontManager.getPromptFont();
         this.hudFont    = fontManager.getDarkTextFont(22);
 
+        // allocate per-room answer caches before the loop so closures can capture the array references
+        this.roomAnswerTexts   = new String[4];
+        this.roomAnswerLayouts = new GlyphLayout[4];
+        for (int i = 0; i < 4; i++) {
+            roomAnswerLayouts[i] = new GlyphLayout();
+        }
+
         // build one renderable per answer room — grey outline + centred answer label
         this.roomRenderables = new ArrayList<>(4);
         List<float[]> allRooms = layout.getAllRoomBounds();
 
-        // capture orchestrator as effectively-final for use inside the lambdas
-        final ILevelOrchestrator orch = orchestrator;
-        final BitmapFont roomFont     = promptFont;
+        // capture orchestrator and font as effectively-final locals for lambda use
+        final ILevelOrchestrator orch               = orchestrator;
+        final BitmapFont         roomFont           = promptFont;
+        // capture array references; refreshRoomAnswerCache() populates the elements later
+        final String[]           capturedAnswerTexts   = roomAnswerTexts;
+        final GlyphLayout[]      capturedAnswerLayouts = roomAnswerLayouts;
 
         for (int i = 0; i < allRooms.size(); i++) {
             final int    roomIndex = i;
@@ -181,7 +204,7 @@ public class GameScene extends Scene {
             // the rect array drives the draw call directly
             final Transform2D roomTransform = new Transform2D(rect[0], rect[1], rect[2], rect[3]);
             roomRenderables.add(new IRenderable() {
-                @Override public String    getAssetPath() { return null; }
+                @Override public String     getAssetPath() { return null; }
                 @Override public ITransform getTransform() { return roomTransform; }
 
                 @Override
@@ -189,52 +212,62 @@ public class GameScene extends Scene {
                     GdxDrawContext gdx = (GdxDrawContext) ctx;
                     // grey outline marking the room boundary
                     gdx.rect(Color.GRAY, rect[0], rect[1], rect[2], rect[3], false);
-                    // answer value centred within the room
-                    String text    = String.valueOf(orch.getRoomAssignment().getAnswerForRoom(roomIndex));
-                    GlyphLayout gl = new GlyphLayout(roomFont, text);
-                    gdx.drawFont(roomFont, text,
+                    // layout and text were pre-computed in refreshRoomAnswerCache — no allocation
+                    GlyphLayout gl = capturedAnswerLayouts[roomIndex];
+                    gdx.drawFont(roomFont, capturedAnswerTexts[roomIndex],
                         rect[0] + (rect[2] - gl.width)  / 2f,
                         rect[1] + rect[3] / 2f + gl.height / 2f);
                 }
             });
         }
 
+        // populate the room answer cache for the initial question
+        refreshRoomAnswerCache();
+
         // question panel — begins its slide animation immediately (scene starts at QUESTION_INTRO)
         this.questionPanel = new QuestionPanel(promptFont);
         questionPanel.beginIntro(orchestrator.getCurrentQuestion().getPrompt());
+        // prevent onPhaseChanged from firing beginIntro a second time on the first update tick
+        this.lastKnownPhase = orchestrator.getPhase();
+
+        // capture hudFont as a final local so closures below are independent of the field lifecycle
+        final BitmapFont capturedHudFont = hudFont;
+
+        // pre-compute fixed feedback layouts once — "CORRECT!" and "WRONG!" never change
+        final GlyphLayout correctLayout = new GlyphLayout(capturedHudFont, "CORRECT!");
+        final GlyphLayout wrongLayout   = new GlyphLayout(capturedHudFont, "WRONG!");
 
         // feedback overlay: full-screen green/red tint + result text, shown only during FEEDBACK
         final Color overlayColour = new Color();
         this.feedbackOverlay = new IRenderable() {
             private final Transform2D t = new Transform2D(0f, 0f, 1280f, 720f);
-            @Override public String    getAssetPath() { return null; }
+            @Override public String     getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
 
             @Override
             public void render(IDrawContext ctx) {
                 if (orch.getPhase() != RoundPhase.FEEDBACK) return;
                 boolean correct = orch.isLastAnswerCorrect();
-                overlayColour.set(correct
-                    ? new Color(0f, 0.7f, 0f, 0.35f)
-                    : new Color(0.8f, 0f, 0f, 0.35f));
-                GdxDrawContext gdx = (GdxDrawContext) ctx;
+                // reuse pre-allocated colour and layout objects — no allocation in this hot path
+                overlayColour.set(correct ? OVERLAY_CORRECT : OVERLAY_WRONG);
+                GdxDrawContext gdx    = (GdxDrawContext) ctx;
                 gdx.drawTintedQuad(overlayColour, 0f, 0f, 1280f, 720f);
-                String msg       = correct ? "CORRECT!" : "WRONG!";
-                GlyphLayout layout = new GlyphLayout(hudFont, msg);
-                gdx.drawFont(hudFont, msg, 640f - layout.width / 2f, 400f);
+                String      msg    = correct ? "CORRECT!" : "WRONG!";
+                GlyphLayout layout = correct ? correctLayout : wrongLayout;
+                gdx.drawFont(capturedHudFont, msg, 640f - layout.width / 2f, 400f);
             }
         };
 
         // score display: top-right corner
         this.scoreDisplay = new IRenderable() {
             private final Transform2D t = new Transform2D(1100f, 680f, 0f, 0f);
-            @Override public String    getAssetPath() { return null; }
+            @Override public String     getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
 
             @Override
             public void render(IDrawContext ctx) {
                 String text = "Score: " + orch.getScore();
-                ((GdxDrawContext) ctx).drawFont(hudFont, text, 1100f, 700f);
+                ((GdxDrawContext) ctx).drawFont(capturedHudFont, text, 1100f, 700f);
             }
         };
 
@@ -245,19 +278,20 @@ public class GameScene extends Scene {
             private static final float BASE_X = 30f;
             private static final float BASE_Y = 682f;
             private final Transform2D t = new Transform2D(BASE_X, BASE_Y, 0f, 0f);
-            @Override public String    getAssetPath() { return null; }
+            @Override public String     getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
 
             @Override
             public void render(IDrawContext ctx) {
-                GdxDrawContext gdx = (GdxDrawContext) ctx;
-                int health = orch.getHealth();
+                GdxDrawContext gdx    = (GdxDrawContext) ctx;
+                int            health = orch.getHealth();
                 for (int i = 0; i < 3; i++) {
                     float x = BASE_X + i * (SQ + GAP);
                     if (i < health) {
                         gdx.rect(Color.RED, x, BASE_Y, SQ, SQ, true);
                     } else {
-                        gdx.rect(new Color(0.3f, 0.3f, 0.3f, 1f), x, BASE_Y, SQ, SQ, false);
+                        // reuse static constant — no allocation
+                        gdx.rect(HEALTH_LOST_COLOUR, x, BASE_Y, SQ, SQ, false);
                     }
                 }
             }
@@ -285,6 +319,8 @@ public class GameScene extends Scene {
         roomCooldownTimers = null;
         cachedRoomBounds   = null;
         roomRenderables    = null;
+        roomAnswerTexts    = null;
+        roomAnswerLayouts  = null;
         lastKnownPhase     = null;
         questionPanel      = null;
         promptFont         = null;
@@ -361,6 +397,7 @@ public class GameScene extends Scene {
      */
     @Override
     public void submitRenderable(IRenderQueue renderQueue) {
+        if (roomRenderables == null) return; // scene has already exited
         for (IRenderable room : roomRenderables) {
             renderQueue.queue(room);
         }
@@ -390,7 +427,8 @@ public class GameScene extends Scene {
             Arrays.fill(roomCooldownTimers, 0f);
         }
         if (to == RoundPhase.QUESTION_INTRO) {
-            // start the panel slide for the incoming question
+            // update the room answer cache for the new question, then slide the panel
+            refreshRoomAnswerCache();
             questionPanel.beginIntro(orchestrator.getCurrentQuestion().getPrompt());
         }
         if (!isTerminalPhase(to) && to != RoundPhase.CHOOSING) {
@@ -460,5 +498,20 @@ public class GameScene extends Scene {
      */
     private boolean isTerminalPhase(RoundPhase phase) {
         return phase == RoundPhase.LEVEL_COMPLETE || phase == RoundPhase.GAME_OVER;
+    }
+
+    /**
+     * reads the current room assignment from the orchestrator and pre-computes the
+     * answer text and glyph layout for each room.
+     *
+     * called once in onEnter and once each time QUESTION_INTRO begins so that
+     * room renderables never allocate during their hot render path.
+     */
+    private void refreshRoomAnswerCache() {
+        for (int i = 0; i < 4; i++) {
+            roomAnswerTexts[i] = String.valueOf(orchestrator.getRoomAssignment().getAnswerForRoom(i));
+            // setText() updates the layout in-place — no new GlyphLayout allocation
+            roomAnswerLayouts[i].setText(promptFont, roomAnswerTexts[i]);
+        }
     }
 }
