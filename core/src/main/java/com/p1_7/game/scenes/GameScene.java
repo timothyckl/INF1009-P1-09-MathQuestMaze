@@ -12,15 +12,17 @@ import com.p1_7.game.gameplay.MazeLayout;
 import com.p1_7.game.gameplay.Player;
 import com.p1_7.game.gameplay.RoundPhase;
 import com.p1_7.game.gameplay.WallCollidable;
+import com.p1_7.game.managers.GameMovementManager;
 
 /**
  * placeholder gameplay scene — minimal wiring to make the player visible
  * and exercisable at runtime pending full orchestration in issue #100.
  *
  * the round phase is hardcoded to CHOOSING until GameRound is wired in #100.
- * wall collision is handled by MazeCollisionManager, which runs after this
- * scene's update() each frame. movement will be delegated to MovementManager
- * in issue #112, at which point the direct player.move() call will be removed.
+ * position integration is delegated to GameMovementManager, which calls
+ * player.move() after this scene's update() sets the velocity. wall collision
+ * is handled by MazeCollisionManager, which runs after GameMovementManager
+ * each frame.
  */
 public class GameScene extends Scene {
 
@@ -35,6 +37,9 @@ public class GameScene extends Scene {
 
     /** collision manager sourced from the engine service context */
     private MazeCollisionManager collisionManager;
+
+    /** movement manager sourced from the engine service context */
+    private GameMovementManager movementManager;
 
     /** wall collidables registered with the collision manager for this scene */
     private List<WallCollidable> wallCollidables;
@@ -58,6 +63,10 @@ public class GameScene extends Scene {
         this.player     = new Player(spawn[0], spawn[1]);
         this.inputQuery = context.get(IInputQuery.class);
 
+        // wire movement manager and register the player for position integration
+        this.movementManager = context.get(GameMovementManager.class);
+        movementManager.registerMovable(player);
+
         // wire collision manager and register the player and all walls
         this.collisionManager = context.get(MazeCollisionManager.class);
         this.wallCollidables  = new ArrayList<>();
@@ -77,6 +86,9 @@ public class GameScene extends Scene {
      */
     @Override
     public void onExit(SceneContext context) {
+        // unregister the player from movement before clearing references
+        movementManager.unregisterMovable(player);
+
         // unregister all collision participants before clearing references
         collisionManager.unregisterPlayer();
         for (WallCollidable wall : wallCollidables) {
@@ -86,13 +98,16 @@ public class GameScene extends Scene {
         layout            = null;
         player            = null;
         inputQuery        = null;
+        movementManager   = null;
         collisionManager  = null;
         wallCollidables   = null;
     }
 
     /**
-     * resolves player input, then integrates velocity. wall collision is
-     * corrected reactively by MazeCollisionManager after this method returns.
+     * resolves player input and sets velocity for this frame. position
+     * integration is delegated to GameMovementManager, which runs after
+     * this method returns. wall collision is corrected reactively by
+     * MazeCollisionManager after GameMovementManager completes.
      *
      * @param deltaTime elapsed seconds since the last frame
      * @param context   the engine service context
@@ -101,7 +116,7 @@ public class GameScene extends Scene {
     public void update(float deltaTime, SceneContext context) {
         // phase is hardcoded to CHOOSING until GameRound is wired in issue #100
         player.update(deltaTime, inputQuery, RoundPhase.CHOOSING);
-        player.move(deltaTime);
+        // position integration delegated to GameMovementManager
     }
 
     /**

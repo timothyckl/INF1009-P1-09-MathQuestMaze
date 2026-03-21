@@ -9,7 +9,7 @@ import com.p1_7.abstractengine.collision.CollisionPair;
 import com.p1_7.abstractengine.collision.ICollidable;
 import com.p1_7.abstractengine.engine.IManager;
 import com.p1_7.abstractengine.transform.ITransform;
-import com.p1_7.game.managers.GameSceneManager;
+import com.p1_7.game.managers.GameMovementManager;
 
 /**
  * concrete CollisionManager that resolves player-to-wall collisions in the maze.
@@ -19,10 +19,10 @@ import com.p1_7.game.managers.GameSceneManager;
  * the player is pushed out of penetrating walls using a minimum translation
  * vector (MTV) computed from axis-aligned overlap distances.
  *
- * declaring GameSceneManager as a dependency ensures this manager's onUpdate()
- * runs after GameSceneManager.onUpdate(), which in turn calls GameScene.update()
- * and player.move() — so position corrections are applied to the post-integration
- * position rather than the pre-movement position.
+ * declaring GameMovementManager as a dependency ensures this manager's onUpdate()
+ * runs after GameMovementManager.onUpdate() — which calls player.move() and
+ * clamps to viewport bounds — so position corrections are applied to the
+ * post-integration position rather than the pre-movement position.
  */
 public class MazeCollisionManager extends CollisionManager {
 
@@ -33,16 +33,16 @@ public class MazeCollisionManager extends CollisionManager {
     private Player player;
 
     /**
-     * declares GameSceneManager as this manager's sole dependency so the engine
-     * schedules this manager's onUpdate() after GameSceneManager.onUpdate() —
-     * which calls GameScene.update() and player.move() — each frame.
+     * declares GameMovementManager as this manager's sole dependency so the engine
+     * schedules this manager's onUpdate() after GameMovementManager.onUpdate() —
+     * which calls player.move() and clamps to viewport bounds — each frame.
      *
-     * @return array containing GameSceneManager.class
+     * @return array containing GameMovementManager.class
      */
     @Override
     @SuppressWarnings("unchecked")
     public Class<? extends IManager>[] getDependencies() {
-        return new Class[]{ GameSceneManager.class };
+        return new Class[]{ GameMovementManager.class };
     }
 
     // ── registration helpers ──────────────────────────────────────

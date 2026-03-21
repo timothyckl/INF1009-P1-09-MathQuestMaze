@@ -21,9 +21,10 @@ import com.p1_7.game.platform.GdxDrawContext;
  * ROUND_RESET). wall collision is handled reactively by MazeCollisionManager,
  * which pushes the player out of any penetrating wall after move() runs.
  *
- * call update() each frame to resolve input, then move() to integrate velocity
- * into position. MazeCollisionManager.onUpdate() runs after the scene update
- * and corrects any wall penetration.
+ * call update() each frame to resolve input and set velocity. position
+ * integration is delegated to GameMovementManager, which calls move() after
+ * GameScene.update() has set the velocity. MazeCollisionManager.onUpdate()
+ * runs after GameMovementManager and corrects any wall penetration.
  */
 public class Player extends Entity implements IRenderable, IMovable, ICollidable {
 
@@ -143,8 +144,9 @@ public class Player extends Entity implements IRenderable, IMovable, ICollidable
     /**
      * integrates the current velocity into the player's position.
      *
-     * wall penetration resulting from this integration is corrected reactively
-     * by MazeCollisionManager.onUpdate(), which runs after the scene update.
+     * called by GameMovementManager each frame after GameScene.update() has set
+     * the velocity. wall penetration is corrected reactively by MazeCollisionManager
+     * after this call returns.
      *
      * @param deltaTime seconds elapsed since the previous frame
      */

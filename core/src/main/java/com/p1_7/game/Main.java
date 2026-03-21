@@ -11,9 +11,10 @@ import com.p1_7.game.gameplay.MazeCollisionManager;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.AudioManager;
+import com.p1_7.game.managers.FontManager;
+import com.p1_7.game.managers.GameMovementManager;
 import com.p1_7.game.managers.GameSceneManager;
 import com.p1_7.game.managers.IAudioManager;
-import com.p1_7.game.managers.FontManager;
 import com.p1_7.game.managers.IFontManager;
 import com.p1_7.game.platform.GdxCursorSource;
 import com.p1_7.game.platform.GdxInputSource;
@@ -44,6 +45,7 @@ public class Main extends ApplicationAdapter {
 
         AudioManager audioManager = new AudioManager();
         FontManager fontManager = new FontManager();
+        GameMovementManager movementManager = new GameMovementManager();
         MazeCollisionManager collisionManager = new MazeCollisionManager();
 
         // build and configure the input manager before handing it to the engine
@@ -58,12 +60,14 @@ public class Main extends ApplicationAdapter {
         engine.registerManager(new GdxRenderManager());
         engine.registerManager(audioManager);
         engine.registerManager(fontManager);
+        engine.registerManager(movementManager);
         engine.registerManager(collisionManager);
 
         // scene setup
         GameSceneManager sceneManager = new GameSceneManager();
         sceneManager.registerService(IAudioManager.class, audioManager);
         sceneManager.registerService(IFontManager.class, fontManager);
+        sceneManager.registerService(GameMovementManager.class, movementManager);
         sceneManager.registerService(MazeCollisionManager.class, collisionManager);
 
         // main menu (shown first)
