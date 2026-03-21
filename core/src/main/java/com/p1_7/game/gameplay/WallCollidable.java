@@ -10,7 +10,7 @@ import com.p1_7.game.core.Bounds2D;
  * exposes the wall as an ICollidable so MazeCollisionManager can include it
  * in pairwise overlap detection. walls are static and do not react to collisions.
  */
-public class WallCollidable implements ICollidable {
+public final class WallCollidable implements ICollidable {
 
     /** the bounding box of this wall, built once at construction time */
     private final Bounds2D bounds;

@@ -19,9 +19,10 @@ import com.p1_7.game.managers.GameSceneManager;
  * the player is pushed out of penetrating walls using a minimum translation
  * vector (MTV) computed from axis-aligned overlap distances.
  *
- * declaring GameSceneManager as a dependency ensures this manager runs after
- * GameScene.update() (which calls player.move()), so position corrections are
- * applied to the already-integrated position.
+ * declaring GameSceneManager as a dependency ensures this manager's onUpdate()
+ * runs after GameSceneManager.onUpdate(), which in turn calls GameScene.update()
+ * and player.move() — so position corrections are applied to the post-integration
+ * position rather than the pre-movement position.
  */
 public class MazeCollisionManager extends CollisionManager {
 
@@ -33,7 +34,8 @@ public class MazeCollisionManager extends CollisionManager {
 
     /**
      * declares GameSceneManager as this manager's sole dependency so the engine
-     * schedules it after the scene update completes each frame.
+     * schedules this manager's onUpdate() after GameSceneManager.onUpdate() —
+     * which calls GameScene.update() and player.move() — each frame.
      *
      * @return array containing GameSceneManager.class
      */
@@ -100,14 +102,20 @@ public class MazeCollisionManager extends CollisionManager {
         for (CollisionPair pair : collisions) {
             // identify which side of the pair is a registered wall
             ICollidable wall;
+            ICollidable other;
             if (registeredWalls.contains(pair.getEntityA())) {
-                wall = pair.getEntityA();
+                wall  = pair.getEntityA();
+                other = pair.getEntityB();
             } else if (registeredWalls.contains(pair.getEntityB())) {
-                wall = pair.getEntityB();
+                wall  = pair.getEntityB();
+                other = pair.getEntityA();
             } else {
                 // neither entity is a known wall — nothing to resolve
                 continue;
             }
+
+            // only push out the registered player; ignore wall-to-non-player pairs
+            if (other != player) continue;
 
             pushPlayerOut(wall);
         }

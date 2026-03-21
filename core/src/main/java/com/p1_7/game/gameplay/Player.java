@@ -39,6 +39,12 @@ public class Player extends Entity implements IRenderable, IMovable, ICollidable
     /** AABB synced with transform position on each getBounds() call */
     private final Bounds2D bounds;
 
+    /** reusable position scratch array for getBounds() — avoids per-call allocation */
+    private final float[] boundsPos = new float[2];
+
+    /** constant extent array shared across all getBounds() calls */
+    private static final float[] BOUNDS_SIZE = new float[]{ SIZE, SIZE };
+
     /** [vx, vy] — set each frame by update() */
     private float[] velocity;
 
@@ -137,8 +143,8 @@ public class Player extends Entity implements IRenderable, IMovable, ICollidable
     /**
      * integrates the current velocity into the player's position.
      *
-     * wall collision is pre-resolved by update() before this is called, so no
-     * further bounds checks are needed here.
+     * wall penetration resulting from this integration is corrected reactively
+     * by MazeCollisionManager.onUpdate(), which runs after the scene update.
      *
      * @param deltaTime seconds elapsed since the previous frame
      */
@@ -157,11 +163,10 @@ public class Player extends Entity implements IRenderable, IMovable, ICollidable
      */
     @Override
     public IBounds getBounds() {
-        // sync bounds to the current transform position before returning
-        bounds.set(
-            new float[]{ transform.getPosition(0), transform.getPosition(1) },
-            new float[]{ SIZE, SIZE }
-        );
+        // sync bounds to the current transform position using pre-allocated scratch arrays
+        boundsPos[0] = transform.getPosition(0);
+        boundsPos[1] = transform.getPosition(1);
+        bounds.set(boundsPos, BOUNDS_SIZE);
         return bounds;
     }
 

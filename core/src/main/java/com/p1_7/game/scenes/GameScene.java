@@ -78,11 +78,9 @@ public class GameScene extends Scene {
     @Override
     public void onExit(SceneContext context) {
         // unregister all collision participants before clearing references
-        if (collisionManager != null) {
-            collisionManager.unregisterPlayer();
-            for (WallCollidable wall : wallCollidables) {
-                collisionManager.unregisterWall(wall);
-            }
+        collisionManager.unregisterPlayer();
+        for (WallCollidable wall : wallCollidables) {
+            collisionManager.unregisterWall(wall);
         }
 
         layout            = null;
@@ -93,7 +91,8 @@ public class GameScene extends Scene {
     }
 
     /**
-     * resolves player input and wall collisions, then integrates velocity.
+     * resolves player input, then integrates velocity. wall collision is
+     * corrected reactively by MazeCollisionManager after this method returns.
      *
      * @param deltaTime elapsed seconds since the last frame
      * @param context   the engine service context
