@@ -7,6 +7,7 @@ import com.p1_7.abstractengine.engine.Engine;
 import com.p1_7.abstractengine.entity.EntityManager;
 import com.p1_7.abstractengine.input.InputManager;
 
+import com.p1_7.game.gameplay.MazeCollisionManager;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.AudioManager;
@@ -43,6 +44,7 @@ public class Main extends ApplicationAdapter {
 
         AudioManager audioManager = new AudioManager();
         FontManager fontManager = new FontManager();
+        MazeCollisionManager collisionManager = new MazeCollisionManager();
 
         // build and configure the input manager before handing it to the engine
         // so extensions are available to scenes from the first frame
@@ -56,11 +58,13 @@ public class Main extends ApplicationAdapter {
         engine.registerManager(new GdxRenderManager());
         engine.registerManager(audioManager);
         engine.registerManager(fontManager);
+        engine.registerManager(collisionManager);
 
         // scene setup
         GameSceneManager sceneManager = new GameSceneManager();
         sceneManager.registerService(IAudioManager.class, audioManager);
         sceneManager.registerService(IFontManager.class, fontManager);
+        sceneManager.registerService(MazeCollisionManager.class, collisionManager);
 
         // main menu (shown first)
         sceneManager.registerScene(new MenuScene());

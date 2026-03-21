@@ -1,12 +1,15 @@
 package com.p1_7.game.gameplay;
 
 import com.badlogic.gdx.graphics.Color;
+import com.p1_7.abstractengine.collision.IBounds;
+import com.p1_7.abstractengine.collision.ICollidable;
 import com.p1_7.abstractengine.entity.Entity;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.movement.IMovable;
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.transform.ITransform;
+import com.p1_7.game.core.Bounds2D;
 import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.platform.GdxDrawContext;
@@ -15,15 +18,14 @@ import com.p1_7.game.platform.GdxDrawContext;
  * the player entity — a cyan square that moves freely around the maze.
  *
  * movement is locked during non-interactive phases (QUESTION_INTRO, FEEDBACK,
- * ROUND_RESET). the player is blocked by the outer walls from MazeLayout via
- * an inline axis-separated AABB check, which will be removed in issue #112 once
- * MazeCollisionManager is live.
+ * ROUND_RESET). wall collision is handled reactively by MazeCollisionManager,
+ * which pushes the player out of any penetrating wall after move() runs.
  *
- * call update() each frame to resolve input and wall collisions, then move() to
- * integrate velocity into position. in issue #112, GameScene will stop calling
- * move() directly and register this entity with MovementManager instead.
+ * call update() each frame to resolve input, then move() to integrate velocity
+ * into position. MazeCollisionManager.onUpdate() runs after the scene update
+ * and corrects any wall penetration.
  */
-public class Player extends Entity implements IRenderable, IMovable {
+public class Player extends Entity implements IRenderable, IMovable, ICollidable {
 
     /** movement speed in pixels per second */
     private static final float SPEED = 200f;
@@ -33,6 +35,9 @@ public class Player extends Entity implements IRenderable, IMovable {
 
     /** bottom-left origin, SIZE × SIZE */
     private final Transform2D transform;
+
+    /** AABB synced with transform position on each getBounds() call */
+    private final Bounds2D bounds;
 
     /** [vx, vy] — set each frame by update() */
     private float[] velocity;
@@ -49,6 +54,7 @@ public class Player extends Entity implements IRenderable, IMovable {
     public Player(float spawnX, float spawnY) {
         // position transform so the player is centred on the spawn point
         this.transform    = new Transform2D(spawnX - SIZE / 2f, spawnY - SIZE / 2f, SIZE, SIZE);
+        this.bounds       = new Bounds2D(spawnX - SIZE / 2f, spawnY - SIZE / 2f, SIZE, SIZE);
         this.velocity     = new float[]{ 0f, 0f };
         this.acceleration = new float[]{ 0f, 0f };
     }
@@ -142,53 +148,58 @@ public class Player extends Entity implements IRenderable, IMovable {
         transform.setPosition(1, transform.getPosition(1) + velocity[1] * deltaTime);
     }
 
+    // ── ICollidable ──────────────────────────────────────────────
+
+    /**
+     * returns the player's bounding box, synced to the current transform position.
+     *
+     * @return the AABB for this frame's position
+     */
+    @Override
+    public IBounds getBounds() {
+        // sync bounds to the current transform position before returning
+        bounds.set(
+            new float[]{ transform.getPosition(0), transform.getPosition(1) },
+            new float[]{ SIZE, SIZE }
+        );
+        return bounds;
+    }
+
+    /**
+     * no-op — position correction is handled by MazeCollisionManager.resolve().
+     *
+     * @param other the collidable that this player collided with
+     */
+    @Override
+    public void onCollision(ICollidable other) {
+        // position correction delegated to MazeCollisionManager
+    }
+
     // ── per-frame update ─────────────────────────────────────────
 
     /**
-     * resolves input, applies phase locking, and performs an axis-separated AABB
-     * wall check against the maze layout for this frame.
+     * resolves input and applies phase locking for this frame.
      *
      * must be called before move(). the resolved velocity is committed via
-     * setVelocity() so MovementManager can read it in issue #112.
+     * setVelocity(). wall collision is handled reactively by MazeCollisionManager
+     * after move() runs — no inline AABB check is needed here.
      *
      * @param deltaTime  seconds elapsed since the previous frame
      * @param inputQuery the logical input query for this frame
      * @param phase      the current round phase; movement is locked unless CHOOSING
-     * @param layout     the maze layout supplying wall bounds
      */
-    public void update(float deltaTime, IInputQuery inputQuery, RoundPhase phase,
-                       MazeLayout layout) {
+    public void update(float deltaTime, IInputQuery inputQuery, RoundPhase phase) {
         // only allow movement during the choosing phase; any other phase locks the player
         if (phase != RoundPhase.CHOOSING) {
             setVelocity(new float[]{ 0f, 0f });
             return;
         }
 
-        // read raw directional input
+        // read raw directional input and commit as velocity
         float rawVx = (inputQuery.isActionActive(GameActions.MOVE_RIGHT) ? SPEED : 0f)
                     - (inputQuery.isActionActive(GameActions.MOVE_LEFT)  ? SPEED : 0f);
         float rawVy = (inputQuery.isActionActive(GameActions.MOVE_UP)    ? SPEED : 0f)
                     - (inputQuery.isActionActive(GameActions.MOVE_DOWN)  ? SPEED : 0f);
-
-        float x = transform.getPosition(0);
-        float y = transform.getPosition(1);
-
-        // two-pass axis-separated AABB wall check — each axis is resolved independently so
-        // one wall zeroing x cannot influence the y test for a different wall in the same frame
-        for (float[] wall : layout.getWallBounds()) {
-            if (overlaps(x + rawVx * deltaTime, y, SIZE, SIZE,
-                         wall[0], wall[1], wall[2], wall[3])) {
-                rawVx = 0f;
-                break;
-            }
-        }
-        for (float[] wall : layout.getWallBounds()) {
-            if (overlaps(x, y + rawVy * deltaTime, SIZE, SIZE,
-                         wall[0], wall[1], wall[2], wall[3])) {
-                rawVy = 0f;
-                break;
-            }
-        }
 
         setVelocity(new float[]{ rawVx, rawVy });
     }
@@ -212,24 +223,4 @@ public class Player extends Entity implements IRenderable, IMovable {
         transform.setPosition(1, spawnPoint[1] - SIZE / 2f);
     }
 
-    // ── private helpers ──────────────────────────────────────────
-
-    /**
-     * returns true if rectangle A overlaps rectangle B.
-     *
-     * @param ax left edge of A
-     * @param ay bottom edge of A
-     * @param aw width of A
-     * @param ah height of A
-     * @param bx left edge of B
-     * @param by bottom edge of B
-     * @param bw width of B
-     * @param bh height of B
-     * @return true when the two axis-aligned bounding boxes intersect
-     */
-    private static boolean overlaps(float ax, float ay, float aw, float ah,
-                                     float bx, float by, float bw, float bh) {
-        return ax < bx + bw && ax + aw > bx
-            && ay < by + bh && ay + ah > by;
-    }
 }
