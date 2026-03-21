@@ -7,6 +7,8 @@ import com.p1_7.abstractengine.engine.Engine;
 import com.p1_7.abstractengine.entity.EntityManager;
 import com.p1_7.abstractengine.input.InputManager;
 
+import com.p1_7.game.gameplay.ILevelOrchestrator;
+import com.p1_7.game.gameplay.LevelOrchestrator;
 import com.p1_7.game.gameplay.MazeCollisionManager;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
@@ -47,6 +49,9 @@ public class Main extends ApplicationAdapter {
         FontManager fontManager = new FontManager();
         GameMovementManager movementManager = new GameMovementManager();
         MazeCollisionManager collisionManager = new MazeCollisionManager();
+        // orchestrator is a pure domain object with no engine lifecycle; registered as
+        // a scene service only, not as an engine manager
+        LevelOrchestrator orchestrator = new LevelOrchestrator();
 
         // build and configure the input manager before handing it to the engine
         // so extensions are available to scenes from the first frame
@@ -69,6 +74,7 @@ public class Main extends ApplicationAdapter {
         sceneManager.registerService(IFontManager.class, fontManager);
         sceneManager.registerService(GameMovementManager.class, movementManager);
         sceneManager.registerService(MazeCollisionManager.class, collisionManager);
+        sceneManager.registerService(ILevelOrchestrator.class, orchestrator);
 
         // main menu (shown first)
         sceneManager.registerScene(new MenuScene());
