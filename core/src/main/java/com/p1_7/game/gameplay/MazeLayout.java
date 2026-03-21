@@ -137,16 +137,16 @@ public class MazeLayout {
     public static MazeLayout createDefault() {
         float[] spawn = { SCREEN_WIDTH / 2f, SCREEN_HEIGHT / 2f };
 
-        // right edge of right rooms: SCREEN_WIDTH - WALL_THICKNESS - ROOM_MARGIN - ROOM_WIDTH = 980
+        // x-origin of right rooms: SCREEN_WIDTH - WALL_THICKNESS - ROOM_MARGIN - ROOM_WIDTH = 980
         float rightX = SCREEN_WIDTH - WALL_THICKNESS - ROOM_MARGIN - ROOM_WIDTH;
 
-        // bottom edge of top rooms: SCREEN_HEIGHT - WALL_THICKNESS - ROOM_MARGIN - ROOM_HEIGHT = 480
+        // y-origin of top rooms: SCREEN_HEIGHT - WALL_THICKNESS - ROOM_MARGIN - ROOM_HEIGHT = 480
         float topY = SCREEN_HEIGHT - WALL_THICKNESS - ROOM_MARGIN - ROOM_HEIGHT;
 
-        // bottom edge of bottom rooms: WALL_THICKNESS + ROOM_MARGIN = 40
+        // y-origin of bottom rooms: WALL_THICKNESS + ROOM_MARGIN = 40
         float bottomY = WALL_THICKNESS + ROOM_MARGIN;
 
-        // left edge of left rooms: WALL_THICKNESS + ROOM_MARGIN = 40
+        // x-origin of left rooms: WALL_THICKNESS + ROOM_MARGIN = 40
         float leftX = WALL_THICKNESS + ROOM_MARGIN;
 
         List<float[]> rooms = new ArrayList<>(ROOM_COUNT);
@@ -181,34 +181,42 @@ public class MazeLayout {
      * @throws IllegalArgumentException if roomIndex is not in [0, 3]
      */
     public float[] getRoomBounds(int roomIndex) {
-        if (roomIndex < 0 || roomIndex > 3) {
+        if (roomIndex < 0 || roomIndex >= ROOM_COUNT) {
             throw new IllegalArgumentException(
-                "roomIndex must be in [0, 3], got: " + roomIndex);
+                "roomIndex must be in [0, " + (ROOM_COUNT - 1) + "], got: " + roomIndex);
         }
         return roomBounds.get(roomIndex).clone();
     }
 
     /**
-     * returns an unmodifiable view of all four answer-room bounding rectangles.
+     * returns an unmodifiable list of deep-copied answer-room bounding rectangles.
      *
-     * each element is a four-element float array [x, y, w, h]. callers must not
-     * mutate the arrays through this view; the list itself is unmodifiable.
+     * each element is a new four-element float array [x, y, w, h]; mutating the returned
+     * arrays does not affect the stored layout.
      *
      * @return unmodifiable list of four [x, y, w, h] arrays
      */
     public List<float[]> getAllRoomBounds() {
-        return roomBounds;
+        List<float[]> copy = new ArrayList<>(ROOM_COUNT);
+        for (float[] rect : roomBounds) {
+            copy.add(rect.clone());
+        }
+        return Collections.unmodifiableList(copy);
     }
 
     /**
-     * returns an unmodifiable view of the four outer wall bounding rectangles.
+     * returns an unmodifiable list of deep-copied outer wall bounding rectangles.
      *
-     * each element is a four-element float array [x, y, w, h]. callers must not
-     * mutate the arrays through this view; the list itself is unmodifiable.
+     * each element is a new four-element float array [x, y, w, h]; mutating the returned
+     * arrays does not affect the stored layout.
      *
      * @return unmodifiable list of four [x, y, w, h] arrays
      */
     public List<float[]> getWallBounds() {
-        return wallBounds;
+        List<float[]> copy = new ArrayList<>(WALL_COUNT);
+        for (float[] rect : wallBounds) {
+            copy.add(rect.clone());
+        }
+        return Collections.unmodifiableList(copy);
     }
 }
