@@ -24,14 +24,30 @@ public class LevelOrchestrator implements ILevelOrchestrator {
      * call startLevel before using any other method.
      */
     public LevelOrchestrator() {
-        this.roomAssigner = new RoomAssigner();
+        this(new RoomAssigner());
     }
 
     /**
-     * {@inheritDoc}
+     * constructs a level orchestrator with the given room assigner.
      *
+     * package-private to allow injection in unit tests without exposing the
+     * dependency publicly.
+     *
+     * @param roomAssigner the room assigner to use; must not be null
+     * @throws IllegalArgumentException if roomAssigner is null
+     */
+    LevelOrchestrator(RoomAssigner roomAssigner) {
+        if (roomAssigner == null) {
+            throw new IllegalArgumentException("roomAssigner must not be null");
+        }
+        this.roomAssigner = roomAssigner;
+    }
+
+    /**
      * creates a new QuestionGenerator and GameRound for the given difficulty, then
-     * refreshes the room assignment to match the first question.
+     * refreshes the room assignment to match the first question. if called while a
+     * round is already active, the previous round's score, health, and phase are
+     * discarded and a new round begins immediately.
      *
      * @param difficulty the difficulty level for this session; must not be null
      * @throws IllegalArgumentException if difficulty is null
@@ -47,66 +63,36 @@ public class LevelOrchestrator implements ILevelOrchestrator {
         refreshAssignment();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws IllegalStateException if startLevel has not been called
-     */
     @Override
     public RoundPhase getPhase() {
         requireActiveRound();
         return gameRound.getPhase();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws IllegalStateException if startLevel has not been called
-     */
     @Override
     public MathQuestion getCurrentQuestion() {
         requireActiveRound();
         return gameRound.getCurrentQuestion();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws IllegalStateException if startLevel has not been called
-     */
     @Override
     public RoomAssignment getRoomAssignment() {
         requireActiveRound();
         return roomAssignment;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws IllegalStateException if startLevel has not been called
-     */
     @Override
     public int getScore() {
         requireActiveRound();
         return gameRound.getScore();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws IllegalStateException if startLevel has not been called
-     */
     @Override
     public int getHealth() {
         requireActiveRound();
         return gameRound.getHealth();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws IllegalStateException if startLevel has not been called
-     */
     @Override
     public boolean isLastAnswerCorrect() {
         requireActiveRound();
@@ -114,8 +100,6 @@ public class LevelOrchestrator implements ILevelOrchestrator {
     }
 
     /**
-     * {@inheritDoc}
-     *
      * resolves the answer for the given room index from the current assignment and
      * delegates to GameRound.submitAnswer.
      *
@@ -133,8 +117,6 @@ public class LevelOrchestrator implements ILevelOrchestrator {
     }
 
     /**
-     * {@inheritDoc}
-     *
      * captures the phase before delegating so the assignment can be refreshed when
      * advancing out of ROUND_RESET, which is the transition that loads a new question.
      *

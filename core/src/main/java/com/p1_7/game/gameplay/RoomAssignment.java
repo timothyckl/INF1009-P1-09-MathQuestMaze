@@ -47,10 +47,11 @@ public class RoomAssignment {
      * @throws IllegalArgumentException if roomIndex is not in the range 0–3
      */
     public int getAnswerForRoom(int roomIndex) {
-        if (!roomToAnswer.containsKey(roomIndex)) {
+        Integer answer = roomToAnswer.get(roomIndex);
+        if (answer == null) {
             throw new IllegalArgumentException(
                 "roomIndex must be in [0, 3], got: " + roomIndex);
         }
-        return roomToAnswer.get(roomIndex);
+        return answer;
     }
 }

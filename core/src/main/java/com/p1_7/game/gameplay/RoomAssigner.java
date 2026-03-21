@@ -14,13 +14,6 @@ import java.util.Map;
 public class RoomAssigner {
 
     /**
-     * constructs a new room assigner.
-     */
-    public RoomAssigner() {
-        // stateless — no initialisation required
-    }
-
-    /**
      * assigns the four answer options from the given question to room indices 0–3.
      *
      * the i-th option in the question's options list is assigned to room index i.
@@ -38,6 +31,11 @@ public class RoomAssigner {
         }
 
         List<Integer> options = question.getOptions();
+        if (options.size() != 4) {
+            throw new IllegalArgumentException(
+                "question must have exactly 4 options, got: " + options.size());
+        }
+
         Map<Integer, Integer> roomToAnswer = new HashMap<>();
 
         // zip options with indices 0–3 directly; options are already shuffled by the generator

@@ -16,6 +16,7 @@ public interface ILevelOrchestrator {
      * must be called before any other method on this interface.
      *
      * @param difficulty the difficulty level to use for question generation; must not be null
+     * @throws IllegalArgumentException if difficulty is null
      */
     void startLevel(Difficulty difficulty);
 
