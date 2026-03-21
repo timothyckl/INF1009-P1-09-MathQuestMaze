@@ -49,6 +49,8 @@ public class Main extends ApplicationAdapter {
         FontManager fontManager = new FontManager();
         GameMovementManager movementManager = new GameMovementManager();
         MazeCollisionManager collisionManager = new MazeCollisionManager();
+        // orchestrator is a pure domain object with no engine lifecycle; registered as
+        // a scene service only, not as an engine manager
         LevelOrchestrator orchestrator = new LevelOrchestrator();
 
         // build and configure the input manager before handing it to the engine

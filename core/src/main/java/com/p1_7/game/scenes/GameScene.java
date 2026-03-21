@@ -12,13 +12,14 @@ import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
+import com.p1_7.abstractengine.transform.ITransform;
+import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.gameplay.Difficulty;
 import com.p1_7.game.gameplay.ILevelOrchestrator;
 import com.p1_7.game.gameplay.MazeCollisionManager;
 import com.p1_7.game.gameplay.MazeLayout;
 import com.p1_7.game.gameplay.Player;
 import com.p1_7.game.gameplay.RoundPhase;
-import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.gameplay.WallCollidable;
 import com.p1_7.game.managers.GameMovementManager;
 import com.p1_7.game.platform.GdxDrawContext;
@@ -70,6 +71,12 @@ public class GameScene extends Scene {
 
     /** per-room countdown timer; fires when the player exits a room, blocks re-entry while > 0 */
     private float[] roomCooldownTimers;
+
+    /**
+     * cached copies of the four room bounds arrays; MazeLayout is immutable so these
+     * never change — caching avoids defensive-clone allocations inside the per-frame loop
+     */
+    private float[][] cachedRoomBounds;
 
     /** phase recorded at the end of the previous update; used to detect transitions */
     private RoundPhase lastKnownPhase;
@@ -123,20 +130,25 @@ public class GameScene extends Scene {
         this.lastKnownPhase     = null;
         this.phaseHoldTimer     = 0f;
 
+        // cache room bounds once; MazeLayout is immutable so these are stable for the scene lifetime
+        this.cachedRoomBounds = new float[4][];
+        for (int i = 0; i < cachedRoomBounds.length; i++) {
+            cachedRoomBounds[i] = layout.getRoomBounds(i);
+        }
+
         // build one grey-outline renderable per answer room
         this.roomRenderables = new ArrayList<>(4);
         List<float[]> allRooms = layout.getAllRoomBounds();
         for (float[] rect : allRooms) {
-            // transform is required by IRenderable (via ITransformable); backed by the room bounds
+            // transform satisfies ITransformable but is not used for rendering;
+            // the rect array drives the draw call directly
             Transform2D roomTransform = new Transform2D(rect[0], rect[1], rect[2], rect[3]);
             roomRenderables.add(new IRenderable() {
                 @Override
                 public String getAssetPath() { return null; }
 
                 @Override
-                public com.p1_7.abstractengine.transform.ITransform getTransform() {
-                    return roomTransform;
-                }
+                public ITransform getTransform() { return roomTransform; }
 
                 @Override
                 public void render(IDrawContext ctx) {
@@ -165,6 +177,7 @@ public class GameScene extends Scene {
         orchestrator       = null;
         playerInsideRoom   = null;
         roomCooldownTimers = null;
+        cachedRoomBounds   = null;
         roomRenderables    = null;
         lastKnownPhase     = null;
 
@@ -180,6 +193,8 @@ public class GameScene extends Scene {
      * resolves player input, detects phase changes, and checks answer-room entry.
      *
      * non-interactive phases freeze input and auto-advance after the hold timer expires.
+     * when advance() is called the resulting phase transition is processed in the same
+     * frame to avoid a one-frame lag on state-sensitive reactions (e.g. player spawn reset).
      * room entry is checked per-frame during the CHOOSING phase only.
      *
      * @param deltaTime elapsed seconds since the last frame
@@ -203,6 +218,13 @@ public class GameScene extends Scene {
                 phaseHoldTimer -= deltaTime;
                 if (phaseHoldTimer <= 0f) {
                     orchestrator.advance();
+                    // re-read and process the resulting phase in the same frame so
+                    // reactions like player.resetToSpawn() are not delayed by one tick
+                    RoundPhase newPhase = orchestrator.getPhase();
+                    if (newPhase != lastKnownPhase) {
+                        onPhaseChanged(lastKnownPhase, newPhase);
+                        lastKnownPhase = newPhase;
+                    }
                 }
             }
             return;
@@ -232,6 +254,8 @@ public class GameScene extends Scene {
      * called whenever the round phase changes. resets the player to spawn on ROUND_RESET
      * and starts the hold timer for non-interactive phases.
      *
+     * 'from' is unused here but retained for future HUD transitions in issue #100.
+     *
      * @param from the previous phase (null on first frame)
      * @param to   the new phase
      */
@@ -251,19 +275,22 @@ public class GameScene extends Scene {
      * checks each answer room for player overlap. on entry fires submitRoomChoice(), on
      * exit starts the re-entry cooldown. only fires during the CHOOSING phase.
      *
+     * when the wrong room is entered, playerInsideRoom[i] is intentionally left as true
+     * until the player physically exits; this means re-entry cannot fire again without
+     * the player leaving first, which is the correct guard for the cooldown path.
+     *
      * @param deltaTime seconds elapsed since the previous frame, used to tick cooldowns
      */
     private void checkRoomEntry(float deltaTime) {
         IBounds playerBounds = player.getBounds();
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < playerInsideRoom.length; i++) {
             // tick the cooldown down; clamp to zero
             if (roomCooldownTimers[i] > 0f) {
                 roomCooldownTimers[i] = Math.max(0f, roomCooldownTimers[i] - deltaTime);
             }
 
-            float[] room = layout.getRoomBounds(i);
-            boolean overlapping = overlapsRoom(playerBounds, room);
+            boolean overlapping = overlapsRoom(playerBounds, cachedRoomBounds[i]);
 
             if (overlapping && !playerInsideRoom[i] && roomCooldownTimers[i] <= 0f) {
                 // player just entered a room with no active cooldown
