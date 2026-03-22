@@ -3,7 +3,8 @@ package com.p1_7.game.managers;
 import com.p1_7.abstractengine.engine.IManager;
 import com.p1_7.abstractengine.movement.MovementManager;
 import com.p1_7.abstractengine.scene.SceneManager;
-import com.p1_7.game.core.GameViewport;
+import com.p1_7.game.Settings;
+import com.p1_7.game.ui.HudStrip;
 
 /**
  * concrete MovementManager that handles player position integration and
@@ -23,7 +24,7 @@ public final class GameMovementManager extends MovementManager {
     protected void onInit() {
         setWorldBounds(
             new float[]{ 0f, 0f },
-            new float[]{ GameViewport.SCREEN_WIDTH, GameViewport.PLAYFIELD_HEIGHT }
+            new float[]{ Settings.getWindowWidth(), HudStrip.PLAYFIELD_HEIGHT }
         );
     }
 

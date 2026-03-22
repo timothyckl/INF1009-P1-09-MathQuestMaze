@@ -17,7 +17,7 @@ import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.abstractengine.transform.ITransform;
-import com.p1_7.game.core.GameViewport;
+import com.p1_7.game.Settings;
 import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.ui.BrightnessOverlay;
 import com.p1_7.game.ui.HudStrip;
@@ -284,8 +284,8 @@ public class GameScene extends Scene {
             private final Transform2D t = new Transform2D(
                 0f,
                 0f,
-                GameViewport.SCREEN_WIDTH,
-                GameViewport.PLAYFIELD_HEIGHT
+                Settings.getWindowWidth(),
+                HudStrip.PLAYFIELD_HEIGHT
             );
             @Override public String     getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
@@ -306,16 +306,16 @@ public class GameScene extends Scene {
                     overlayColour,
                     0f,
                     0f,
-                    GameViewport.SCREEN_WIDTH,
-                    GameViewport.PLAYFIELD_HEIGHT
+                    Settings.getWindowWidth(),
+                    HudStrip.PLAYFIELD_HEIGHT
                 );
                 String      msg    = correct ? "CORRECT!" : "WRONG!";
                 GlyphLayout layout = correct ? correctLayout : wrongLayout;
                 gdx.drawFont(
                     capturedHudFont,
                     msg,
-                    GameViewport.SCREEN_WIDTH / 2f - layout.width / 2f,
-                    GameViewport.PLAYFIELD_HEIGHT / 2f + 60f
+                    Settings.getWindowWidth() / 2f - layout.width / 2f,
+                    HudStrip.PLAYFIELD_HEIGHT / 2f + 60f
                 );
             }
         };
@@ -323,9 +323,9 @@ public class GameScene extends Scene {
         // score display: top-right corner
         this.scoreDisplay = new IRenderable() {
             private static final float RIGHT_PADDING = 18f;
-            private static final float BASELINE_Y    = GameViewport.HUD_STRIP_Y + HUD_SCORE_BASELINE_OFFSET;
+            private final float BASELINE_Y = HudStrip.STRIP_Y + HUD_SCORE_BASELINE_OFFSET;
             private final Transform2D t = new Transform2D(
-                GameViewport.SCREEN_WIDTH - RIGHT_PADDING,
+                Settings.getWindowWidth() - RIGHT_PADDING,
                 BASELINE_Y,
                 0f,
                 0f
@@ -341,7 +341,7 @@ public class GameScene extends Scene {
                 ((GdxDrawContext) ctx).drawFont(
                     capturedHudFont,
                     text,
-                    GameViewport.SCREEN_WIDTH - RIGHT_PADDING - layout.width,
+                    Settings.getWindowWidth() - RIGHT_PADDING - layout.width,
                     BASELINE_Y
                 );
             }
@@ -352,7 +352,7 @@ public class GameScene extends Scene {
             private static final float SQ     = 20f;
             private static final float GAP    = 6f;
             private static final float BASE_X = 18f;
-            private static final float BASE_Y = GameViewport.HUD_STRIP_Y + HUD_HEALTH_BASELINE_OFFSET;
+            private final float BASE_Y = HudStrip.STRIP_Y + HUD_HEALTH_BASELINE_OFFSET;
             private final Transform2D t = new Transform2D(BASE_X, BASE_Y, 0f, 0f);
             @Override public String     getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
@@ -395,7 +395,7 @@ public class GameScene extends Scene {
                         zoneLeft - 1f,
                         0f,
                         2f,
-                        GameViewport.PLAYFIELD_HEIGHT,
+                        HudStrip.PLAYFIELD_HEIGHT,
                         true
                     );
                     gdx.rect(
@@ -403,25 +403,25 @@ public class GameScene extends Scene {
                         zoneRight - 1f,
                         0f,
                         2f,
-                        GameViewport.PLAYFIELD_HEIGHT,
+                        HudStrip.PLAYFIELD_HEIGHT,
                         true
                     );
-                    gdx.rect(DEBUG_ZONE_COLOUR, 0f, zoneTop - 1f, GameViewport.SCREEN_WIDTH, 2f, true);
-                    gdx.rect(DEBUG_ZONE_COLOUR, 0f, zoneBot - 1f, GameViewport.SCREEN_WIDTH, 2f, true);
+                    gdx.rect(DEBUG_ZONE_COLOUR, 0f, zoneTop - 1f, Settings.getWindowWidth(), 2f, true);
+                    gdx.rect(DEBUG_ZONE_COLOUR, 0f, zoneBot - 1f, Settings.getWindowWidth(), 2f, true);
                     // cyan playfield midlines
                     gdx.rect(
                         DEBUG_CORR_COLOUR,
-                        GameViewport.SCREEN_WIDTH / 2f - 1f,
+                        Settings.getWindowWidth() / 2f - 1f,
                         0f,
                         2f,
-                        GameViewport.PLAYFIELD_HEIGHT,
+                        HudStrip.PLAYFIELD_HEIGHT,
                         true
                     );
                     gdx.rect(
                         DEBUG_CORR_COLOUR,
                         0f,
-                        GameViewport.PLAYFIELD_HEIGHT / 2f - 1f,
-                        GameViewport.SCREEN_WIDTH,
+                        HudStrip.PLAYFIELD_HEIGHT / 2f - 1f,
+                        Settings.getWindowWidth(),
                         2f,
                         true
                     );
@@ -689,8 +689,8 @@ public class GameScene extends Scene {
         final Transform2D transform = new Transform2D(
             0f,
             0f,
-            GameViewport.SCREEN_WIDTH,
-            GameViewport.PLAYFIELD_HEIGHT
+            Settings.getWindowWidth(),
+            HudStrip.PLAYFIELD_HEIGHT
         );
         return new IRenderable() {
             @Override public String getAssetPath() { return null; }
@@ -702,8 +702,8 @@ public class GameScene extends Scene {
                     SCENE_BG_COLOUR,
                     0f,
                     0f,
-                    GameViewport.SCREEN_WIDTH,
-                    GameViewport.PLAYFIELD_HEIGHT
+                    Settings.getWindowWidth(),
+                    HudStrip.PLAYFIELD_HEIGHT
                 );
             }
         };

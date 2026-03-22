@@ -5,7 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
-import com.p1_7.game.core.GameViewport;
+import com.p1_7.game.Settings;
+import com.p1_7.game.ui.HudStrip;
 
 /**
  * immutable value object that describes the fixed spatial layout of the math maze.
@@ -18,10 +19,10 @@ import com.p1_7.game.core.GameViewport;
 public class MazeLayout {
 
     /** total width of the play area in pixels */
-    private static final float SCREEN_WIDTH = GameViewport.SCREEN_WIDTH;
+    private static final float SCREEN_WIDTH = Settings.getWindowWidth();
 
     /** total height of the play area in pixels */
-    private static final float SCREEN_HEIGHT = GameViewport.PLAYFIELD_HEIGHT;
+    private static final float SCREEN_HEIGHT = HudStrip.PLAYFIELD_HEIGHT;
 
     /** thickness of the perimeter wall in pixels */
     private static final float WALL_THICKNESS = 20f;
