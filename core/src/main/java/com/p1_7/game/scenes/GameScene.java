@@ -3,6 +3,9 @@ package com.p1_7.game.scenes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+
+import com.badlogic.gdx.Gdx;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -143,7 +146,10 @@ public class GameScene extends Scene {
      */
     @Override
     public void onEnter(SceneContext context) {
-        this.layout   = MazeLayout.createDefault();
+        // generate a new random seed each entry and log it so layouts are reproducible
+        long mazeSeed = new Random().nextLong();
+        Gdx.app.log("GameScene", "maze seed: " + mazeSeed);
+        this.layout   = MazeLayout.generate(mazeSeed);
         float[] spawn = layout.getSpawnPoint();
         this.player   = new Player(spawn[0], spawn[1]);
 
