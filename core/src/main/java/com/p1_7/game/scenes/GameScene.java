@@ -606,7 +606,11 @@ public class GameScene extends Scene {
         if (SHOW_DEBUG_GRID && debugGridRenderable != null) {
             renderQueue.queue(debugGridRenderable);
         }
-        renderQueue.queue(brightnessOverlay); // topmost — dims the whole frame per settings
+        // skip the brightness overlay when suspended — the active overlay scene applies its own
+        // dim, and stacking both would produce a double-darkening at non-maximum brightness
+        if (!paused) {
+            renderQueue.queue(brightnessOverlay);
+        }
     }
 
     // ── private helpers ───────────────────────────────────────────────────────

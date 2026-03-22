@@ -97,14 +97,19 @@ public class SettingScene extends Scene {
     private boolean overlayMode;
     private IRenderable overlayDim;
 
+    // scene to return to when back is pressed; set at onEnter and cleared at onExit
+    private String returnScene;
+
     public SettingScene() {
         this.name = "settings";
     }
 
     @Override
     public void onEnter(SceneContext context) {
-        // true when opened from PauseScene — the game world is already rendered behind us
+        // determine origin so back navigation goes to the right scene regardless of
+        // what happens to the suspended scene record later in the session
         overlayMode = context.getSuspendedSceneKey() != null;
+        returnScene = overlayMode ? "pause" : "menu";
         if (overlayMode) {
             overlayDim = buildOverlayDim();
         }
@@ -121,6 +126,7 @@ public class SettingScene extends Scene {
     public void onExit(SceneContext context) {
         overlayMode = false;
         overlayDim  = null;
+        returnScene = null;
         stopListening();
         clearRemapState();
         disposeSceneComponents();
@@ -279,17 +285,12 @@ public class SettingScene extends Scene {
     }
 
     /**
-     * navigates back to the pause overlay when settings was opened from PauseScene,
-     * or to the main menu when opened from MenuScene.
+     * navigates back to the scene that opened settings, determined at onEnter time.
      *
      * @param context the engine service context
      */
     private void navigateBack(SceneContext context) {
-        if (context.getSuspendedSceneKey() != null) {
-            context.changeScene("pause");
-        } else {
-            context.changeScene("menu");
-        }
+        context.changeScene(returnScene);
     }
 
     private void updateSliderInputs(ICursorSource cursorSource, IInputQuery inputQuery) {

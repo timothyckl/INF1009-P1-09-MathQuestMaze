@@ -283,7 +283,7 @@ public class SceneManager extends UpdatableManager {
         }
 
         if (pendingKey != null) {
-            boolean isResuming = (pendingKey != null && pendingKey.equals(getSuspendedScene()));
+            boolean isResuming = pendingKey.equals(getSuspendedScene());
 
             if (isResuming) {
                 if (currentKey != null && scenes.containsKey(currentKey)) {
@@ -298,6 +298,12 @@ public class SceneManager extends UpdatableManager {
             } else {
                 if (currentKey != null && scenes.containsKey(currentKey)) {
                     scenes.get(currentKey).onExit(context);
+                }
+                // if a scene was suspended and we are navigating away rather than resuming,
+                // exit it now so it can release its resources cleanly
+                if (suspendedSceneKey != null && scenes.containsKey(suspendedSceneKey)) {
+                    scenes.get(suspendedSceneKey).onExit(context);
+                    clearSuspendedScene();
                 }
                 currentKey = pendingKey;
                 pendingKey = null;
