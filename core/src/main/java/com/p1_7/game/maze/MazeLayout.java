@@ -1,4 +1,4 @@
-package com.p1_7.game.gameplay;
+package com.p1_7.game.maze;
 
 import java.util.ArrayList;
 import java.util.Collections;

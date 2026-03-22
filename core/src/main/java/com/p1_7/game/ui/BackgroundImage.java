@@ -1,4 +1,4 @@
-package com.p1_7.game.entities;
+package com.p1_7.game.ui;
 
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;

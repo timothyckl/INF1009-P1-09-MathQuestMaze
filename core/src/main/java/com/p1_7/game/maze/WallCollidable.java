@@ -1,4 +1,4 @@
-package com.p1_7.game.gameplay;
+package com.p1_7.game.maze;
 
 import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.collision.ICollidable;

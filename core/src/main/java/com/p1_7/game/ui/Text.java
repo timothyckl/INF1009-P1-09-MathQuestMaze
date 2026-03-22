@@ -1,4 +1,4 @@
-package com.p1_7.game.entities;
+package com.p1_7.game.ui;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;

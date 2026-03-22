@@ -1,15 +1,17 @@
-package com.p1_7.game.gameplay;
+package com.p1_7.game.managers;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.p1_7.game.entities.Player;
+import com.p1_7.game.maze.WallCollidable;
 
 import com.p1_7.abstractengine.collision.CollisionManager;
 import com.p1_7.abstractengine.collision.CollisionPair;
 import com.p1_7.abstractengine.collision.ICollidable;
 import com.p1_7.abstractengine.engine.IManager;
 import com.p1_7.abstractengine.transform.ITransform;
-import com.p1_7.game.managers.GameMovementManager;
 
 /**
  * concrete CollisionManager that resolves player-to-wall collisions in the maze.

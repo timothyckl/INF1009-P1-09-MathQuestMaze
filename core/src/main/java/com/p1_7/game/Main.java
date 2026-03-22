@@ -7,9 +7,9 @@ import com.p1_7.abstractengine.engine.Engine;
 import com.p1_7.abstractengine.entity.EntityManager;
 import com.p1_7.abstractengine.input.InputManager;
 
-import com.p1_7.game.gameplay.ILevelOrchestrator;
-import com.p1_7.game.gameplay.LevelOrchestrator;
-import com.p1_7.game.gameplay.MazeCollisionManager;
+import com.p1_7.game.level.ILevelOrchestrator;
+import com.p1_7.game.level.LevelOrchestrator;
+import com.p1_7.game.managers.MazeCollisionManager;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.AudioManager;

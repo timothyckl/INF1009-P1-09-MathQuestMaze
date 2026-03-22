@@ -1,4 +1,10 @@
-package com.p1_7.game.gameplay;
+package com.p1_7.game.level;
+
+import com.p1_7.game.gameplay.Difficulty;
+import com.p1_7.game.gameplay.GameRound;
+import com.p1_7.game.gameplay.MathQuestion;
+import com.p1_7.game.gameplay.QuestionGenerator;
+import com.p1_7.game.gameplay.RoundPhase;
 
 /**
  * concrete coordinator that implements ILevelOrchestrator by delegating to GameRound

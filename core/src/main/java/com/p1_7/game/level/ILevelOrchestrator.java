@@ -1,4 +1,8 @@
-package com.p1_7.game.gameplay;
+package com.p1_7.game.level;
+
+import com.p1_7.game.gameplay.Difficulty;
+import com.p1_7.game.gameplay.MathQuestion;
+import com.p1_7.game.gameplay.RoundPhase;
 
 /**
  * facade that GameScene depends on to drive a single playthrough session.

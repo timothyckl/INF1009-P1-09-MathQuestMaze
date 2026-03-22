@@ -9,14 +9,14 @@ import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.game.Settings;
-import com.p1_7.game.entities.BackgroundImage;
-import com.p1_7.game.entities.BrightnessOverlay;
-import com.p1_7.game.entities.Text;
+import com.p1_7.game.ui.BackgroundImage;
+import com.p1_7.game.ui.BrightnessOverlay;
+import com.p1_7.game.ui.Text;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.managers.IFontManager;
-import com.p1_7.game.entities.MenuButton;
+import com.p1_7.game.ui.MenuButton;
 
 /**
  * Main menu scene for Math Quest Maze.
@@ -51,7 +51,7 @@ public class MenuScene extends Scene {
     private ICursorSource cursorSource;
     private IInputQuery inputQuery;
 
-    // ── entities ─────────────────────────────────────────────────
+    // ── ui components ────────────────────────────────────────────
     private BackgroundImage background;
     private Text           titleText;
     private MenuButton     startButton;
@@ -85,7 +85,7 @@ public class MenuScene extends Scene {
         titleFont = fontManager.getGoldDisplayFont(56);
         buttonFont = fontManager.getDarkTextFont(26);
 
-        // ── entities ─────────────────────────────────────────────
+        // ── ui components ────────────────────────────────────────
         background = new BackgroundImage(BG_ASSET);
         titleText  = new Text("MATH QUEST MAZE", centreX,
                                    Settings.getWindowHeight() * 0.75f, titleFont);

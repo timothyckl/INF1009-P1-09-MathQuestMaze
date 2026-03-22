@@ -1,4 +1,4 @@
-package com.p1_7.game.gameplay;
+package com.p1_7.game.entities;
 
 import com.badlogic.gdx.graphics.Color;
 import com.p1_7.abstractengine.collision.IBounds;
@@ -12,6 +12,7 @@ import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.core.Bounds2D;
 import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.input.GameActions;
+import com.p1_7.game.gameplay.RoundPhase;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**

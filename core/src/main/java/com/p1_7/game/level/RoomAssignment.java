@@ -1,4 +1,4 @@
-package com.p1_7.game.gameplay;
+package com.p1_7.game.level;
 
 import java.util.Collections;
 import java.util.HashMap;
