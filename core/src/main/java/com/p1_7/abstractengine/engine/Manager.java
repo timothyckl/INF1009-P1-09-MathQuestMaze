@@ -76,6 +76,7 @@ public abstract class Manager implements IManager {
      * called by setDependencies() before init(). default is a no-op.
      *
      * @param resolver the resolver used to look up dependency instances
+     * @see #getDependencies()
      */
     protected void onWire(ManagerResolver resolver) {
         // no-op — subclasses may override
