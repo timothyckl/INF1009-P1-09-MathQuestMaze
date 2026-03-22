@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.input.IInputQuery;
+import com.p1_7.abstractengine.input.InputState;
+import com.p1_7.game.input.GameActions;
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.render.IRenderQueue;
@@ -30,6 +32,7 @@ import com.p1_7.game.managers.MazeCollisionManager;
 import com.p1_7.game.maze.MazeLayout;
 import com.p1_7.game.maze.WallCollidable;
 import com.p1_7.game.managers.GameMovementManager;
+import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.managers.IFontManager;
 import com.p1_7.game.platform.GdxDrawContext;
 
@@ -186,6 +189,10 @@ public class GameScene extends Scene {
      */
     @Override
     public void onEnter(SceneContext context) {
+        // ensure the scene always starts unpaused — guards against a stale paused flag
+        // left over if the player suspended and then returned to menu before playing again
+        setPaused(false);
+        context.get(IAudioManager.class).playMusic("game", true);
         this.layout   = MazeLayout.createDefault();
         float[] spawn = layout.getSpawnPoint();
         this.player   = new Player(spawn[0], spawn[1]);
@@ -488,6 +495,28 @@ public class GameScene extends Scene {
     }
 
     /**
+     * called when the pause overlay opens — freezes the game world in place.
+     *
+     * @param context the engine service context
+     */
+    @Override
+    public void onSuspend(SceneContext context) {
+        setPaused(true);
+        context.get(IAudioManager.class).pauseMusic();
+    }
+
+    /**
+     * called when the pause overlay closes — resumes normal gameplay.
+     *
+     * @param context the engine service context
+     */
+    @Override
+    public void onResume(SceneContext context) {
+        setPaused(false);
+        context.get(IAudioManager.class).resumeMusic();
+    }
+
+    /**
      * resolves player input, detects phase changes, and checks answer-room entry.
      *
      * non-interactive phases freeze input and auto-advance after the hold timer expires.
@@ -537,7 +566,13 @@ public class GameScene extends Scene {
             return;
         }
 
-        // choosing phase: resolve player input then check room entry
+        // choosing phase: check for pause request before processing player input
+        if (inputQuery.getActionState(GameActions.MENU_BACK) == InputState.PRESSED) {
+            context.suspendScene("pause");
+            return;
+        }
+
+        // resolve player input then check room entry
         player.update(deltaTime, inputQuery, phase);
         checkRoomEntry(deltaTime, orchestrator);
     }

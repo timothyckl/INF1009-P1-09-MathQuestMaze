@@ -25,6 +25,7 @@ import com.p1_7.game.scenes.GameScene;
 import com.p1_7.game.scenes.GameOverScene;
 import com.p1_7.game.scenes.LevelCompleteScene;
 import com.p1_7.game.scenes.MenuScene;
+import com.p1_7.game.scenes.PauseScene;
 import com.p1_7.game.scenes.SettingScene;
 
 /**
@@ -82,6 +83,9 @@ public class Main extends ApplicationAdapter {
 
         // settings screen
         sceneManager.registerScene(new SettingScene());
+
+        // pause overlay — opened via ESC during the CHOOSING phase
+        sceneManager.registerScene(new PauseScene());
 
         // level-complete and game-over exit scenes
         sceneManager.registerScene(new LevelCompleteScene());
