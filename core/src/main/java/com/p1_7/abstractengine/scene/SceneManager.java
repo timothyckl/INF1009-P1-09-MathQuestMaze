@@ -113,6 +113,16 @@ public class SceneManager extends UpdatableManager {
             public Scene getScene(String key) {
                 return SceneManager.this.getScene(key);
             }
+
+            @Override
+            public String getSuspendedSceneKey() {
+                return SceneManager.this.getSuspendedScene();
+            }
+
+            @Override
+            public void clearSuspendedScene() {
+                SceneManager.this.clearSuspendedScene();
+            }
         };
 
         if (currentKey != null && scenes.containsKey(currentKey)) {
@@ -266,10 +276,10 @@ public class SceneManager extends UpdatableManager {
             String previousKey = currentKey;
             currentKey = pendingSuspendKey;
             pendingSuspendKey = null;
+            storePreviousScene(previousKey);
             if (scenes.containsKey(currentKey)) {
                 scenes.get(currentKey).onEnter(context);
             }
-            storePreviousScene(previousKey);
         }
 
         if (pendingKey != null) {
@@ -309,6 +319,11 @@ public class SceneManager extends UpdatableManager {
 
         // resolve queue once and pass directly to avoid scene accessing full context
         IRenderQueue renderQueue = (IRenderQueue) serviceMap.get(IRenderQueue.class);
+
+        // render the suspended scene first so the overlay scene composites on top
+        if (suspendedSceneKey != null && scenes.containsKey(suspendedSceneKey)) {
+            scenes.get(suspendedSceneKey).submitRenderable(renderQueue);
+        }
         current.submitRenderable(renderQueue);
     }
 }

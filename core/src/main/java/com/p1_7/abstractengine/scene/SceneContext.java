@@ -37,4 +37,16 @@ public interface SceneContext {
      * @return the Scene, or null if not found
      */
     Scene getScene(String key);
+
+    /**
+     * returns the key of the currently suspended scene, or null if no scene is suspended.
+     *
+     * @return the suspended scene key, or null
+     */
+    String getSuspendedSceneKey();
+
+    /**
+     * clears the suspended scene record so it can no longer be resumed.
+     */
+    void clearSuspendedScene();
 }
