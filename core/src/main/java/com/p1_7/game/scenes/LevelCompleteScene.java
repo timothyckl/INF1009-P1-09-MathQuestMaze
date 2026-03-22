@@ -15,6 +15,7 @@ import com.p1_7.game.ui.MenuButton;
 import com.p1_7.game.ui.Text;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
+import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.managers.IFontManager;
 
 public class LevelCompleteScene extends Scene {
@@ -45,6 +46,7 @@ public class LevelCompleteScene extends Scene {
 
     @Override
     public void onEnter(SceneContext context) {
+        context.get(IAudioManager.class).playMusic("level-complete", false);
         IFontManager fontManager = context.get(IFontManager.class);
         titleFont = fontManager.getGoldDisplayFont(54);
         promptFont = fontManager.getPromptFont();

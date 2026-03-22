@@ -68,8 +68,8 @@ public class MenuScene extends Scene {
         IAudioManager audio = context.get(IAudioManager.class);
         IFontManager fontManager = context.get(IFontManager.class);
 
-        // start background music (asset pre-loaded in AudioManager.onInit)
-        audio.playMusic("bgMusic", true);
+        // start menu music (asset pre-loaded in AudioManager.onInit)
+        audio.playMusic("menu", true);
 
         titleFont = fontManager.getGoldDisplayFont(56);
         buttonFont = fontManager.getDarkTextFont(26);

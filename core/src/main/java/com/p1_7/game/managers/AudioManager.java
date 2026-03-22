@@ -45,7 +45,10 @@ public class AudioManager extends Manager implements IAudioManager {
      */
     @Override
     protected void onInit() {
-        loadMusic("bgMusic", "music.mp3");
+        loadMusic("menu",           "music/menu.mp3");
+        loadMusic("game",           "music/background.mp3");
+        loadMusic("game-over",      "music/game-over.mp3");
+        loadMusic("level-complete", "music/level-complete.mp3");
     }
 
     /**
