@@ -73,9 +73,17 @@ public class LevelCompleteScene extends Scene {
         if (continueButton != null) continueButton.dispose();
         if (mainMenuButton != null) mainMenuButton.dispose();
         if (brightnessOverlay != null) brightnessOverlay.dispose();
-        titleFont  = null;
-        promptFont = null;
-        buttonFont = null;
+        background        = null;
+        title             = null;
+        promptStatus      = null;
+        hintSpace         = null;
+        hintEsc           = null;
+        continueButton    = null;
+        mainMenuButton    = null;
+        brightnessOverlay = null;
+        titleFont         = null;
+        promptFont        = null;
+        buttonFont        = null;
     }
 
     @Override

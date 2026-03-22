@@ -46,8 +46,9 @@ public class SettingScene extends Scene {
     private BitmapFont tableFont;
     private BitmapFont buttonFont;
 
-    // inputManager kept as a field — it is accessed from the remapInputProcessor callback,
-    // which fires outside the hook lifecycle and cannot receive context as a parameter
+    // kept as a field because syncRemapBindings() is called via the remapInputProcessor
+    // callback chain (keyDown → applyActiveRemap → syncRemapBindings), which fires outside
+    // the hook lifecycle and cannot receive context as a parameter
     private IInputManager inputManager;
     private InputProcessor previousInputProcessor;
     private final InputProcessor remapInputProcessor = new InputAdapter() {
@@ -146,8 +147,7 @@ public class SettingScene extends Scene {
     }
 
     private void resolveSceneServices(SceneContext context) {
-        // inputManager is kept as a field — needed by syncRemapBindings(), which is called
-        // from the remapInputProcessor callback outside the normal hook lifecycle
+        // see field declaration for why inputManager is retained across hooks
         inputManager = context.get(IInputManager.class);
     }
 
