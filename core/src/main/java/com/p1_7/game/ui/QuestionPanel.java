@@ -13,21 +13,22 @@ import com.p1_7.game.platform.GdxDrawContext;
 
 /**
  * animated question panel entity that slides from the screen centre to the bottom
- * of the screen over one second during the QUESTION_INTRO phase.
+ * of the screen during the QUESTION_INTRO phase, then holds so the player can read
+ * the question before the phase advances.
  *
  * the panel renders a semi-transparent dark background with the current question
  * text centred within it.
  */
 public class QuestionPanel extends Entity implements IRenderable {
 
-    /** panel width in pixels */
-    private static final float PANEL_W = 500f;
+    /** panel width in pixels — spans the full screen width */
+    private static final float PANEL_W = Settings.getWindowWidth();
 
     /** panel height in pixels */
     private static final float PANEL_H = 60f;
 
-    /** fixed horizontal position — centred on the screen */
-    private static final float PANEL_X = (Settings.getWindowWidth() - PANEL_W) / 2f;
+    /** fixed horizontal position — flush with the left edge of the screen */
+    private static final float PANEL_X = 0f;
 
     /** starting y position — panel bottom at approximately screen centre */
     private static final float START_Y = 330f;
@@ -35,9 +36,13 @@ public class QuestionPanel extends Entity implements IRenderable {
     /** resting y position — panel bottom just above the bottom wall */
     private static final float END_Y = 40f;
 
-    /** duration of the slide animation in seconds; must match PHASE_HOLD_SECONDS in GameScene */
+    /** pause before the slide begins, giving the player time to read the question */
+    private static final float ANIM_START_DELAY = 1.5f;
+
+    /** duration of the slide animation in seconds */
     private static final float ANIM_DURATION = 1.0f;
 
+    // TODO palette: replace in palette issue
     /** brighter slate-blue panel background so the prompt stays readable */
     private static final Color PANEL_BG = new Color(0.24f, 0.29f, 0.40f, 0.94f);
 
@@ -52,6 +57,9 @@ public class QuestionPanel extends Entity implements IRenderable {
 
     /** current y position of the panel; interpolated between START_Y and END_Y */
     private float currentY;
+
+    /** countdown before the slide begins; slide does not start until this reaches zero */
+    private float delayTimer;
 
     /** animation progress in the range 0..1; 1 means the animation is complete */
     private float animProgress;
@@ -74,6 +82,7 @@ public class QuestionPanel extends Entity implements IRenderable {
         this.font         = font;
         this.transform    = new Transform2D(PANEL_X, END_Y, PANEL_W, PANEL_H);
         this.currentY     = END_Y;
+        this.delayTimer   = 0f;
         this.animProgress = 1f;
         this.questionText = "";
     }
@@ -90,6 +99,7 @@ public class QuestionPanel extends Entity implements IRenderable {
         // recompute layout once per question so render() never allocates
         layout.setText(font, questionText);
         this.currentY     = START_Y;
+        this.delayTimer   = ANIM_START_DELAY;
         this.animProgress = 0f;
     }
 
@@ -102,6 +112,11 @@ public class QuestionPanel extends Entity implements IRenderable {
      */
     public void update(float deltaTime) {
         if (animProgress >= 1f) return;
+        // wait for the pre-slide delay before starting the animation
+        if (delayTimer > 0f) {
+            delayTimer = Math.max(0f, delayTimer - deltaTime);
+            return;
+        }
         animProgress = Math.min(1f, animProgress + deltaTime / ANIM_DURATION);
         currentY = START_Y + (END_Y - START_Y) * animProgress;
         // keep transform in sync so ITransformable consumers see the correct position

@@ -51,8 +51,11 @@ public class GameScene extends Scene {
     /** re-entry cooldown in seconds before a wrong room can penalise the player again */
     private static final float ROOM_COOLDOWN_SECONDS = 1.0f;
 
-    /** hold time in seconds for non-interactive phases (QUESTION_INTRO and ROUND_RESET) */
-    private static final float PHASE_HOLD_SECONDS = 1.0f;
+    /** hold time for QUESTION_INTRO — covers 1.5 s pre-slide delay + 1.0 s slide + 2.0 s reading hold */
+    private static final float QUESTION_INTRO_HOLD_SECONDS = 4.5f;
+
+    /** hold time in seconds for ROUND_RESET */
+    private static final float ROUND_RESET_HOLD_SECONDS = 1.0f;
 
     /** hold time in seconds for the FEEDBACK phase — longer to allow the player to read the result */
     private static final float FEEDBACK_HOLD_SECONDS = 2.0f;
@@ -124,8 +127,11 @@ public class GameScene extends Scene {
     /** animated panel that slides to the bottom of the screen during QUESTION_INTRO */
     private QuestionPanel questionPanel;
 
-    /** font shared between the question panel and room answer labels */
+    /** font shared between room answer labels */
     private BitmapFont promptFont;
+
+    /** larger font used exclusively for the question panel */
+    private BitmapFont questionFont;
 
     /** font used for score text and feedback messages */
     private BitmapFont hudFont;
@@ -215,7 +221,8 @@ public class GameScene extends Scene {
 
         // source fonts from the font manager
         IFontManager fontManager = context.get(IFontManager.class);
-        this.promptFont = fontManager.getLightTextFont(28);
+        this.promptFont   = fontManager.getLightTextFont(28);
+        this.questionFont = fontManager.getLightTextFont(36);
         this.hudFont    = fontManager.getLightTextFont(22);
 
         // allocate per-room answer caches before the loop so closures can capture the array references
@@ -265,11 +272,11 @@ public class GameScene extends Scene {
         refreshRoomAnswerCache(orchestrator);
 
         // question panel — begins its slide animation immediately (scene starts at QUESTION_INTRO)
-        this.questionPanel = new QuestionPanel(promptFont);
+        this.questionPanel = new QuestionPanel(questionFont);
         questionPanel.beginIntro(orchestrator.getCurrentQuestion().getPrompt());
         // prevent onPhaseChanged from firing beginIntro a second time on the first update tick
         this.lastKnownPhase = orchestrator.getPhase();
-        this.phaseHoldTimer = PHASE_HOLD_SECONDS; // initialise hold for the initial QUESTION_INTRO
+        this.phaseHoldTimer = QUESTION_INTRO_HOLD_SECONDS; // initialise hold for the initial QUESTION_INTRO
 
         // capture hudFont as a final local so closures below are independent of the field lifecycle
         final BitmapFont capturedHudFont = hudFont;
@@ -461,6 +468,7 @@ public class GameScene extends Scene {
         lastKnownPhase     = null;
         questionPanel      = null;
         promptFont         = null;
+        questionFont       = null;
         hudFont            = null;
         feedbackOverlay    = null;
         scoreDisplay       = null;
@@ -588,7 +596,9 @@ public class GameScene extends Scene {
             // terminal phases share the feedback hold so the overlay is visible before transitioning
             phaseHoldTimer = (to == RoundPhase.FEEDBACK || isTerminalPhase(to))
                 ? FEEDBACK_HOLD_SECONDS
-                : PHASE_HOLD_SECONDS;
+                : (to == RoundPhase.QUESTION_INTRO
+                    ? QUESTION_INTRO_HOLD_SECONDS
+                    : ROUND_RESET_HOLD_SECONDS);
         }
     }
 
