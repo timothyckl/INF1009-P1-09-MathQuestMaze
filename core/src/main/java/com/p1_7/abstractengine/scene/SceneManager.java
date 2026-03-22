@@ -43,7 +43,9 @@ public class SceneManager extends UpdatableManager {
     private SceneContext context;
 
     /**
-     * {@inheritDoc}
+     * returns the direct dependencies of this manager.
+     *
+     * @return array of manager types this manager depends on
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -72,7 +74,7 @@ public class SceneManager extends UpdatableManager {
      * @param resolver the resolver used to look up dependency instances
      */
     @Override
-    public void onWire(ManagerResolver resolver) {
+    protected void onWire(ManagerResolver resolver) {
         InputManager inputManager = resolver.resolve(InputManager.class);
         serviceMap.put(IEntityManager.class,        resolver.resolve(EntityManager.class));
         serviceMap.put(IRenderQueue.class,           resolver.resolve(RenderManager.class).getRenderQueue());
