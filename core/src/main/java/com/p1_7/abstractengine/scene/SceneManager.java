@@ -283,7 +283,7 @@ public class SceneManager extends UpdatableManager {
         }
 
         if (pendingKey != null) {
-            boolean isResuming = (pendingKey != null && pendingKey.equals(getSuspendedScene()));
+            boolean isResuming = pendingKey.equals(getSuspendedScene());
 
             if (isResuming) {
                 if (currentKey != null && scenes.containsKey(currentKey)) {

@@ -155,7 +155,8 @@ public class PauseScene extends Scene {
     @Override
     public void submitRenderable(IRenderQueue renderQueue) {
         if (dimOverlay == null) return; // scene has already exited
-        // dim layer and panel are queued first — the frozen game world renders behind via SceneManager
+        // SceneManager already submitted the frozen game world before calling this;
+        // queue the dim layer and panel on top of it
         renderQueue.queue(dimOverlay);
         renderQueue.queue(pauseTitle);
         renderQueue.queue(resumeButton);
@@ -169,25 +170,29 @@ public class PauseScene extends Scene {
      * @param context the engine service context
      */
     private void resumeGame(SceneContext context) {
+        if (suspendedKey == null) return; // guard against calls after onExit
         // SceneManager detects that the target matches suspendedSceneKey and calls onResume()
         context.changeScene(suspendedKey);
     }
 
     /**
-     * manually exits the suspended game scene, clears the suspension record,
+     * exits the suspended game scene explicitly, clears the suspension record,
      * then navigates to the main menu.
      *
-     * SceneManager's changeScene path does not call onExit() on the suspended scene,
-     * so it is called explicitly here to release movement and collision registrations.
+     * SceneManager's non-resume changeScene only exits the current (overlay) scene;
+     * it cannot tell whether a suspended scene should be discarded or preserved, so
+     * the caller is responsible for cleanup when leaving the overlay chain entirely.
      *
      * @param context the engine service context
      */
     private void returnToMenu(SceneContext context) {
-        Scene suspended = context.getScene(suspendedKey);
-        if (suspended != null) {
-            suspended.onExit(context);
+        if (suspendedKey != null) {
+            Scene suspended = context.getScene(suspendedKey);
+            if (suspended != null) {
+                suspended.onExit(context);
+            }
+            context.clearSuspendedScene();
         }
-        context.clearSuspendedScene();
         context.changeScene("menu");
     }
 
