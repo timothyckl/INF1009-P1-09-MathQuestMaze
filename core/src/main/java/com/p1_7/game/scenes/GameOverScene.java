@@ -8,10 +8,10 @@ import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.game.Settings;
-import com.p1_7.game.entities.BackgroundImage;
 import com.p1_7.game.entities.BrightnessOverlay;
 import com.p1_7.game.entities.MenuButton;
-import com.p1_7.game.entities.Text;
+import com.p1_7.game.scenes.ui.SceneBackground;
+import com.p1_7.game.scenes.ui.StaticLabel;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IFontManager;
@@ -37,11 +37,11 @@ public class GameOverScene extends Scene {
     private BitmapFont titleFont;
     private BitmapFont promptFont;
     private BitmapFont buttonFont;
-    private BackgroundImage background;
-    private Text title;
-    private Text promptStatus;
-    private Text hintSpace;
-    private Text hintEsc;
+    private SceneBackground background;
+    private StaticLabel title;
+    private StaticLabel promptStatus;
+    private StaticLabel hintSpace;
+    private StaticLabel hintEsc;
     private MenuButton retryButton;
     private MenuButton mainMenuButton;
     private BrightnessOverlay brightnessOverlay;
@@ -73,13 +73,13 @@ public class GameOverScene extends Scene {
 
         float cx = Settings.getWindowWidth() / 2f;
         float cy = Settings.getWindowHeight() / 2f;
-        background = new BackgroundImage(BG_ASSET);
-        title = new Text("GAME OVER", cx, cy + 120f, titleFont);
-        promptStatus = new Text("Better luck next time!", cx, cy + 55f, promptFont);
+        background = new SceneBackground(BG_ASSET);
+        title = new StaticLabel("GAME OVER", cx, cy + 120f, titleFont);
+        promptStatus = new StaticLabel("Better luck next time!", cx, cy + 55f, promptFont);
         retryButton = MenuButton.withTexture("RETRY", cx, cy - 10f, buttonFont, BTN_ASSET, HOVER_ASSET);
         mainMenuButton = MenuButton.withTexture("MAIN MENU", cx, cy - 85f, buttonFont, BTN_ASSET, HOVER_ASSET);
-        hintSpace = new Text("SPACE - Retry", cx, cy - 175f, promptFont);
-        hintEsc = new Text("ESC - Main Menu", cx, cy - 220f, promptFont);
+        hintSpace = new StaticLabel("SPACE - Retry", cx, cy - 175f, promptFont);
+        hintEsc = new StaticLabel("ESC - Main Menu", cx, cy - 220f, promptFont);
         brightnessOverlay = new BrightnessOverlay();
 
         inputCooldown = INPUT_COOLDOWN_SECONDS;

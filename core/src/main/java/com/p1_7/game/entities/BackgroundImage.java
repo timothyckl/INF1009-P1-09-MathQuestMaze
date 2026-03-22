@@ -11,7 +11,7 @@ import com.p1_7.game.platform.GdxDrawContext;
  * Shared full-screen background renderable that delegates texture ownership
  * to the engine asset pipeline.
  */
-public final class BackgroundImage implements IRenderable {
+public class BackgroundImage implements IRenderable {
 
     private final Transform2D transform;
     private final String assetPath;

@@ -9,9 +9,9 @@ import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.game.Settings;
-import com.p1_7.game.entities.BackgroundImage;
 import com.p1_7.game.entities.BrightnessOverlay;
-import com.p1_7.game.entities.Text;
+import com.p1_7.game.scenes.ui.SceneBackground;
+import com.p1_7.game.scenes.ui.StaticLabel;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IAudioManager;
@@ -52,8 +52,8 @@ public class MenuScene extends Scene {
     private IInputQuery inputQuery;
 
     // ── entities ─────────────────────────────────────────────────
-    private BackgroundImage background;
-    private Text           titleText;
+    private SceneBackground background;
+    private StaticLabel    titleText;
     private MenuButton     startButton;
     private MenuButton     settingsButton;
     private MenuButton     exitButton;
@@ -86,8 +86,8 @@ public class MenuScene extends Scene {
         buttonFont = fontManager.getDarkTextFont(26);
 
         // ── entities ─────────────────────────────────────────────
-        background = new BackgroundImage(BG_ASSET);
-        titleText  = new Text("MATH QUEST MAZE", centreX,
+        background = new SceneBackground(BG_ASSET);
+        titleText  = new StaticLabel("MATH QUEST MAZE", centreX,
                                    Settings.getWindowHeight() * 0.75f, titleFont);
 
         startButton    = MenuButton.withTexture("START",

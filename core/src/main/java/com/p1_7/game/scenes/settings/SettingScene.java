@@ -17,11 +17,12 @@ import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.game.Settings;
-import com.p1_7.game.entities.BackgroundImage;
 import com.p1_7.game.entities.BrightnessOverlay;
 import com.p1_7.game.entities.BrightnessSlider;
 import com.p1_7.game.entities.MenuButton;
-import com.p1_7.game.entities.Text;
+import com.p1_7.game.scenes.ui.DynamicLabel;
+import com.p1_7.game.scenes.ui.SceneBackground;
+import com.p1_7.game.scenes.ui.StaticLabel;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IAudioManager;
@@ -66,17 +67,17 @@ public class SettingScene extends Scene {
 
     private IAudioManager audio;
 
-    private BackgroundImage background;
-    private Text heading;
-    private Text volumeLabel;
+    private SceneBackground background;
+    private StaticLabel heading;
+    private DynamicLabel volumeLabel;
     private VolumeSlider volumeSlider;
-    private Text brightnessLabel;
+    private DynamicLabel brightnessLabel;
     private BrightnessSlider brightnessSlider;
-    private Text controlsHeading;
-    private Text remapHint;
-    private Text actionHeader;
-    private Text primaryHeader;
-    private Text alternateHeader;
+    private StaticLabel controlsHeading;
+    private DynamicLabel remapHint;
+    private StaticLabel actionHeader;
+    private StaticLabel primaryHeader;
+    private StaticLabel alternateHeader;
     private MenuButton backButton;
     private BrightnessOverlay brightnessOverlay;
     private final List<RemapSlot> remapSlots = new ArrayList<>();
@@ -172,12 +173,12 @@ public class SettingScene extends Scene {
         float volumeLabelY = volumeSliderY + 50f;
         float headingY = volumeLabelY + 66f;
 
-        background = new BackgroundImage(BG_ASSET);
+        background = new SceneBackground(BG_ASSET);
         heading = createCenteredLabel("SETTINGS", headingY, headingFont);
-        volumeLabel = createCenteredLabel(volumeText(), volumeLabelY, labelFont);
-        brightnessLabel = createCenteredLabel(brightnessText(), brightnessLabelY, labelFont);
+        volumeLabel = new DynamicLabel(volumeText(), centreX, volumeLabelY, labelFont);
+        brightnessLabel = new DynamicLabel(brightnessText(), centreX, brightnessLabelY, labelFont);
         controlsHeading = createCenteredLabel("CONTROLS", controlsHeadingY, buttonFont);
-        remapHint = createCenteredLabel(idleRemapHintText(), hintY, tableFont);
+        remapHint = new DynamicLabel(idleRemapHintText(), centreX, hintY, tableFont);
         volumeSlider = new VolumeSlider(centreX, volumeSliderY, 340f, audio.getMusicVolume());
         brightnessSlider = new BrightnessSlider(centreX, brightnessSliderY, 340f, Settings.getBrightnessLevel());
         backButton = MenuButton.withTexture("BACK", centreX, backButtonY, buttonFont, BTN_ASSET, HOVER_ASSET);
@@ -187,21 +188,21 @@ public class SettingScene extends Scene {
         buildRemapSlots(firstRowY, rowSpacing);
     }
 
-    private Text createCenteredLabel(String text, float centreYPosition, BitmapFont font) {
-        return new Text(text, centreX, centreYPosition, font);
+    private StaticLabel createCenteredLabel(String text, float centreYPosition, BitmapFont font) {
+        return new StaticLabel(text, centreX, centreYPosition, font);
     }
 
     private void createRemapHeaders(float tableHeaderY) {
         float tableLeft = centreX - RemapSlot.TABLE_WIDTH / 2f;
-        actionHeader = new Text("ACTION",
+        actionHeader = new StaticLabel("ACTION",
             tableLeft + RemapSlot.ACTION_COLUMN_WIDTH / 2f,
             tableHeaderY,
             tableFont);
-        primaryHeader = new Text("PRIMARY",
+        primaryHeader = new StaticLabel("PRIMARY",
             tableLeft + RemapSlot.ACTION_COLUMN_WIDTH + RemapSlot.CELL_GAP + RemapSlot.KEY_COLUMN_WIDTH / 2f,
             tableHeaderY,
             tableFont);
-        alternateHeader = new Text("ALTERNATE",
+        alternateHeader = new StaticLabel("ALTERNATE",
             tableLeft + RemapSlot.ACTION_COLUMN_WIDTH + RemapSlot.CELL_GAP * 2f
                 + RemapSlot.KEY_COLUMN_WIDTH * 1.5f,
             tableHeaderY,
