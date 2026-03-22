@@ -5,21 +5,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
+import com.p1_7.game.core.GameViewport;
+
 /**
  * immutable value object that describes the fixed spatial layout of the math maze.
  *
- * the layout reserves the four corners for answer rooms and the screen centre for
- * the player spawn room. corridors are generated between those spaces, then the
- * remaining interior area is converted into wall rectangles so collision and
+ * the layout reserves the four corners for answer rooms and the playfield centre
+ * for the player spawn room. corridors are generated between those spaces, then
+ * the remaining interior area is converted into wall rectangles so collision and
  * rendering both use the same geometry.
  */
 public class MazeLayout {
 
     /** total width of the play area in pixels */
-    private static final float SCREEN_WIDTH = 1280f;
+    private static final float SCREEN_WIDTH = GameViewport.SCREEN_WIDTH;
 
     /** total height of the play area in pixels */
-    private static final float SCREEN_HEIGHT = 720f;
+    private static final float SCREEN_HEIGHT = GameViewport.PLAYFIELD_HEIGHT;
 
     /** thickness of the perimeter wall in pixels */
     private static final float WALL_THICKNESS = 20f;
@@ -47,9 +49,6 @@ public class MazeLayout {
 
     /** uniform scale applied to the whole maze footprint */
     private static final float LAYOUT_SCALE = 0.88f;
-
-    /** downward shift after scaling to free more space for the HUD */
-    private static final float LAYOUT_OFFSET_Y = -18f;
 
     /** tolerance used to collapse float-noise seams between adjacent walkable edges */
     private static final float EDGE_MERGE_EPSILON = 0.01f;
@@ -362,8 +361,7 @@ public class MazeLayout {
 
     private static float[] transformPoint(float[] point) {
         float transformedX = SCREEN_WIDTH / 2f + (point[0] - SCREEN_WIDTH / 2f) * LAYOUT_SCALE;
-        float transformedY = SCREEN_HEIGHT / 2f + (point[1] - SCREEN_HEIGHT / 2f) * LAYOUT_SCALE
-            + LAYOUT_OFFSET_Y;
+        float transformedY = SCREEN_HEIGHT / 2f + (point[1] - SCREEN_HEIGHT / 2f) * LAYOUT_SCALE;
         return new float[]{ transformedX, transformedY };
     }
 

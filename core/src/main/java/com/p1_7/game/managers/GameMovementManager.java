@@ -3,10 +3,11 @@ package com.p1_7.game.managers;
 import com.p1_7.abstractengine.engine.IManager;
 import com.p1_7.abstractengine.movement.MovementManager;
 import com.p1_7.abstractengine.scene.SceneManager;
+import com.p1_7.game.core.GameViewport;
 
 /**
  * concrete MovementManager that handles player position integration and
- * viewport clamping for the game's fixed 1280 × 720 screen.
+ * viewport clamping for the game's fixed 1280 × 672 playfield below the HUD strip.
  *
  * declaring SceneManager as a dependency ensures this manager's onUpdate()
  * runs after SceneManager.onUpdate() — which calls GameScene.update() and
@@ -15,18 +16,15 @@ import com.p1_7.abstractengine.scene.SceneManager;
  */
 public final class GameMovementManager extends MovementManager {
 
-    /** screen width in pixels — used as the movement boundary upper bound */
-    private static final float SCREEN_WIDTH  = 1280f;
-
-    /** screen height in pixels — used as the movement boundary upper bound */
-    private static final float SCREEN_HEIGHT = 720f;
-
     /**
      * configures viewport boundary clamping for the game's screen dimensions.
      */
     @Override
     protected void onInit() {
-        setWorldBounds(new float[]{ 0f, 0f }, new float[]{ SCREEN_WIDTH, SCREEN_HEIGHT });
+        setWorldBounds(
+            new float[]{ 0f, 0f },
+            new float[]{ GameViewport.SCREEN_WIDTH, GameViewport.PLAYFIELD_HEIGHT }
+        );
     }
 
     /**
