@@ -182,7 +182,7 @@ public class Engine {
             }
         }
 
-        // wiring pass — resolve and store dependency references
+        // wiring pass — call setDependencies so each manager can resolve and store its dependencies
         ManagerResolver resolver = new ManagerResolver() {
             @Override
             public <T extends IManager> T resolve(Class<T> type) {
@@ -190,10 +190,7 @@ public class Engine {
             }
         };
         for (int i = 0; i < managers.size(); i++) {
-            IManager m = managers.get(i);
-            if (m instanceof Manager) {
-                ((Manager) m).onWire(resolver);
-            }
+            managers.get(i).setDependencies(resolver);
         }
 
         initialised = true;

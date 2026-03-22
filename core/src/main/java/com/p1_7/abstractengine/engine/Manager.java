@@ -61,12 +61,24 @@ public abstract class Manager implements IManager {
     }
 
     /**
-     * wiring hook called before init(); override to resolve and store
-     * dependency references. default is a no-op.
+     * resolves and stores dependency references before init(); delegates to
+     * onWire(ManagerResolver). called by the engine during the wiring pass.
      *
      * @param resolver the resolver used to look up dependency instances
      */
-    public void onWire(ManagerResolver resolver) {
+    public final void setDependencies(ManagerResolver resolver) {
+        onWire(resolver);
+    }
+
+    /**
+     * override to resolve and store references to declared dependencies; use
+     * resolver.resolve(Type.class) to look up each dependency by type.
+     * called by setDependencies() before init(). default is a no-op.
+     *
+     * @param resolver the resolver used to look up dependency instances
+     * @see #getDependencies()
+     */
+    protected void onWire(ManagerResolver resolver) {
         // no-op — subclasses may override
     }
 }

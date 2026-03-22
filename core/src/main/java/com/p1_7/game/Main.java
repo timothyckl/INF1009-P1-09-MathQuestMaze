@@ -14,8 +14,8 @@ import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.AudioManager;
 import com.p1_7.game.managers.FontManager;
+import com.p1_7.abstractengine.scene.SceneManager;
 import com.p1_7.game.managers.GameMovementManager;
-import com.p1_7.game.managers.GameSceneManager;
 import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.managers.IFontManager;
 import com.p1_7.game.platform.GdxCursorSource;
@@ -70,7 +70,7 @@ public class Main extends ApplicationAdapter {
         engine.registerManager(collisionManager);
 
         // scene setup
-        GameSceneManager sceneManager = new GameSceneManager();
+        SceneManager sceneManager = new SceneManager();
         sceneManager.registerService(IAudioManager.class, audioManager);
         sceneManager.registerService(IFontManager.class, fontManager);
         sceneManager.registerService(GameMovementManager.class, movementManager);
