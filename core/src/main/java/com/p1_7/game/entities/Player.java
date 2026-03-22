@@ -36,7 +36,7 @@ public class Player extends Entity implements IRenderable, IMovable, ICollidable
     private static final Color PLAYER_COLOUR = new Color(0.30f, 0.82f, 0.98f, 1f);
 
     /** player width and height in pixels */
-    private static final float SIZE = 32f;
+    private static final float SIZE = 20f;
 
     /** bottom-left origin, SIZE × SIZE */
     private final Transform2D transform;

@@ -3,7 +3,6 @@ package com.p1_7.game.scenes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 
@@ -66,12 +65,15 @@ public class GameScene extends Scene {
     private static final Color OVERLAY_CORRECT    = new Color(0.08f, 0.62f, 0.22f, 0.42f);
     private static final Color OVERLAY_WRONG      = new Color(0.75f, 0.08f, 0.08f, 0.42f);
 
-    /** room outline colour — steel blue, visible against the black background */
-    private static final Color ROOM_OUTLINE_COLOUR = new Color(0.30f, 0.45f, 0.62f, 1f);
+    /** lighter blue-slate background for the walkable playfield */
+    private static final Color SCENE_BG_COLOUR = new Color(0.15f, 0.19f, 0.27f, 1f);
+
+    /** solid wall fill colour for the generated maze */
+    private static final Color WALL_FILL_COLOUR = new Color(0.07f, 0.10f, 0.16f, 1f);
 
     /** health pip colours — warm red for remaining health, dark steel-blue for lost */
     private static final Color HEALTH_ACTIVE_COLOUR = new Color(0.90f, 0.20f, 0.20f, 1f);
-    private static final Color HEALTH_LOST_COLOUR   = new Color(0.18f, 0.22f, 0.28f, 1f);
+    private static final Color HEALTH_LOST_COLOUR   = new Color(0.36f, 0.41f, 0.49f, 1f);
 
     /** the fixed spatial layout providing spawn point, room bounds, and wall bounds */
     private MazeLayout layout;
@@ -79,8 +81,14 @@ public class GameScene extends Scene {
     /** the player entity — created at scene entry, released on exit */
     private Player player;
 
+    /** solid background quad for the gameplay area */
+    private IRenderable backgroundRenderable;
+
     /** wall collidables registered with the collision manager for this scene */
     private List<WallCollidable> wallCollidables;
+
+    /** one renderable per wall rectangle so the maze geometry is visible */
+    private List<IRenderable> wallRenderables;
 
     /** tracks whether the player is currently overlapping each answer room */
     private boolean[] playerInsideRoom;
@@ -100,7 +108,7 @@ public class GameScene extends Scene {
     /** countdown timer used to auto-advance through non-interactive phases */
     private float phaseHoldTimer;
 
-    /** one IRenderable per answer room — renders a grey outline and answer label each frame */
+    /** one IRenderable per answer room — renders only the answer label each frame */
     private List<IRenderable> roomRenderables;
 
     /**
@@ -132,6 +140,17 @@ public class GameScene extends Scene {
     /** three health squares rendered in the top-left corner */
     private IRenderable healthDisplay;
 
+    /** set to true to draw zone-boundary and corridor-centreline debug lines over the scene */
+    private static final boolean SHOW_DEBUG_GRID = false;
+
+    /** magenta for zone boundaries, cyan for screen midlines, orange for spawn */
+    private static final Color DEBUG_ZONE_COLOUR  = new Color(1f, 0f, 1f, 0.9f);
+    private static final Color DEBUG_CORR_COLOUR  = new Color(0f, 0.8f, 1f, 0.9f);
+    private static final Color DEBUG_SPAWN_COLOUR = new Color(1f, 0.5f, 0f, 1f);
+
+    /** debug overlay — null when SHOW_DEBUG_GRID is false */
+    private IRenderable debugGridRenderable;
+
     /**
      * constructs the game scene with the scene key "game".
      */
@@ -146,12 +165,10 @@ public class GameScene extends Scene {
      */
     @Override
     public void onEnter(SceneContext context) {
-        // generate a new random seed each entry and log it so layouts are reproducible
-        long mazeSeed = new Random().nextLong();
-        Gdx.app.log("GameScene", "maze seed: " + mazeSeed);
-        this.layout   = MazeLayout.generate(mazeSeed);
+        this.layout   = MazeLayout.createDefault();
         float[] spawn = layout.getSpawnPoint();
         this.player   = new Player(spawn[0], spawn[1]);
+        this.backgroundRenderable = createBackgroundRenderable();
 
         // wire movement manager and register the player for position integration
         GameMovementManager movementManager = context.get(GameMovementManager.class);
@@ -159,12 +176,14 @@ public class GameScene extends Scene {
 
         // wire collision manager and register the player and all walls
         MazeCollisionManager collisionManager = context.get(MazeCollisionManager.class);
-        this.wallCollidables  = new ArrayList<>();
+        this.wallCollidables = new ArrayList<>();
+        this.wallRenderables = new ArrayList<>();
         collisionManager.registerPlayer(player);
         for (float[] rect : layout.getWallBounds()) {
             WallCollidable wall = new WallCollidable(rect);
             wallCollidables.add(wall);
             collisionManager.registerWall(wall);
+            wallRenderables.add(createWallRenderable(rect));
         }
 
         // wire level orchestrator and start the session at easy difficulty
@@ -201,7 +220,6 @@ public class GameScene extends Scene {
         // build one renderable per answer room — grey outline + centred answer label
         this.roomRenderables = new ArrayList<>(4);
         List<float[]> allRooms = layout.getAllRoomBounds();
-
         // capture orchestrator and font as effectively-final locals for lambda use
         final ILevelOrchestrator orch               = orchestrator;
         final BitmapFont         roomFont           = promptFont;
@@ -222,8 +240,6 @@ public class GameScene extends Scene {
                 @Override
                 public void render(IDrawContext ctx) {
                     GdxDrawContext gdx = (GdxDrawContext) ctx;
-                    // steel-blue outline marking the room boundary
-                    gdx.rect(ROOM_OUTLINE_COLOUR, rect[0], rect[1], rect[2], rect[3], false);
                     // layout and text were pre-computed in refreshRoomAnswerCache — no allocation
                     GlyphLayout gl = capturedAnswerLayouts[roomIndex];
                     gdx.drawFont(roomFont, capturedAnswerTexts[roomIndex],
@@ -314,6 +330,36 @@ public class GameScene extends Scene {
                 }
             }
         };
+
+        // debug grid — zone boundary lines and corridor centrelines drawn over everything
+        if (SHOW_DEBUG_GRID) {
+            // zone boundaries derived from room bounds — left/right edges and top/bottom edges
+            final float zoneLeft  = cachedRoomBounds[0][0] + cachedRoomBounds[0][2]; // right edge of TL room
+            final float zoneRight = cachedRoomBounds[1][0];                           // left edge of TR room
+            final float zoneTop   = cachedRoomBounds[0][1];                           // bottom edge of top rooms
+            final float zoneBot   = cachedRoomBounds[2][1] + cachedRoomBounds[2][3];  // top edge of bottom rooms
+            final float[] sp      = layout.getSpawnPoint();
+            this.debugGridRenderable = new IRenderable() {
+                private final Transform2D t = new Transform2D(0f, 0f, 0f, 0f);
+                @Override public String     getAssetPath() { return null; }
+                @Override public ITransform getTransform() { return t; }
+
+                @Override
+                public void render(IDrawContext ctx) {
+                    GdxDrawContext gdx = (GdxDrawContext) ctx;
+                    // magenta zone boundary lines
+                    gdx.rect(DEBUG_ZONE_COLOUR, zoneLeft  - 1f, 0f,   2f,    720f, true);
+                    gdx.rect(DEBUG_ZONE_COLOUR, zoneRight - 1f, 0f,   2f,    720f, true);
+                    gdx.rect(DEBUG_ZONE_COLOUR, 0f, zoneTop - 1f,     1280f, 2f,   true);
+                    gdx.rect(DEBUG_ZONE_COLOUR, 0f, zoneBot - 1f,     1280f, 2f,   true);
+                    // cyan screen midlines (x=640, y=360)
+                    gdx.rect(DEBUG_CORR_COLOUR, 639f, 0f,  2f,    720f, true);
+                    gdx.rect(DEBUG_CORR_COLOUR, 0f,   359f, 1280f, 2f,  true);
+                    // orange spawn crosshair
+                    gdx.rect(DEBUG_SPAWN_COLOUR, sp[0] - 4f, sp[1] - 4f, 8f, 8f, true);
+                }
+            };
+        }
     }
 
     /**
@@ -338,6 +384,7 @@ public class GameScene extends Scene {
         playerInsideRoom   = null;
         roomCooldownTimers = null;
         cachedRoomBounds   = null;
+        wallRenderables    = null;
         roomRenderables    = null;
         roomAnswerTexts    = null;
         roomAnswerLayouts  = null;
@@ -348,10 +395,12 @@ public class GameScene extends Scene {
         feedbackOverlay    = null;
         scoreDisplay       = null;
         healthDisplay      = null;
-        brightnessOverlay  = null;
+        brightnessOverlay   = null;
+        debugGridRenderable = null;
 
         layout          = null;
         player          = null;
+        backgroundRenderable = null;
         wallCollidables = null;
     }
 
@@ -423,6 +472,10 @@ public class GameScene extends Scene {
     @Override
     public void submitRenderable(IRenderQueue renderQueue) {
         if (roomRenderables == null) return; // scene has already exited
+        renderQueue.queue(backgroundRenderable);
+        for (IRenderable wall : wallRenderables) {
+            renderQueue.queue(wall);
+        }
         for (IRenderable room : roomRenderables) {
             renderQueue.queue(room);
         }
@@ -431,6 +484,9 @@ public class GameScene extends Scene {
         renderQueue.queue(scoreDisplay);
         renderQueue.queue(healthDisplay);
         renderQueue.queue(feedbackOverlay);
+        if (SHOW_DEBUG_GRID && debugGridRenderable != null) {
+            renderQueue.queue(debugGridRenderable);
+        }
         renderQueue.queue(brightnessOverlay); // topmost — dims the whole frame per settings
     }
 
@@ -528,6 +584,46 @@ public class GameScene extends Scene {
      */
     private boolean isTerminalPhase(RoundPhase phase) {
         return phase == RoundPhase.LEVEL_COMPLETE || phase == RoundPhase.GAME_OVER;
+    }
+
+    /**
+     * creates a filled wall renderable from a rectangle in layout space.
+     *
+     * @param rect the wall rectangle as [x, y, w, h]
+     * @return a renderable that draws the wall as a continuous solid mass
+     */
+    private IRenderable createWallRenderable(float[] rect) {
+        final float[] stableRect = rect.clone();
+        final Transform2D transform = new Transform2D(
+            stableRect[0], stableRect[1], stableRect[2], stableRect[3]);
+        return new IRenderable() {
+            @Override public String getAssetPath() { return null; }
+            @Override public ITransform getTransform() { return transform; }
+
+            @Override
+            public void render(IDrawContext ctx) {
+                ((GdxDrawContext) ctx).rect(
+                    WALL_FILL_COLOUR, stableRect[0], stableRect[1], stableRect[2], stableRect[3], true);
+            }
+        };
+    }
+
+    /**
+     * creates the lighter background quad that sits under the maze geometry.
+     *
+     * @return a renderable that fills the whole gameplay viewport
+     */
+    private IRenderable createBackgroundRenderable() {
+        final Transform2D transform = new Transform2D(0f, 0f, 1280f, 720f);
+        return new IRenderable() {
+            @Override public String getAssetPath() { return null; }
+            @Override public ITransform getTransform() { return transform; }
+
+            @Override
+            public void render(IDrawContext ctx) {
+                ((GdxDrawContext) ctx).drawTintedQuad(SCENE_BG_COLOUR, 0f, 0f, 1280f, 720f);
+            }
+        };
     }
 
     /**
