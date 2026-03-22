@@ -112,5 +112,4 @@ public final class VolumeSlider extends Entity implements IRenderable {
             knobX, trackCentreY, knobRadius, true);
     }
 
-    public void dispose() { }
 }

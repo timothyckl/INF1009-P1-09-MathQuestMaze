@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.p1_7.abstractengine.entity.Entity;
+import com.p1_7.abstractengine.entity.IDisposable;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.abstractengine.render.IDrawContext;
@@ -33,7 +34,7 @@ import com.p1_7.game.platform.GdxDrawContext;
  * Call resetClick() after handling the action so it fires only once.
  * Call dispose() inside the scene's onExit() to free GPU resources.
  */
-public class MenuButton extends Entity implements IRenderable {
+public class MenuButton extends Entity implements IRenderable, IDisposable {
 
     // ── dimensions ──────────────────────────────────────────────
     public static final float BUTTON_WIDTH  = 260f;

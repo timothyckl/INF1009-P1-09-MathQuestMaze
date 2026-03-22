@@ -342,7 +342,6 @@ public class GameScene extends Scene {
         feedbackOverlay    = null;
         scoreDisplay       = null;
         healthDisplay      = null;
-        if (brightnessOverlay != null) brightnessOverlay.dispose();
         brightnessOverlay  = null;
 
         layout          = null;

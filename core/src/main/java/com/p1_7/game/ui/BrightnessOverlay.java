@@ -47,6 +47,4 @@ public class BrightnessOverlay extends Entity implements IRenderable {
                               transform.getSize(0),     transform.getSize(1));
     }
 
-    /** No-op — this entity owns no disposable resources. */
-    public void dispose() { }
 }

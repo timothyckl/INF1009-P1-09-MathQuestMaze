@@ -83,7 +83,6 @@ public class GameOverScene extends Scene {
     public void onExit(SceneContext context) {
         if (retryButton != null) retryButton.dispose();
         if (mainMenuButton != null) mainMenuButton.dispose();
-        if (brightnessOverlay != null) brightnessOverlay.dispose();
         background   = null;
         title        = null;
         promptStatus = null;

@@ -140,9 +140,6 @@ public class BrightnessSlider extends Entity implements IRenderable {
                       knobX, trackCentreY, knobRadius, true);
     }
 
-    /** No-op — this entity owns no GPU resources. */
-    public void dispose() { }
-
     private float normalizedValue() {
         return (value - MIN_VALUE) / VALUE_RANGE;
     }

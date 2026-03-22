@@ -215,17 +215,8 @@ public class SettingScene extends Scene {
     }
 
     private void disposeSceneComponents() {
-        if (volumeSlider != null) {
-            volumeSlider.dispose();
-        }
-        if (brightnessSlider != null) {
-            brightnessSlider.dispose();
-        }
         if (backButton != null) {
             backButton.dispose();
-        }
-        if (brightnessOverlay != null) {
-            brightnessOverlay.dispose();
         }
         background = null;
         heading = null;

@@ -72,7 +72,6 @@ public class LevelCompleteScene extends Scene {
     public void onExit(SceneContext context) {
         if (continueButton != null) continueButton.dispose();
         if (mainMenuButton != null) mainMenuButton.dispose();
-        if (brightnessOverlay != null) brightnessOverlay.dispose();
         background        = null;
         title             = null;
         promptStatus      = null;
