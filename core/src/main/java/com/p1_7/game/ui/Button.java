@@ -14,11 +14,11 @@ import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 
 /**
- * Abstract base class for all button-style UI entities. Manages transform layout, hit-testing,
+ * abstract base class for all button-style UI entities. manages transform layout, hit-testing,
  * and click detection so that subclasses only need to supply rendering and resource cleanup.
  *
- * Call updateInput() once per frame, then check isClicked().
- * Call resetClick() after handling the action so it fires only once.
+ * call updateInput() once per frame, then check isClicked().
+ * call resetClick() after handling the action so it fires only once.
  */
 public abstract class Button extends Entity implements IRenderable, IDisposable {
 
@@ -38,7 +38,7 @@ public abstract class Button extends Entity implements IRenderable, IDisposable 
     private boolean clicked = false;
 
     /**
-     * Builds the shared button state from centre position and font.
+     * builds the shared button state from centre position and font.
      *
      * @param label   text shown on the button
      * @param centreX horizontal centre in world coordinates
@@ -55,8 +55,8 @@ public abstract class Button extends Entity implements IRenderable, IDisposable 
     }
 
     /**
-     * Polls cursor position and click state.
-     * Call once per frame from the scene's update().
+     * polls cursor position and click state.
+     * call once per frame from the scene's update().
      *
      * @param cursor     the world-space cursor source (Y-flip already applied)
      * @param inputQuery the logical input query for this frame
@@ -77,13 +77,13 @@ public abstract class Button extends Entity implements IRenderable, IDisposable 
         }
     }
 
-    /** Returns true if the button was clicked this frame. */
+    /** returns true if the button was clicked this frame. */
     public boolean isClicked() { return clicked; }
 
-    /** Clears the click flag — call after handling the action. */
+    /** clears the click flag — call after handling the action. */
     public void resetClick() { clicked = false; }
 
-    /** Returns null — subclasses manage their own asset loading. */
+    /** returns null — subclasses manage their own asset loading. */
     @Override
     public String getAssetPath() { return null; }
 

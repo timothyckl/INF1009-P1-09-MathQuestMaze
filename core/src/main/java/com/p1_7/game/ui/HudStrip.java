@@ -23,7 +23,7 @@ public final class HudStrip extends Entity implements IRenderable {
     /** total height available for gameplay below the strip — equal to STRIP_Y by definition */
     public static final float PLAYFIELD_HEIGHT = STRIP_Y;
 
-    // TODO palette: replace in palette issue
+    // TODO palette: replace hardcoded colour with a shared palette entry
     private static final Color STRIP_COLOUR = new Color(0.11f, 0.14f, 0.20f, 1f);
 
     private final Transform2D transform = new Transform2D(

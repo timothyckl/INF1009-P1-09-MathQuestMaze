@@ -42,7 +42,7 @@ public class QuestionPanel extends Entity implements IRenderable {
     /** duration of the slide animation in seconds */
     private static final float ANIM_DURATION = 1.0f;
 
-    // TODO palette: replace in palette issue
+    // TODO palette: replace hardcoded colour with a shared palette entry
     /** brighter slate-blue panel background so the prompt stays readable */
     private static final Color PANEL_BG = new Color(0.24f, 0.29f, 0.40f, 0.94f);
 

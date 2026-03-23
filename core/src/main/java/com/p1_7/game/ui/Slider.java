@@ -14,11 +14,11 @@ import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
- * Abstract base class for horizontal slider UI entities. Handles drag input, value clamping,
+ * abstract base class for horizontal slider UI entities. handles drag input, value clamping,
  * track/knob rendering, and the moved flag; subclasses supply the value range and colour scheme.
  *
- * Call updateInput() once per frame, then check hasMoved() and getValue().
- * Call resetMoved() after applying the value.
+ * call updateInput() once per frame, then check hasMoved() and getValue().
+ * call resetMoved() after applying the value.
  */
 public abstract class Slider extends Entity implements IRenderable, IDisposable {
 
@@ -38,7 +38,7 @@ public abstract class Slider extends Entity implements IRenderable, IDisposable 
     private boolean moved    = false;
 
     /**
-     * Builds shared slider state from centre position, track span, and initial value.
+     * builds shared slider state from centre position, track span, and initial value.
      *
      * @param centreX      horizontal centre of the slider in world coordinates
      * @param centreY      vertical centre of the slider in world coordinates
@@ -61,29 +61,29 @@ public abstract class Slider extends Entity implements IRenderable, IDisposable 
 
     // ── abstract range and colour getters ────────────────────────
 
-    /** Returns the lower bound of this slider's value range. */
+    /** returns the lower bound of this slider's value range. */
     protected abstract float getMinValue();
 
-    /** Returns the upper bound of this slider's value range. */
+    /** returns the upper bound of this slider's value range. */
     protected abstract float getMaxValue();
 
-    /** Returns the colour used for the unfilled portion of the track. */
+    /** returns the colour used for the unfilled portion of the track. */
     protected abstract Color getTrackColour();
 
-    /** Returns the colour used for the filled portion of the track. */
+    /** returns the colour used for the filled portion of the track. */
     protected abstract Color getFilledColour();
 
-    /** Returns the knob colour in its idle state. */
+    /** returns the knob colour in its idle state. */
     protected abstract Color getKnobColour();
 
-    /** Returns the knob colour while it is being dragged. */
+    /** returns the knob colour while it is being dragged. */
     protected abstract Color getKnobDragColour();
 
     // ── concrete input handling ───────────────────────────────────
 
     /**
-     * Polls cursor position and drag state. Does not mutate any external state.
-     * Call once per frame from the scene's update().
+     * polls cursor position and drag state. does not mutate any external state.
+     * call once per frame from the scene's update().
      *
      * @param cursor     the world-space cursor source (Y-flip already applied)
      * @param inputQuery the logical input query for this frame
@@ -117,16 +117,16 @@ public abstract class Slider extends Entity implements IRenderable, IDisposable 
         }
     }
 
-    /** Returns the current value within [getMinValue(), getMaxValue()]. */
+    /** returns the current value within [getMinValue(), getMaxValue()]. */
     public float getValue() { return value; }
 
-    /** Returns true if the slider value changed this frame. */
+    /** returns true if the slider value changed this frame. */
     public boolean hasMoved() { return moved; }
 
-    /** Clears the moved flag — call after handling the value change. */
+    /** clears the moved flag — call after handling the value change. */
     public void resetMoved() { moved = false; }
 
-    /** Returns null — sliders manage no asset files. */
+    /** returns null — sliders manage no asset files. */
     @Override
     public String getAssetPath() { return null; }
 
@@ -134,7 +134,7 @@ public abstract class Slider extends Entity implements IRenderable, IDisposable 
     public ITransform getTransform() { return transform; }
 
     /**
-     * Draws the track background, the filled portion, and the knob using the subclass colour scheme.
+     * draws the track background, the filled portion, and the knob using the subclass colour scheme.
      *
      * @param ctx the draw context for this frame
      */
@@ -152,12 +152,12 @@ public abstract class Slider extends Entity implements IRenderable, IDisposable 
                       knobX, trackCentreY, knobRadius, true);
     }
 
-    /** No-op — sliders own no GPU resources. */
+    /** no-op — sliders own no GPU resources. */
     @Override
     public void dispose() { }
 
     /**
-     * Maps a raw value to a normalised [0, 1] track position.
+     * maps a raw value to a normalised [0, 1] track position.
      *
      * @param rawValue the value in [getMinValue(), getMaxValue()]
      * @return position along the track from 0 (left) to 1 (right)
@@ -167,7 +167,7 @@ public abstract class Slider extends Entity implements IRenderable, IDisposable 
     }
 
     /**
-     * Clamps a value to the valid range [getMinValue(), getMaxValue()].
+     * clamps a value to the valid range [getMinValue(), getMaxValue()].
      *
      * @param rawValue the value to clamp
      * @return the clamped value

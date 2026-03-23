@@ -19,6 +19,14 @@ import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.managers.IFontManager;
 import com.p1_7.game.level.ILevelOrchestrator;
 
+/**
+ * shown after the player clears a level; displays the current level number, a prompt
+ * for the next level, and navigation buttons.
+ *
+ * advances the difficulty via ILevelOrchestrator before transitioning to the game scene.
+ * if the player has cleared the final level, the continue button becomes "play again"
+ * and restarts from the first difficulty rather than advancing.
+ */
 public class LevelCompleteScene extends Scene {
 
     private static final int MAX_LEVEL = 3;

@@ -11,6 +11,11 @@ import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.platform.GdxDrawContext;
 
+/**
+ * UI row displaying an action label and two editable key-binding cells (primary and alternate).
+ * the owning scene drives hover/active state via setHoveredColumn and setActiveColumn,
+ * then reads updated key codes via getKeyCode after a remap.
+ */
 public final class RemapSlot extends Entity implements IRenderable {
 
     public static final float TABLE_WIDTH = 560f;
@@ -25,6 +30,7 @@ public final class RemapSlot extends Entity implements IRenderable {
     private static final Color CELL_BORDER = new Color(0.90f, 0.94f, 1.0f, 1f);
     private static final Color TEXT_COLOR = new Color(0.12f, 0.16f, 0.28f, 1f);
 
+    /** identifies which of the two key-binding columns a remap operation targets */
     public enum BindingColumn {
         PRIMARY("Primary"),
         ALTERNATE("Alternate");
@@ -35,6 +41,7 @@ public final class RemapSlot extends Entity implements IRenderable {
             this.label = label;
         }
 
+        /** returns the human-readable column header string */
         public String getLabel() {
             return label;
         }
@@ -55,6 +62,17 @@ public final class RemapSlot extends Entity implements IRenderable {
     private BindingColumn hoveredColumn;
     private BindingColumn activeColumn;
 
+    /**
+     * constructs a remap slot row centred at (centreX, centreY).
+     *
+     * @param label            display name of the game action
+     * @param actionId         the action whose bindings this slot controls
+     * @param primaryKeyCode   initial primary key (libGDX Input.Keys constant)
+     * @param alternateKeyCode initial alternate key (libGDX Input.Keys constant)
+     * @param centreX          horizontal centre of the table in world coordinates
+     * @param centreY          vertical centre of this row in world coordinates
+     * @param font             BitmapFont owned by the scene
+     */
     public RemapSlot(String label,
               ActionId actionId,
               int primaryKeyCode,
@@ -76,22 +94,33 @@ public final class RemapSlot extends Entity implements IRenderable {
         this.cellBaselineY = centreY + 8f;
     }
 
+    /** returns the display name of the game action. */
     public String getLabel() {
         return label;
     }
 
+    /** returns the action identifier for this slot. */
     public ActionId getActionId() {
         return actionId;
     }
 
+    /** returns the current primary key code (libGDX Input.Keys constant). */
     public int getPrimaryKeyCode() {
         return primaryKeyCode;
     }
 
+    /** returns the current alternate key code (libGDX Input.Keys constant). */
     public int getAlternateKeyCode() {
         return alternateKeyCode;
     }
 
+    /**
+     * returns the column whose cell contains (x, y), or null if neither cell is hit.
+     *
+     * @param x world-space x coordinate
+     * @param y world-space y coordinate
+     * @return the hit column, or null
+     */
     public BindingColumn hitTest(float x, float y) {
         if (contains(primaryCellX, y, x)) {
             return BindingColumn.PRIMARY;
@@ -107,14 +136,30 @@ public final class RemapSlot extends Entity implements IRenderable {
             && y >= cellY && y <= cellY + CELL_HEIGHT;
     }
 
+    /**
+     * marks the given column as hovered; pass null to clear.
+     *
+     * @param column the column to highlight, or null
+     */
     public void setHoveredColumn(BindingColumn column) {
         this.hoveredColumn = column;
     }
 
+    /**
+     * marks the given column as awaiting a key press; pass null to cancel.
+     *
+     * @param column the column to activate, or null
+     */
     public void setActiveColumn(BindingColumn column) {
         this.activeColumn = column;
     }
 
+    /**
+     * returns the column whose current binding matches keyCode, or null if neither does.
+     *
+     * @param keyCode the libGDX Input.Keys constant to look up
+     * @return the matching column, or null
+     */
     public BindingColumn findColumnForKey(int keyCode) {
         if (primaryKeyCode == keyCode) {
             return BindingColumn.PRIMARY;
@@ -125,14 +170,32 @@ public final class RemapSlot extends Entity implements IRenderable {
         return null;
     }
 
+    /**
+     * returns the key code for the given column.
+     *
+     * @param column the column to query
+     * @return the libGDX Input.Keys constant for that column
+     */
     public int getKeyCode(BindingColumn column) {
         return column == BindingColumn.PRIMARY ? primaryKeyCode : alternateKeyCode;
     }
 
+    /**
+     * returns the key code for the column opposite to the given one.
+     *
+     * @param column the reference column
+     * @return the key code of the other column
+     */
     public int getOtherKeyCode(BindingColumn column) {
         return column == BindingColumn.PRIMARY ? alternateKeyCode : primaryKeyCode;
     }
 
+    /**
+     * overwrites the key code for the given column.
+     *
+     * @param column  the column to update
+     * @param keyCode the new libGDX Input.Keys constant
+     */
     public void setKeyCode(BindingColumn column, int keyCode) {
         if (column == BindingColumn.PRIMARY) {
             primaryKeyCode = keyCode;

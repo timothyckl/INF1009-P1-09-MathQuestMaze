@@ -30,7 +30,11 @@ import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.managers.IFontManager;
 
 /**
- * Settings scene for Math Quest Maze.
+ * lets the player adjust volume and brightness levels, and remap primary and alternate
+ * key bindings for each game action.
+ *
+ * key remapping is handled by an InputAdapter registered directly with Gdx.input; the
+ * adapter writes bindings back to IInputManager when a key is pressed.
  */
 public class SettingScene extends Scene {
 

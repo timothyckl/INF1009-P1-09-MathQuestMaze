@@ -21,6 +21,14 @@ public class Text extends Entity implements IRenderable {
     /** cached layout recomputed only when the text changes */
     private GlyphLayout cachedLayout;
 
+    /**
+     * constructs a centred text renderable at the given world-space position.
+     *
+     * @param text    the initial string to display
+     * @param centreX horizontal centre of the text in world coordinates
+     * @param centreY vertical centre of the text in world coordinates
+     * @param font    BitmapFont owned by the scene
+     */
     public Text(String text, float centreX, float centreY, BitmapFont font) {
         this.text = text;
         this.font = font;
@@ -28,6 +36,11 @@ public class Text extends Entity implements IRenderable {
         this.cachedLayout = new GlyphLayout(font, text);
     }
 
+    /**
+     * replaces the displayed string and updates the cached glyph layout.
+     *
+     * @param text the new string to display
+     */
     public void setText(String text) {
         this.text = text;
         this.cachedLayout.setText(font, text);

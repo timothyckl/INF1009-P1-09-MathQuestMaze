@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.p1_7.game.Settings;
 
 /**
- * Horizontal brightness slider. Value range is [Settings.MIN_BRIGHTNESS_LEVEL, 1.0]
+ * horizontal brightness slider. value range is [Settings.MIN_BRIGHTNESS_LEVEL, 1.0]
  * with a gold colour scheme.
  *
  * The slider does not mutate Settings directly; the owning scene is responsible for
@@ -18,7 +18,7 @@ public final class BrightnessSlider extends Slider {
     private static final Color COLOUR_KNOB_DRAG = Color.WHITE;
 
     /**
-     * Creates a brightness slider centred at (centreX, centreY).
+     * creates a brightness slider centred at (centreX, centreY).
      *
      * @param centreX      horizontal centre of the slider in world coordinates
      * @param centreY      vertical centre of the slider in world coordinates

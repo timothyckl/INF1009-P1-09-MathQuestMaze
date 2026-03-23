@@ -8,7 +8,7 @@ import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
- * Reusable UI button for menus. Supports two modes:
+ * reusable UI button for menus. supports two modes:
  *
  *   TEXTURED   — draws a PNG for the button body; hover applies a colour tint.
  *               Create via MenuButton.withTexture(...).
@@ -44,7 +44,7 @@ public class MenuButton extends Button {
     // ── factory method (textured) ────────────────────────────────
 
     /**
-     * Creates a textured button that loads its own PNG files.
+     * creates a textured button that loads its own PNG files.
      *
      * @param label      text shown on the button
      * @param centreX    horizontal centre in world coordinates
@@ -75,7 +75,7 @@ public class MenuButton extends Button {
     // ── constructors ─────────────────────────────────────────────
 
     /**
-     * Procedural constructor — no image assets required.
+     * procedural constructor — no image assets required.
      *
      * @param label   text shown on the button
      * @param centreX horizontal centre in world coordinates
@@ -86,7 +86,7 @@ public class MenuButton extends Button {
         this(label, centreX, centreY, font, null, null);
     }
 
-    /** Full internal constructor used by both modes. */
+    /** full internal constructor used by both modes. */
     private MenuButton(String label, float centreX, float centreY,
                        BitmapFont font, Texture normal, Texture hover) {
         super(label, centreX, centreY, font);
@@ -97,7 +97,7 @@ public class MenuButton extends Button {
     // ── IRenderable ──────────────────────────────────────────────
 
     /**
-     * Draws the button background (textured or procedural) then the label.
+     * draws the button background (textured or procedural) then the label.
      * Pass transitions are fully managed by GdxDrawContext; no begin/end calls here.
      *
      * @param ctx the draw context for this frame
@@ -132,7 +132,7 @@ public class MenuButton extends Button {
     }
 
     /**
-     * Releases textures owned by this button.
+     * releases textures owned by this button.
      * The font is NOT disposed — the scene owns it.
      * Safe no-op for procedurally constructed instances (no textures to release).
      */
