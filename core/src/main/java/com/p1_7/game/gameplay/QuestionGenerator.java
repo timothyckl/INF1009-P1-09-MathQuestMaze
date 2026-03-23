@@ -10,12 +10,12 @@ import java.util.Random;
  * stateful generator that produces math question instances for a given difficulty level.
  *
  * each call to generateQuestion produces a new arithmetic question with one correct answer
- * and three plausible distractors. the difficulty controls the operand range; the operation
- * (addition or subtraction) is chosen at random on each call.
+ * and three plausible distractors. the difficulty controls the operand range and the set
+ * of allowed operations; each allowed operation has equal probability of being selected.
  */
 public class QuestionGenerator {
 
-    /** the difficulty level that determines the operand range for generated questions */
+    /** the difficulty level that determines the operand range and allowed operations */
     private final Difficulty difficulty;
 
     /** random number source used for all generation decisions */
@@ -24,7 +24,7 @@ public class QuestionGenerator {
     /**
      * constructs a question generator for the given difficulty level using an unseeded random source.
      *
-     * @param difficulty the difficulty that controls operand range; must not be null
+     * @param difficulty the difficulty that controls operand range and operations; must not be null
      * @throws IllegalArgumentException if difficulty is null
      */
     public QuestionGenerator(Difficulty difficulty) {
@@ -37,7 +37,7 @@ public class QuestionGenerator {
      * prefer this overload in tests: passing a seeded random instance makes generation
      * deterministic, allowing specific behaviours (e.g. operand swapping) to be asserted reliably.
      *
-     * @param difficulty the difficulty that controls operand range; must not be null
+     * @param difficulty the difficulty that controls operand range and operations; must not be null
      * @param random     the random source to use for all generation decisions; must not be null
      * @throws IllegalArgumentException if difficulty or random is null
      */
@@ -55,30 +55,32 @@ public class QuestionGenerator {
     /**
      * generates a single math question appropriate for this generator's difficulty.
      *
-     * the operation is chosen randomly (addition or subtraction). for subtraction, operands
-     * are swapped when necessary to ensure the result is non-negative. the returned question
-     * contains exactly four unique non-negative integer options including the correct answer.
+     * the operation is chosen with equal probability from the difficulty's allowed set.
+     * subtraction operands are swapped when necessary to ensure a non-negative result.
+     * division always produces a whole-number quotient. the returned question contains
+     * exactly four unique non-negative integer options including the correct answer.
      *
      * @return a new math question with a prompt, correct answer, and four answer options
      */
     public MathQuestion generateQuestion() {
+        List<Operation> ops = difficulty.getAllowedOperations();
+        Operation operation = ops.get(random.nextInt(ops.size()));
+
         int min = difficulty.getMinOperand();
         int max = difficulty.getMaxOperand();
-
-        // draw two operands from the difficulty's inclusive range
-        int a = min + random.nextInt(max - min + 1);
-        int b = min + random.nextInt(max - min + 1);
-
-        // choose addition or subtraction with equal probability
-        boolean isAddition = random.nextBoolean();
 
         int correctAnswer;
         String prompt;
 
-        if (isAddition) {
+        if (operation == Operation.ADDITION) {
+            int a = min + random.nextInt(max - min + 1);
+            int b = min + random.nextInt(max - min + 1);
             correctAnswer = a + b;
             prompt = a + " + " + b + " = ?";
-        } else {
+
+        } else if (operation == Operation.SUBTRACTION) {
+            int a = min + random.nextInt(max - min + 1);
+            int b = min + random.nextInt(max - min + 1);
             // swap operands so the result is always >= 0
             if (a < b) {
                 int temp = a;
@@ -87,6 +89,22 @@ public class QuestionGenerator {
             }
             correctAnswer = a - b;
             prompt = a + " - " + b + " = ?";
+
+        } else if (operation == Operation.MULTIPLICATION) {
+            int a = min + random.nextInt(max - min + 1);
+            int b = min + random.nextInt(max - min + 1);
+            correctAnswer = a * b;
+            prompt = a + " \u00d7 " + b + " = ?";
+
+        } else {
+            // division — pick a divisor then derive a dividend that is evenly divisible
+            int b = min + random.nextInt(max - min + 1);
+            // largest quotient q such that b * q stays within the operand range
+            int maxQuotient = max / b;
+            int q = 1 + random.nextInt(maxQuotient);
+            int a = b * q;
+            correctAnswer = q;
+            prompt = a + " \u00f7 " + b + " = ?";
         }
 
         List<Integer> options = buildOptions(correctAnswer);
