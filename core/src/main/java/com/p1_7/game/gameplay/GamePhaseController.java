@@ -142,7 +142,7 @@ public class GamePhaseController {
         return phase == RoundPhase.LEVEL_COMPLETE || phase == RoundPhase.GAME_OVER;
     }
 
-    // ── private helpers ──────────────────────────────────────────────────
+    // private helpers ─────────────────────────────────────────────────
 
     /**
      * sets the hold timer based on the incoming phase.

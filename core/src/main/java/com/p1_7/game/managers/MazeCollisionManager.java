@@ -61,7 +61,7 @@ public class MazeCollisionManager extends CollisionManager {
         return new Class[]{ GameMovementManager.class };
     }
 
-    // ── registration helpers ──────────────────────────────────────
+    // registration helpers ─────────────────────────────────────
 
     /**
      * registers the player for collision detection and wall-push resolution.
@@ -158,7 +158,7 @@ public class MazeCollisionManager extends CollisionManager {
         unregisterCollidable(item);
     }
 
-    // ── resolution ───────────────────────────────────────────────
+    // resolution ──────────────────────────────────────────────
 
     /**
      * resolves all detected collisions by pushing any registered mover out of

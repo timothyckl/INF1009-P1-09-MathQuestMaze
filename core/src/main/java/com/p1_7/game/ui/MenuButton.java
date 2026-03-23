@@ -26,13 +26,13 @@ import com.p1_7.game.platform.GdxDrawContext;
  */
 public class MenuButton extends Button {
 
-    // ── procedural fallback colours ──────────────────────────────
+    // procedural fallback colours ─────────────────────────────
     private static final Color COLOUR_NORMAL = new Color(0.20f, 0.20f, 0.55f, 1f);
     private static final Color COLOUR_HOVER  = new Color(0.35f, 0.35f, 0.80f, 1f);
     private static final Color COLOUR_BORDER = new Color(0.80f, 0.80f, 1.00f, 1f);
     private static final float BORDER_THICK  = 3f;
 
-    // ── textured hover tints ─────────────────────────────────────
+    // textured hover tints ────────────────────────────────────
     private static final Color TINT_NORMAL = Color.WHITE.cpy();
     private static final Color TINT_HOVER  = new Color(0.75f, 0.88f, 1.0f, 1f);
 
@@ -41,7 +41,7 @@ public class MenuButton extends Button {
     /** null in procedural mode; may equal texNormal if no separate hover image */
     private final Texture texHover;
 
-    // ── factory method (textured) ────────────────────────────────
+    // factory method (textured) ───────────────────────────────
 
     /**
      * creates a textured button that loads its own PNG files.
@@ -72,7 +72,7 @@ public class MenuButton extends Button {
         return new MenuButton(label, centreX, centreY, font, normal, hover);
     }
 
-    // ── constructors ─────────────────────────────────────────────
+    // constructors ────────────────────────────────────────────
 
     /**
      * procedural constructor — no image assets required.
@@ -94,7 +94,7 @@ public class MenuButton extends Button {
         this.texHover  = hover;
     }
 
-    // ── IRenderable ──────────────────────────────────────────────
+    // IRenderable ─────────────────────────────────────────────
 
     /**
      * draws the button background (textured or procedural) then the label.
@@ -110,12 +110,12 @@ public class MenuButton extends Button {
         float y = transform.getPosition(1);
 
         if (texNormal != null) {
-            // ── textured mode ──────────────────────────────────
+            // textured mode ─────────────────────────────────
             gdxCtx.drawRawTexture(hovered ? texHover : texNormal,
                                   hovered ? TINT_HOVER : TINT_NORMAL,
                                   x, y, BUTTON_WIDTH, BUTTON_HEIGHT);
         } else {
-            // ── procedural fallback ────────────────────────────
+            // procedural fallback ───────────────────────────
             gdxCtx.rect(COLOUR_BORDER,
                         x - BORDER_THICK, y - BORDER_THICK,
                         BUTTON_WIDTH  + BORDER_THICK * 2,

@@ -16,7 +16,7 @@ import com.p1_7.game.platform.GdxDrawContext;
  */
 public class Enemy extends HostileCharacter {
 
-    // ── AI constants ──────────────────────────────────────────────
+    // AI constants ─────────────────────────────────────────────
 
     /** collision box side length in pixels */
     private static final float SIZE          = 20f;
@@ -46,7 +46,7 @@ public class Enemy extends HostileCharacter {
     /** seconds the enemy walks in one direction before reversing patrol */
     private static final float PATROL_DURATION = 1.5f;
 
-    // ── sprite constants ─────────────────────────────────────────
+    // sprite constants ────────────────────────────────────────
 
     private static final String WALK_ASSET   = "goblin-walk.png";
     private static final String RUN_ASSET    = "goblin-run.png";
@@ -75,7 +75,7 @@ public class Enemy extends HostileCharacter {
     /** seconds each animation frame is held before advancing */
     private static final float FRAME_DURATION        = 0.1f;
 
-    // ── state ────────────────────────────────────────────────────
+    // state ───────────────────────────────────────────────────
 
     /** three-way AI state */
     private enum AnimState { IDLE, CHASE, ATTACK }
@@ -101,7 +101,7 @@ public class Enemy extends HostileCharacter {
         super(spawnX, spawnY, SIZE, DAMAGE_BOX_SIZE);
     }
 
-    // ── IRenderable ──────────────────────────────────────────────
+    // IRenderable ─────────────────────────────────────────────
 
     /**
      * returns the walk sprite path as the primary asset for pre-loading.
@@ -140,7 +140,7 @@ public class Enemy extends HostileCharacter {
         }
     }
 
-    // ── per-frame update ─────────────────────────────────────────
+    // per-frame update ────────────────────────────────────────
 
     /**
      * evaluates proximity to the player and updates velocity, animation state,

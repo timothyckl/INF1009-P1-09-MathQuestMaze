@@ -59,7 +59,7 @@ public abstract class Slider extends Entity implements IRenderable, IDisposable 
         );
     }
 
-    // ── abstract range and colour getters ────────────────────────
+    // abstract range and colour getters ───────────────────────
 
     /** returns the lower bound of this slider's value range. */
     protected abstract float getMinValue();
@@ -79,7 +79,7 @@ public abstract class Slider extends Entity implements IRenderable, IDisposable 
     /** returns the knob colour while it is being dragged. */
     protected abstract Color getKnobDragColour();
 
-    // ── concrete input handling ───────────────────────────────────
+    // concrete input handling ──────────────────────────────────
 
     /**
      * polls cursor position and drag state. does not mutate any external state.

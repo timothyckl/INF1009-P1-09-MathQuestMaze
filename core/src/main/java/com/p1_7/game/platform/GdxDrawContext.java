@@ -184,7 +184,7 @@ public class GdxDrawContext implements IDrawContext {
         shapeRenderer.circle(x, y, radius);
     }
 
-    // ── private pass management ───────────────────────────────────────
+    // private pass management ──────────────────────────────────────
 
     /**
      * ensures the sprite batch pass is open, closing the shape pass first if needed.

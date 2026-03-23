@@ -6,7 +6,7 @@ package com.p1_7.game;
  */
 public final class GameConfig {
 
-    // ── phase hold timers ────────────────────────────────────────────────
+    // phase hold timers ───────────────────────────────────────────────
 
     /** hold time for QUESTION_INTRO — matches panel animation total (1.5 s + 1.0 s) */
     public static final float QUESTION_INTRO_HOLD_SECONDS = 2.5f;
@@ -17,7 +17,7 @@ public final class GameConfig {
     /** hold time for ROUND_RESET before the next question begins */
     public static final float ROUND_RESET_HOLD_SECONDS = 1.0f;
 
-    // ── room entry ───────────────────────────────────────────────────────
+    // room entry ──────────────────────────────────────────────────────
 
     /** re-entry cooldown in seconds before a wrong room can penalise the player again */
     public static final float ROOM_COOLDOWN_SECONDS = 1.0f;
@@ -28,7 +28,7 @@ public final class GameConfig {
     /** height of the centre trigger zone within each answer room in pixels */
     public static final float ROOM_TRIGGER_HEIGHT = 80f;
 
-    // ── item spawning ────────────────────────────────────────────────────
+    // item spawning ───────────────────────────────────────────────────
 
     /** minimum number of hearts spawned per level */
     public static final int HEART_SPAWN_MIN = 1;

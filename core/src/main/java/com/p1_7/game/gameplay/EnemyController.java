@@ -87,7 +87,7 @@ public class EnemyController {
         }
     }
 
-    // ── line-of-sight ────────────────────────────────────────────────────
+    // line-of-sight ───────────────────────────────────────────────────
 
     /**
      * returns true when the straight line from enemy centre to player centre
@@ -163,7 +163,7 @@ public class EnemyController {
         return true;
     }
 
-    // ── skeleton spawning ────────────────────────────────────────────────
+    // skeleton spawning ───────────────────────────────────────────────
 
     /**
      * builds a map-wide patrol loop and rotates it so the skeleton starts

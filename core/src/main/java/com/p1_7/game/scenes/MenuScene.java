@@ -34,24 +34,24 @@ import com.p1_7.game.ui.MenuButton;
  */
 public class MenuScene extends Scene {
 
-    // ── asset paths ──────────────────────────────────────────────
+    // asset paths ─────────────────────────────────────────────
     private static final String BG_ASSET    = "background.png";
     private static final String BTN_ASSET   = "menu/button.png";
     private static final String HOVER_ASSET = "menu/button_hover.png";
 
-    // ── layout ───────────────────────────────────────────────────
+    // layout ──────────────────────────────────────────────────
     // computed in onEnter so they reflect the resolution at scene entry time
     private static final float FIRST_BUTTON_Y_RATIO = 0.56f;
     private float centreX;
     private float firstButtonY;
     private static final float BUTTON_SPACING = 80f;
 
-    // ── fonts (generated from TTF, both owned + disposed here) ───
+    // fonts (generated from TTF, both owned + disposed here) ──
     private BitmapFont titleFont;
     private BitmapFont subtitleFont;
     private BitmapFont buttonFont;
 
-    // ── ui components ────────────────────────────────────────────
+    // ui components ───────────────────────────────────────────
     private BackgroundImage background;
     private Text           titleText;
     private Text           teamText;
@@ -81,7 +81,7 @@ public class MenuScene extends Scene {
         subtitleFont = fontManager.getLightTextFont(22);
         buttonFont = fontManager.getDarkTextFont(26);
 
-        // ── ui components ────────────────────────────────────────
+        // ui components ───────────────────────────────────────
         background = new BackgroundImage(BG_ASSET);
         titleText  = new Text("MATH QUEST MAZE", centreX,
                                    Settings.getWindowHeight() * 0.75f, titleFont);

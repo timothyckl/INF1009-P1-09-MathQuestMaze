@@ -30,7 +30,7 @@ public class GameOverScene extends Scene {
     private static final String BTN_ASSET = "menu/button.png";
     private static final String HOVER_ASSET = "menu/button_hover.png";
 
-    // ── ui elements ────────────────────────────────────────────────────────────
+    // ui elements ───────────────────────────────────────────────────────────
     private BitmapFont titleFont;
     private BitmapFont promptFont;
     private BitmapFont buttonFont;

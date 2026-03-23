@@ -90,7 +90,7 @@ public class Player extends Character {
         super(spawnX, spawnY, SIZE);
     }
 
-    // ── IRenderable ──────────────────────────────────────────────
+    // IRenderable ─────────────────────────────────────────────
 
     /**
      * returns the walk-cycle sprite strip path for asset pre-loading.
@@ -119,7 +119,7 @@ public class Player extends Character {
                               drawX, drawY, DISPLAY_W, DISPLAY_H, flipSprite);
     }
 
-    // ── per-frame update ─────────────────────────────────────────
+    // per-frame update ────────────────────────────────────────
 
     /**
      * resolves input and applies phase locking for this frame.

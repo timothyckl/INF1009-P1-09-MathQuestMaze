@@ -64,14 +64,14 @@ public abstract class Character extends Entity implements IRenderable, IMovable,
         this.acceleration = new float[]{ 0f, 0f };
     }
 
-    // ── ITransformable ───────────────────────────────────────────
+    // ITransformable ──────────────────────────────────────────
 
     @Override
     public ITransform getTransform() {
         return transform;
     }
 
-    // ── IMovable ─────────────────────────────────────────────────
+    // IMovable ────────────────────────────────────────────────
 
     @Override
     public float[] getVelocity() {
@@ -104,7 +104,7 @@ public abstract class Character extends Entity implements IRenderable, IMovable,
         transform.setPosition(1, transform.getPosition(1) + velocity[1] * deltaTime);
     }
 
-    // ── ICollidable ──────────────────────────────────────────────
+    // ICollidable ─────────────────────────────────────────────
 
     /**
      * returns the bounding box synced to the current transform position.
@@ -129,7 +129,7 @@ public abstract class Character extends Entity implements IRenderable, IMovable,
         // wall push is delegated to MazeCollisionManager.resolve()
     }
 
-    // ── spawn reset ──────────────────────────────────────────────
+    // spawn reset ─────────────────────────────────────────────
 
     /**
      * recentres the character on the given spawn coordinates.
@@ -149,7 +149,7 @@ public abstract class Character extends Entity implements IRenderable, IMovable,
         transform.setPosition(1, spawnPoint[1] - size / 2f);
     }
 
-    // ── animation helpers ────────────────────────────────────────
+    // animation helpers ───────────────────────────────────────
 
     /**
      * advances the walk-cycle frame counter while the entity is in motion.

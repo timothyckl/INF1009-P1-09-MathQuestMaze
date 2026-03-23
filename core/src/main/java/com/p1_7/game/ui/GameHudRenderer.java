@@ -39,7 +39,7 @@ public class GameHudRenderer {
     /** vertical offset from the strip baseline to the health pip top edge */
     private static final float HUD_HEALTH_BASELINE_OFFSET = 14f;
 
-    // ── fields populated during init() ───────────────────────────────────
+    // fields populated during init() ──────────────────────────────────
 
     private BitmapFont promptFont;
     private BitmapFont questionFont;
@@ -179,7 +179,7 @@ public class GameHudRenderer {
         brightnessOverlay = null;
     }
 
-    // ── renderable builders ──────────────────────────────────────────────
+    // renderable builders ─────────────────────────────────────────────
 
     private void buildRoomRenderables(MazeLayout layout) {
         this.roomRenderables = new ArrayList<>(4);
@@ -337,7 +337,7 @@ public class GameHudRenderer {
         };
     }
 
-    // ── static helpers ───────────────────────────────────────────────────
+    // static helpers ──────────────────────────────────────────────────
 
     private static int getLevelNumber(Difficulty difficulty) {
         if (difficulty == Difficulty.MEDIUM) return 2;

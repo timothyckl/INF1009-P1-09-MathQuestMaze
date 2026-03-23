@@ -55,7 +55,7 @@ public class GameScene extends Scene implements GamePhaseListener {
     /** solid wall fill colour for the generated maze */
     private static final Color WALL_FILL_COLOUR = new Color(0.07f, 0.10f, 0.16f, 1f);
 
-    // ── collaborators ────────────────────────────────────────────────────
+    // collaborators ───────────────────────────────────────────────────
 
     private final GamePhaseController phaseController  = new GamePhaseController();
     private final EnemyController     enemyController  = new EnemyController();
@@ -63,7 +63,7 @@ public class GameScene extends Scene implements GamePhaseListener {
     private final MovementPipeline    movementPipeline = new MovementPipeline();
     private final GameHudRenderer     hudRenderer      = new GameHudRenderer();
 
-    // ── scene-lifecycle fields ───────────────────────────────────────────
+    // scene-lifecycle fields ──────────────────────────────────────────
 
     /** the fixed spatial layout providing spawn point, room bounds, and wall bounds */
     private MazeLayout layout;
@@ -304,7 +304,7 @@ public class GameScene extends Scene implements GamePhaseListener {
         hudRenderer.submitHudOverlays(renderQueue, paused);
     }
 
-    // ── GamePhaseListener ────────────────────────────────────────────────
+    // GamePhaseListener ───────────────────────────────────────────────
 
     /**
      * called whenever the round phase transitions. resets the player on ROUND_RESET
@@ -326,7 +326,7 @@ public class GameScene extends Scene implements GamePhaseListener {
         }
     }
 
-    // ── private helpers ──────────────────────────────────────────────────
+    // private helpers ─────────────────────────────────────────────────
 
     private IRenderable createWallRenderable(float[] rect) {
         final float[] stableRect = rect.clone();
