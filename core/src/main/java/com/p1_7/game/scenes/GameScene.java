@@ -55,14 +55,6 @@ public class GameScene extends Scene implements GamePhaseListener {
     /** solid wall fill colour for the generated maze */
     private static final Color WALL_FILL_COLOUR = new Color(0.07f, 0.10f, 0.16f, 1f);
 
-    /** set to true to draw zone-boundary and corridor-centreline debug lines */
-    private static final boolean SHOW_DEBUG_GRID = false;
-
-    /** magenta for zone boundaries, cyan for screen midlines, orange for spawn */
-    private static final Color DEBUG_ZONE_COLOUR  = new Color(1f, 0f, 1f, 0.9f);
-    private static final Color DEBUG_CORR_COLOUR  = new Color(0f, 0.8f, 1f, 0.9f);
-    private static final Color DEBUG_SPAWN_COLOUR = new Color(1f, 0.5f, 0f, 1f);
-
     // ── collaborators ────────────────────────────────────────────────────
 
     private final GamePhaseController phaseController  = new GamePhaseController();
@@ -99,9 +91,6 @@ public class GameScene extends Scene implements GamePhaseListener {
      * never change — caching avoids defensive-clone allocations inside the per-frame loop
      */
     private float[][] cachedRoomBounds;
-
-    /** debug overlay — null when SHOW_DEBUG_GRID is false */
-    private IRenderable debugGridRenderable;
 
     /**
      * constructs the game scene with the scene key "game".
@@ -173,10 +162,6 @@ public class GameScene extends Scene implements GamePhaseListener {
         phaseController.setLastKnownPhase(orchestrator.getPhase());
         phaseController.setHoldTimer(GameConfig.QUESTION_INTRO_HOLD_SECONDS);
 
-        // build the debug grid if enabled
-        if (SHOW_DEBUG_GRID) {
-            this.debugGridRenderable = createDebugGridRenderable();
-        }
     }
 
     /**
@@ -209,7 +194,6 @@ public class GameScene extends Scene implements GamePhaseListener {
 
         cachedRoomBounds     = null;
         wallRenderables      = null;
-        debugGridRenderable  = null;
         layout               = null;
         player               = null;
         backgroundRenderable = null;
@@ -316,11 +300,8 @@ public class GameScene extends Scene implements GamePhaseListener {
             }
         }
         renderQueue.queue(player);
-        // HUD overlays sit on top of everything except debug grid and brightness
+        // HUD overlays sit on top of everything
         hudRenderer.submitHudOverlays(renderQueue, paused);
-        if (SHOW_DEBUG_GRID && debugGridRenderable != null) {
-            renderQueue.queue(debugGridRenderable);
-        }
     }
 
     // ── GamePhaseListener ────────────────────────────────────────────────
@@ -380,34 +361,4 @@ public class GameScene extends Scene implements GamePhaseListener {
         };
     }
 
-    private IRenderable createDebugGridRenderable() {
-        final float zoneLeft  = cachedRoomBounds[0][0] + cachedRoomBounds[0][2];
-        final float zoneRight = cachedRoomBounds[1][0];
-        final float zoneTop   = cachedRoomBounds[0][1];
-        final float zoneBot   = cachedRoomBounds[2][1] + cachedRoomBounds[2][3];
-        final float[] sp      = layout.getSpawnPoint();
-        return new IRenderable() {
-            private final Transform2D t = new Transform2D(0f, 0f, 0f, 0f);
-            @Override public String     getAssetPath() { return null; }
-            @Override public ITransform getTransform() { return t; }
-
-            @Override
-            public void render(IDrawContext ctx) {
-                GdxDrawContext gdx = (GdxDrawContext) ctx;
-                gdx.rect(DEBUG_ZONE_COLOUR, zoneLeft - 1f, 0f, 2f,
-                    HudStrip.PLAYFIELD_HEIGHT, true);
-                gdx.rect(DEBUG_ZONE_COLOUR, zoneRight - 1f, 0f, 2f,
-                    HudStrip.PLAYFIELD_HEIGHT, true);
-                gdx.rect(DEBUG_ZONE_COLOUR, 0f, zoneTop - 1f,
-                    Settings.getWindowWidth(), 2f, true);
-                gdx.rect(DEBUG_ZONE_COLOUR, 0f, zoneBot - 1f,
-                    Settings.getWindowWidth(), 2f, true);
-                gdx.rect(DEBUG_CORR_COLOUR, Settings.getWindowWidth() / 2f - 1f, 0f, 2f,
-                    HudStrip.PLAYFIELD_HEIGHT, true);
-                gdx.rect(DEBUG_CORR_COLOUR, 0f, HudStrip.PLAYFIELD_HEIGHT / 2f - 1f,
-                    Settings.getWindowWidth(), 2f, true);
-                gdx.rect(DEBUG_SPAWN_COLOUR, sp[0] - 4f, sp[1] - 4f, 8f, 8f, true);
-            }
-        };
-    }
 }
