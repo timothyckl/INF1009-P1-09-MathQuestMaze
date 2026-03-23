@@ -1,6 +1,5 @@
 package com.p1_7.game.scenes;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.p1_7.abstractengine.input.IInputExtensionRegistry;
 import com.p1_7.abstractengine.input.IInputQuery;
@@ -9,6 +8,7 @@ import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.game.Settings;
+import com.p1_7.game.gameplay.Difficulty;
 import com.p1_7.game.ui.BackgroundImage;
 import com.p1_7.game.ui.BrightnessOverlay;
 import com.p1_7.game.ui.MenuButton;
@@ -17,12 +17,13 @@ import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.managers.IFontManager;
+import com.p1_7.game.level.ILevelOrchestrator;
 
 public class LevelCompleteScene extends Scene {
 
     private static final int MAX_LEVEL = 3;
     private static final float INPUT_COOLDOWN_SECONDS = 0.18f;
-    private static final String BG_ASSET = "menu/background.png";
+    private static final String BG_ASSET = "background.png";
     private static final String BTN_ASSET = "menu/button.png";
     private static final String HOVER_ASSET = "menu/button_hover.png";
 
@@ -37,7 +38,6 @@ public class LevelCompleteScene extends Scene {
     private MenuButton continueButton;
     private MenuButton mainMenuButton;
     private BrightnessOverlay brightnessOverlay;
-    private int currentLevel = 1;
     private float inputCooldown;
 
     public LevelCompleteScene() {
@@ -54,7 +54,9 @@ public class LevelCompleteScene extends Scene {
 
         float cx = Settings.getWindowWidth() / 2f;
         float cy = Settings.getWindowHeight() / 2f;
-        boolean lastLevel = isLastLevel();
+        Difficulty currentDifficulty = context.get(ILevelOrchestrator.class).getCurrentDifficulty();
+        int currentLevel = getLevelNumber(currentDifficulty);
+        boolean lastLevel = isLastLevel(currentDifficulty);
         int nextLevel = lastLevel ? 1 : currentLevel + 1;
         String continueLabel = lastLevel ? "PLAY AGAIN" : "CONTINUE";
         String spaceHint = lastLevel ? "SPACE - Play Again" : "SPACE - Continue";
@@ -116,11 +118,8 @@ public class LevelCompleteScene extends Scene {
 
         if (confirmPressed || continueButton.isClicked()) {
             continueButton.resetClick();
-            if (isLastLevel()) {
-                currentLevel = 1;
-            } else {
-                currentLevel++;
-            }
+            ILevelOrchestrator orchestrator = context.get(ILevelOrchestrator.class);
+            orchestrator.setCurrentDifficulty(getNextDifficulty(orchestrator.getCurrentDifficulty()));
             context.changeScene("game");
         }
     }
@@ -137,7 +136,27 @@ public class LevelCompleteScene extends Scene {
         renderQueue.queue(brightnessOverlay);
     }
 
-    private boolean isLastLevel() {
-        return currentLevel >= MAX_LEVEL;
+    private static boolean isLastLevel(Difficulty difficulty) {
+        return getLevelNumber(difficulty) >= MAX_LEVEL;
+    }
+
+    private static int getLevelNumber(Difficulty difficulty) {
+        if (difficulty == Difficulty.MEDIUM) {
+            return 2;
+        }
+        if (difficulty == Difficulty.HARD) {
+            return 3;
+        }
+        return 1;
+    }
+
+    private static Difficulty getNextDifficulty(Difficulty currentDifficulty) {
+        if (currentDifficulty == Difficulty.EASY) {
+            return Difficulty.MEDIUM;
+        }
+        if (currentDifficulty == Difficulty.MEDIUM) {
+            return Difficulty.HARD;
+        }
+        return Difficulty.EASY;
     }
 }

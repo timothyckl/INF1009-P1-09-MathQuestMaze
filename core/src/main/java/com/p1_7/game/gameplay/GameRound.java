@@ -41,6 +41,9 @@ public class GameRound {
      */
     private boolean lastAnswerCorrect;
 
+    /** true when the most recent damage event came from enemy contact */
+    private boolean lastDamageFromEnemy;
+
     /**
      * constructs a new game round using the given question generator.
      *
@@ -59,6 +62,7 @@ public class GameRound {
         this.score = 0;
         this.health = STARTING_HEALTH;
         this.phase = RoundPhase.QUESTION_INTRO;
+        this.lastDamageFromEnemy = false;
         // generate the opening question so the scene has something to display immediately
         this.currentQuestion = questionGenerator.generateQuestion();
     }
@@ -79,6 +83,15 @@ public class GameRound {
      */
     public int getHealth() {
         return health;
+    }
+
+    /**
+     * returns the maximum player health for this round.
+     *
+     * @return the health cap
+     */
+    public int getMaxHealth() {
+        return STARTING_HEALTH;
     }
 
     /**
@@ -111,6 +124,15 @@ public class GameRound {
     }
 
     /**
+     * returns whether the most recent damage event came from enemy contact.
+     *
+     * @return true if the latest damaging event was enemy contact
+     */
+    public boolean wasLastDamageFromEnemy() {
+        return lastDamageFromEnemy;
+    }
+
+    /**
      * evaluates a player's answer against the current question and transitions the phase accordingly.
      *
      * correct answer: increments score and transitions to level_complete if the winning score
@@ -132,13 +154,54 @@ public class GameRound {
             // correct: reward the player and check win condition
             score++;
             lastAnswerCorrect = true;
+            lastDamageFromEnemy = false;
             phase = (score >= WINNING_SCORE) ? RoundPhase.LEVEL_COMPLETE : RoundPhase.FEEDBACK;
         } else {
             // wrong: penalise the player and check loss condition; question stays active
             health--;
             lastAnswerCorrect = false;
+            lastDamageFromEnemy = false;
             phase = (health <= 0) ? RoundPhase.GAME_OVER : RoundPhase.FEEDBACK;
         }
+    }
+
+    /**
+     * applies one point of enemy-contact damage while the player is actively choosing.
+     *
+     * unlike submitAnswer(), this does not transition through FEEDBACK for non-lethal hits;
+     * it only reduces health and moves directly to GAME_OVER if health reaches zero.
+     *
+     * @throws IllegalStateException if the current phase is not choosing
+     */
+    public void applyEnemyDamage() {
+        if (phase != RoundPhase.CHOOSING) {
+            throw new IllegalStateException(
+                "applyEnemyDamage called in invalid phase: " + phase + "; expected CHOOSING");
+        }
+
+        health--;
+        lastDamageFromEnemy = true;
+        if (health <= 0) {
+            phase = RoundPhase.GAME_OVER;
+        }
+    }
+
+    /**
+     * restores up to the given amount of health, capped at the round maximum.
+     *
+     * @param amount number of health points to restore; must be positive
+     * @return true if health increased, false if the player was already at full health
+     */
+    public boolean healPlayer(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("amount must be positive");
+        }
+        if (health >= STARTING_HEALTH) {
+            return false;
+        }
+
+        health = Math.min(STARTING_HEALTH, health + amount);
+        return true;
     }
 
     /**

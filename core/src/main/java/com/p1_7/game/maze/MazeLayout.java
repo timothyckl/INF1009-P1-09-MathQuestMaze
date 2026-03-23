@@ -36,14 +36,14 @@ public class MazeLayout {
     /** height of each answer room rectangle */
     private static final float ROOM_HEIGHT = 160f;
 
-    /** width of the centre spawn room */
-    private static final float SPAWN_ROOM_WIDTH = 180f;
-
-    /** height of the centre spawn room */
-    private static final float SPAWN_ROOM_HEIGHT = 120f;
-
     /** width shared by all corridor rectangles */
     private static final float CORRIDOR_WIDTH = 96f;
+
+    /** width of the centre spawn room; matches the corridor width so the centre junction is flush */
+    private static final float SPAWN_ROOM_WIDTH = CORRIDOR_WIDTH;
+
+    /** height of the centre spawn room; matches the corridor width so the centre junction is flush */
+    private static final float SPAWN_ROOM_HEIGHT = CORRIDOR_WIDTH;
 
     /** expected number of answer rooms */
     private static final int ROOM_COUNT = 4;
@@ -52,7 +52,7 @@ public class MazeLayout {
     private static final float LAYOUT_SCALE = 0.88f;
 
     /** vertical offset applied to the whole maze after scaling; positive moves the maze upward */
-    private static final float LAYOUT_OFFSET_Y = 20f;
+    private static final float LAYOUT_OFFSET_Y = 45f;
 
     /** downward shift applied to corridors after scaling, without affecting room positions */
     private static final float CORRIDOR_OFFSET_Y = -30f;
@@ -90,6 +90,9 @@ public class MazeLayout {
     /** all maze wall bounds, including perimeter and interior blocks */
     private final List<float[]> wallBounds;
 
+    /** corridor and pathway rectangles where free-roaming pickups may spawn */
+    private final List<float[]> pathwayBounds;
+
     /**
      * constructs a maze layout from explicit spawn, room, and wall data.
      *
@@ -97,9 +100,10 @@ public class MazeLayout {
      * @param spawnRoomBounds four-element array [x, y, w, h] for the centre room
      * @param roomBounds      list of exactly four answer-room rectangles
      * @param wallBounds      list of wall rectangles for collision and rendering
+     * @param pathwayBounds   list of corridor/pathway rectangles for random pickup placement
      */
     MazeLayout(float[] spawnPoint, float[] spawnRoomBounds,
-               List<float[]> roomBounds, List<float[]> wallBounds) {
+               List<float[]> roomBounds, List<float[]> wallBounds, List<float[]> pathwayBounds) {
         validateSpawnPoint(spawnPoint);
         validateRect(spawnRoomBounds, "spawnRoomBounds");
 
@@ -112,6 +116,9 @@ public class MazeLayout {
         }
         if (wallBounds == null) {
             throw new IllegalArgumentException("wallBounds must not be null");
+        }
+        if (pathwayBounds == null) {
+            throw new IllegalArgumentException("pathwayBounds must not be null");
         }
 
         List<float[]> roomCopy = new ArrayList<>(ROOM_COUNT);
@@ -128,10 +135,18 @@ public class MazeLayout {
             wallCopy.add(rect.clone());
         }
 
+        List<float[]> pathwayCopy = new ArrayList<>(pathwayBounds.size());
+        for (int i = 0; i < pathwayBounds.size(); i++) {
+            float[] rect = pathwayBounds.get(i);
+            validateRect(rect, "pathwayBounds[" + i + "]");
+            pathwayCopy.add(rect.clone());
+        }
+
         this.spawnPoint = spawnPoint.clone();
         this.spawnRoomBounds = spawnRoomBounds.clone();
         this.roomBounds = Collections.unmodifiableList(roomCopy);
         this.wallBounds = Collections.unmodifiableList(wallCopy);
+        this.pathwayBounds = Collections.unmodifiableList(pathwayCopy);
     }
 
     /**
@@ -168,7 +183,6 @@ public class MazeLayout {
         float middleHallTopY = HUB_HORIZONTAL_CENTER_Y + halfCorridor;
         float leftInnerCutCenterX = (leftX + ROOM_WIDTH + spawnRoomX) / 2f;
         float rightInnerCutCenterX = (spawnRoomX + SPAWN_ROOM_WIDTH + rightX) / 2f;
-
         List<float[]> walkable = new ArrayList<>();
         walkable.addAll(rooms);
         walkable.add(spawnRoom);
@@ -256,7 +270,9 @@ public class MazeLayout {
         List<float[]> scaledRooms = transformRects(rooms);
         float[] scaledSpawnRoom = transformRect(spawnRoom);
         float[] scaledSpawnPoint = transformPoint(spawnPoint);
-        List<float[]> scaledWalkable = new ArrayList<>(scaledRooms.size() + 1 + (walkable.size() - rooms.size() - 1));
+        List<float[]> scaledWalkable =
+            new ArrayList<>(scaledRooms.size() + 1 + (walkable.size() - rooms.size() - 1));
+        List<float[]> scaledPathways = new ArrayList<>(walkable.size() - rooms.size() - 1);
         scaledWalkable.addAll(scaledRooms);
         scaledWalkable.add(scaledSpawnRoom);
         for (int i = rooms.size() + 1; i < walkable.size(); i++) {
@@ -296,10 +312,11 @@ public class MazeLayout {
             }
 
             scaledWalkable.add(rect);
+            scaledPathways.add(rect.clone());
         }
 
         List<float[]> walls = buildWallBounds(scaledWalkable);
-        return new MazeLayout(scaledSpawnPoint, scaledSpawnRoom, scaledRooms, walls);
+        return new MazeLayout(scaledSpawnPoint, scaledSpawnRoom, scaledRooms, walls, scaledPathways);
     }
 
     /**
@@ -350,6 +367,18 @@ public class MazeLayout {
      */
     public List<float[]> getWallBounds() {
         return copyRects(wallBounds);
+    }
+
+    /**
+     * returns deep copies of all corridor/pathway rectangles.
+     *
+     * these exclude the answer rooms and centre spawn room, making them suitable
+     * for random pickup placement within the maze pathways.
+     *
+     * @return unmodifiable list of [x, y, w, h] pathway rectangles
+     */
+    public List<float[]> getPathwayBounds() {
+        return copyRects(pathwayBounds);
     }
 
     private static void validateSpawnPoint(float[] spawnPoint) {

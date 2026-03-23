@@ -3,6 +3,7 @@ package com.p1_7.game.scenes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.badlogic.gdx.Gdx;
 
@@ -24,7 +25,10 @@ import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.ui.BrightnessOverlay;
 import com.p1_7.game.ui.HudStrip;
 import com.p1_7.game.ui.QuestionPanel;
+import com.p1_7.game.entities.Enemy;
+import com.p1_7.game.entities.HostileCharacter;
 import com.p1_7.game.entities.Player;
+import com.p1_7.game.entities.Skeleton;
 import com.p1_7.game.gameplay.Difficulty;
 import com.p1_7.game.gameplay.RoundPhase;
 import com.p1_7.game.level.ILevelOrchestrator;
@@ -34,6 +38,8 @@ import com.p1_7.game.maze.WallCollidable;
 import com.p1_7.game.managers.GameMovementManager;
 import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.managers.IFontManager;
+import com.p1_7.game.items.Heart;
+import com.p1_7.game.items.Item;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
@@ -55,11 +61,10 @@ public class GameScene extends Scene {
     private static final float ROOM_COOLDOWN_SECONDS = 1.0f;
 
     /**
-     * hold time for QUESTION_INTRO — must equal QuestionPanel.ANIM_START_DELAY (1.5 s)
-     * + QuestionPanel.ANIM_DURATION (1.0 s) + desired reading hold (2.0 s) = 4.5 s.
-     * update this constant whenever either animation constant in QuestionPanel changes.
+     * hold time for QUESTION_INTRO — matches QuestionPanel.ANIM_START_DELAY (1.5 s)
+     * + QuestionPanel.ANIM_DURATION (1.0 s) = 2.5 s.
      */
-    private static final float QUESTION_INTRO_HOLD_SECONDS = 4.5f;
+    private static final float QUESTION_INTRO_HOLD_SECONDS = 2.5f;
 
     /** hold time in seconds for ROUND_RESET */
     private static final float ROUND_RESET_HOLD_SECONDS = 1.0f;
@@ -83,15 +88,17 @@ public class GameScene extends Scene {
     /** solid wall fill colour for the generated maze */
     private static final Color WALL_FILL_COLOUR = new Color(0.07f, 0.10f, 0.16f, 1f);
 
-    /** health pip colours — warm red for remaining health, dark steel-blue for lost */
-    private static final Color HEALTH_ACTIVE_COLOUR = new Color(0.90f, 0.20f, 0.20f, 1f);
-    private static final Color HEALTH_LOST_COLOUR   = new Color(0.36f, 0.41f, 0.49f, 1f);
-
-    /** the fixed spatial layout providing spawn point, room bounds, and wall bounds */
+/** the fixed spatial layout providing spawn point, room bounds, and wall bounds */
     private MazeLayout layout;
 
     /** the player entity — created at scene entry, released on exit */
     private Player player;
+
+    /** corner-room goblins plus one roaming skeleton — created at scene entry, released on exit */
+    private List<HostileCharacter> enemies;
+
+    /** collectable pickups currently present in the maze */
+    private List<Item> items;
 
     /** solid background quad for the gameplay area */
     private IRenderable backgroundRenderable;
@@ -155,6 +162,9 @@ public class GameScene extends Scene {
     /** three health squares rendered in the top-left corner */
     private IRenderable healthDisplay;
 
+    /** current level/difficulty label rendered at the centre of the HUD strip */
+    private IRenderable levelDisplay;
+
     /** solid top bar separating HUD elements from the playfield */
     private HudStrip hudStrip;
 
@@ -214,9 +224,11 @@ public class GameScene extends Scene {
             wallRenderables.add(createWallRenderable(rect));
         }
 
-        // wire level orchestrator and start the session at easy difficulty
+        // wire level orchestrator and start the session at the selected difficulty
         ILevelOrchestrator orchestrator = context.get(ILevelOrchestrator.class);
-        orchestrator.startLevel(Difficulty.EASY);
+        Difficulty difficulty = orchestrator.getCurrentDifficulty();
+        orchestrator.startLevel(difficulty);
+        player.bindGameplay(orchestrator);
 
         // initialise per-room entry state and cooldown timers
         this.playerInsideRoom   = new boolean[4];
@@ -228,6 +240,39 @@ public class GameScene extends Scene {
         this.cachedRoomBounds = new float[4][];
         for (int i = 0; i < cachedRoomBounds.length; i++) {
             cachedRoomBounds[i] = layout.getRoomBounds(i);
+        }
+
+        int skeletonCount = getSkeletonCount(difficulty);
+
+        // spawn one goblin at the centre of each corner room
+        this.enemies = new ArrayList<>(4 + skeletonCount);
+        for (float[] room : cachedRoomBounds) {
+            float cx = room[0] + room[2] / 2f;
+            float cy = room[1] + room[3] / 2f;
+            HostileCharacter enemy = new Enemy(cx, cy);
+            enemies.add(enemy);
+            movementManager.registerMovable(enemy);
+            collisionManager.registerMover(enemy);
+        }
+
+        // skeletons spawn at distinct corridor-only intersections and share the same
+        // maze-wide patrol loop from their respective start points.
+        int[] skeletonStartIndices = chooseSkeletonStartIndices(skeletonCount);
+        for (int startIndex : skeletonStartIndices) {
+            float[][] skeletonRoute = createSkeletonPatrolRoute(startIndex);
+            HostileCharacter skeleton = new Skeleton(
+                skeletonRoute[0][0],
+                skeletonRoute[0][1],
+                skeletonRoute
+            );
+            enemies.add(skeleton);
+            movementManager.registerMovable(skeleton);
+            collisionManager.registerMover(skeleton);
+        }
+
+        this.items = spawnItems(orchestrator);
+        for (Item item : items) {
+            collisionManager.registerItem(item);
         }
 
         // source fonts from the font manager
@@ -291,11 +336,11 @@ public class GameScene extends Scene {
 
         // capture hudFont as a final local so closures below are independent of the field lifecycle
         final BitmapFont capturedHudFont = hudFont;
+        final Difficulty capturedDifficulty = difficulty;
 
-        // pre-compute fixed feedback layouts once — "CORRECT!" and "WRONG!" never change
+        // pre-compute fixed feedback layouts once — feedback strings never change
         final GlyphLayout correctLayout = new GlyphLayout(capturedHudFont, "CORRECT!");
         final GlyphLayout wrongLayout   = new GlyphLayout(capturedHudFont, "WRONG!");
-
         // feedback overlay: playfield-height green/red tint + result text, shown only during FEEDBACK
         final Color overlayColour = new Color();
         this.feedbackOverlay = new IRenderable() {
@@ -313,9 +358,11 @@ public class GameScene extends Scene {
                 // show for FEEDBACK, LEVEL_COMPLETE and GAME_OVER — terminal phases
                 // inherit the same overlay so the result is visible before the scene transition
                 RoundPhase p = orch.getPhase();
+                boolean enemyDeath = p == RoundPhase.GAME_OVER && orch.wasLastDamageFromEnemy();
                 if (p != RoundPhase.FEEDBACK
                         && p != RoundPhase.LEVEL_COMPLETE
                         && p != RoundPhase.GAME_OVER) return;
+                if (enemyDeath) return;
                 boolean correct = orch.isLastAnswerCorrect();
                 // reuse pre-allocated colour and layout objects — no allocation in this hot path
                 overlayColour.set(correct ? OVERLAY_CORRECT : OVERLAY_WRONG);
@@ -365,29 +412,62 @@ public class GameScene extends Scene {
             }
         };
 
-        // health display: top-left, 3 squares (filled red = remaining health, dark grey = lost)
+        // health display: top-left, "Health:" label followed by 3 heart icons from the sprite strip
         this.healthDisplay = new IRenderable() {
-            private static final float SQ     = 20f;
-            private static final float GAP    = 6f;
-            private static final float BASE_X = 18f;
-            private final float BASE_Y = HudStrip.STRIP_Y + HUD_HEALTH_BASELINE_OFFSET;
-            private final Transform2D t = new Transform2D(BASE_X, BASE_Y, 0f, 0f);
+            private static final String HEART_ASSET  = "Heart.png";
+            private static final String LABEL        = "Health:";
+            private static final int    FRAME_SIZE   = 16;   // px — each frame in the strip
+            private static final int    FRAME_FULL   = 4;    // frame index for active heart
+            private static final int    FRAME_EMPTY  = 0;    // frame index for lost heart
+            private static final float  SQ           = 20f;
+            private static final float  GAP          = 6f;
+            private static final float  LABEL_MARGIN = 8f;   // gap between label and first heart
+            private static final float  BASE_X       = 18f;
+            private final float       BASE_Y      = HudStrip.STRIP_Y + HUD_HEALTH_BASELINE_OFFSET;
+            private final float       LABEL_Y     = HudStrip.STRIP_Y + HUD_SCORE_BASELINE_OFFSET;
+            // pre-measure label width so hearts are always flush against it
+            private final GlyphLayout labelLayout = new GlyphLayout(capturedHudFont, LABEL);
+            private final Transform2D t           = new Transform2D(BASE_X, BASE_Y, 0f, 0f);
             @Override public String     getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
 
             @Override
             public void render(IDrawContext ctx) {
-                GdxDrawContext gdx    = (GdxDrawContext) ctx;
-                int            health = orch.getHealth();
+                GdxDrawContext gdx      = (GdxDrawContext) ctx;
+                int            health   = orch.getHealth();
+                float          heartsX  = BASE_X + labelLayout.width + LABEL_MARGIN;
+                gdx.drawFont(capturedHudFont, LABEL, BASE_X, LABEL_Y);
                 for (int i = 0; i < 3; i++) {
-                    float x = BASE_X + i * (SQ + GAP);
-                    if (i < health) {
-                        gdx.rect(HEALTH_ACTIVE_COLOUR, x, BASE_Y, SQ, SQ, true);
-                    } else {
-                        // reuse static constant — no allocation
-                        gdx.rect(HEALTH_LOST_COLOUR, x, BASE_Y, SQ, SQ, false);
-                    }
+                    float x     = heartsX + i * (SQ + GAP);
+                    int   frame = (i < health) ? FRAME_FULL : FRAME_EMPTY;
+                    int   srcX  = frame * FRAME_SIZE;
+                    // srcY=0 — strip height equals one frame; libgdx y-down so top is 0
+                    gdx.drawTextureRegion(HEART_ASSET, srcX, 0, FRAME_SIZE, FRAME_SIZE,
+                                         x, BASE_Y, SQ, SQ, false);
                 }
+            }
+        };
+
+        // level display: centred in the HUD strip
+        this.levelDisplay = new IRenderable() {
+            private final float BASELINE_Y = HudStrip.STRIP_Y + HUD_SCORE_BASELINE_OFFSET;
+            private final float CENTRE_X   = Settings.getWindowWidth() / 2f;
+            private final Transform2D t = new Transform2D(CENTRE_X, BASELINE_Y, 0f, 0f);
+            private final GlyphLayout layout = new GlyphLayout();
+            @Override public String     getAssetPath() { return null; }
+            @Override public ITransform getTransform() { return t; }
+
+            @Override
+            public void render(IDrawContext ctx) {
+                String text = "Level " + getLevelNumber(capturedDifficulty)
+                    + " - " + formatDifficultyLabel(capturedDifficulty);
+                layout.setText(capturedHudFont, text);
+                ((GdxDrawContext) ctx).drawFont(
+                    capturedHudFont,
+                    text,
+                    CENTRE_X - layout.width / 2f,
+                    BASELINE_Y
+                );
             }
         };
 
@@ -463,6 +543,17 @@ public class GameScene extends Scene {
         // unregister the player from movement before clearing references
         movementManager.unregisterMovable(player);
 
+        // unregister enemies from movement and collision before clearing references
+        for (HostileCharacter enemy : enemies) {
+            movementManager.unregisterMovable(enemy);
+            collisionManager.unregisterMover(enemy);
+        }
+        for (Item item : items) {
+            collisionManager.unregisterItem(item);
+        }
+        enemies = null;
+        items = null;
+
         // unregister all collision participants before clearing references
         collisionManager.unregisterPlayer();
         for (WallCollidable wall : wallCollidables) {
@@ -484,6 +575,7 @@ public class GameScene extends Scene {
         feedbackOverlay    = null;
         scoreDisplay       = null;
         healthDisplay      = null;
+        levelDisplay       = null;
         hudStrip           = null;
         brightnessOverlay   = null;
         debugGridRenderable = null;
@@ -502,6 +594,10 @@ public class GameScene extends Scene {
     @Override
     public void onSuspend(SceneContext context) {
         setPaused(true);
+        player.setVelocity(new float[]{ 0f, 0f });
+        for (HostileCharacter enemy : enemies) {
+            enemy.setVelocity(new float[]{ 0f, 0f });
+        }
         context.get(IAudioManager.class).pauseMusic();
     }
 
@@ -541,8 +637,15 @@ public class GameScene extends Scene {
 
         // non-interactive phases: freeze input and auto-advance after hold timer
         if (phase != RoundPhase.CHOOSING) {
+            if (phase == RoundPhase.GAME_OVER && orchestrator.wasLastDamageFromEnemy()) {
+                context.changeScene("game-over");
+                return;
+            }
             // zeros velocity via phase lock inside player.update()
             player.update(deltaTime, inputQuery, phase);
+            for (HostileCharacter enemy : enemies) {
+                enemy.setVelocity(new float[]{ 0f, 0f });
+            }
             // advance the panel slide during the QUESTION_INTRO hold
             if (phase == RoundPhase.QUESTION_INTRO) {
                 questionPanel.update(deltaTime);
@@ -574,12 +677,16 @@ public class GameScene extends Scene {
 
         // resolve player input then check room entry
         player.update(deltaTime, inputQuery, phase);
+        for (HostileCharacter enemy : enemies) {
+            enemy.update(deltaTime, player.getTransform(), hasLineOfSightToPlayer(enemy));
+        }
         checkRoomEntry(deltaTime, orchestrator);
     }
 
     /**
      * submits all renderables to the queue in painter's order:
      * room outlines and answer labels → player → question panel → hud strip → score → health →
+     * level → feedback overlay
      * feedback overlay → debug grid (when enabled) → brightness overlay.
      *
      * the brightness overlay is queued last so it dims the entire composited frame
@@ -597,11 +704,20 @@ public class GameScene extends Scene {
         for (IRenderable room : roomRenderables) {
             renderQueue.queue(room);
         }
+        for (HostileCharacter enemy : enemies) {
+            renderQueue.queue(enemy);
+        }
+        for (Item item : items) {
+            if (item.isActive()) {
+                renderQueue.queue(item);
+            }
+        }
         renderQueue.queue(player);
         renderQueue.queue(questionPanel);   // slides above the world during QUESTION_INTRO
         renderQueue.queue(hudStrip);
         renderQueue.queue(scoreDisplay);
         renderQueue.queue(healthDisplay);
+        renderQueue.queue(levelDisplay);
         renderQueue.queue(feedbackOverlay);
         if (SHOW_DEBUG_GRID && debugGridRenderable != null) {
             renderQueue.queue(debugGridRenderable);
@@ -627,6 +743,9 @@ public class GameScene extends Scene {
         if (to == RoundPhase.ROUND_RESET) {
             // new question loading — return player to spawn and clear room state
             player.resetToSpawn(layout.getSpawnPoint());
+            for (HostileCharacter enemy : enemies) {
+                enemy.resetToSpawn();
+            }
             Arrays.fill(playerInsideRoom, false);
             Arrays.fill(roomCooldownTimers, 0f);
         }
@@ -672,7 +791,11 @@ public class GameScene extends Scene {
             if (overlapping && !playerInsideRoom[i] && roomCooldownTimers[i] <= 0f) {
                 // player just entered a room with no active cooldown
                 playerInsideRoom[i] = true;
+                int healthBefore = orchestrator.getHealth();
                 orchestrator.submitRoomChoice(i);
+                if (orchestrator.getHealth() < healthBefore) {
+                    player.triggerDamageAnimation();
+                }
                 // phase has changed after submitRoomChoice — stop checking further rooms
                 break;
             } else if (!overlapping && playerInsideRoom[i]) {
@@ -681,6 +804,309 @@ public class GameScene extends Scene {
                 roomCooldownTimers[i] = ROOM_COOLDOWN_SECONDS;
             }
         }
+    }
+
+    /**
+     * returns true when the straight line from enemy centre to player centre is not blocked
+     * by any wall rectangle in the current maze.
+     *
+     * @param enemy the enemy whose vision ray is being tested
+     * @return true if no wall intersects the enemy-to-player segment
+     */
+    private boolean hasLineOfSightToPlayer(HostileCharacter enemy) {
+        ITransform enemyTransform = enemy.getTransform();
+        ITransform playerTransform = player.getTransform();
+
+        float ex = enemyTransform.getPosition(0) + enemyTransform.getSize(0) / 2f;
+        float ey = enemyTransform.getPosition(1) + enemyTransform.getSize(1) / 2f;
+        float px = playerTransform.getPosition(0) + playerTransform.getSize(0) / 2f;
+        float py = playerTransform.getPosition(1) + playerTransform.getSize(1) / 2f;
+
+        for (WallCollidable wall : wallCollidables) {
+            if (segmentIntersectsRect(ex, ey, px, py, wall.getBounds())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * builds a map-wide patrol loop for the roaming skeleton and rotates it so the
+     * skeleton starts at a random corridor intersection.
+     *
+     * the route uses corridor-centre intersections only, so the chosen spawn point
+     * never overlaps the goblin room-centre spawn positions.
+     *
+     * @return ordered loop of [x, y] waypoints beginning at a random intersection
+     */
+    private float[][] createSkeletonPatrolRoute(int startIndex) {
+        List<float[]> pathways = layout.getPathwayBounds();
+        if (pathways.size() < 8) {
+            throw new IllegalStateException(
+                "MazeLayout must expose at least eight pathway rectangles for skeleton patrol routing");
+        }
+
+        float topY = centreY(pathways.get(0));
+        float bottomY = centreY(pathways.get(1));
+        float leftX = centreX(pathways.get(2));
+        float rightX = centreX(pathways.get(3));
+        float middleY = centreY(pathways.get(7));
+        float centreX = centreX(pathways.get(4));
+
+        float[][] route = new float[][]{
+            new float[]{ leftX, topY },
+            new float[]{ centreX, topY },
+            new float[]{ rightX, topY },
+            new float[]{ rightX, middleY },
+            new float[]{ rightX, bottomY },
+            new float[]{ centreX, bottomY },
+            new float[]{ leftX, bottomY },
+            new float[]{ leftX, middleY }
+        };
+
+        return rotateRoute(route, startIndex);
+    }
+
+    private int[] chooseSkeletonStartIndices(int skeletonCount) {
+        int[] spawnableStartIndices = new int[]{ 1, 3, 5, 7 };
+        if (skeletonCount < 0 || skeletonCount > spawnableStartIndices.length) {
+            throw new IllegalArgumentException(
+                "skeletonCount must be in [0, " + spawnableStartIndices.length + "], got: " + skeletonCount);
+        }
+
+        int[] chosen = spawnableStartIndices.clone();
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+        for (int i = chosen.length - 1; i > 0; i--) {
+            int swapIndex = rng.nextInt(i + 1);
+            int tmp = chosen[i];
+            chosen[i] = chosen[swapIndex];
+            chosen[swapIndex] = tmp;
+        }
+
+        return Arrays.copyOf(chosen, skeletonCount);
+    }
+
+    private static float centreX(float[] rect) {
+        return rect[0] + rect[2] / 2f;
+    }
+
+    private static float centreY(float[] rect) {
+        return rect[1] + rect[3] / 2f;
+    }
+
+    private static float[][] rotateRoute(float[][] route, int startIndex) {
+        float[][] rotated = new float[route.length][2];
+        for (int i = 0; i < route.length; i++) {
+            float[] point = route[(startIndex + i) % route.length];
+            rotated[i][0] = point[0];
+            rotated[i][1] = point[1];
+        }
+        return rotated;
+    }
+
+    private static int getSkeletonCount(Difficulty difficulty) {
+        if (difficulty == Difficulty.HARD) {
+            return 3;
+        }
+        if (difficulty == Difficulty.MEDIUM) {
+            return 2;
+        }
+        return 1;
+    }
+
+    private static int getLevelNumber(Difficulty difficulty) {
+        if (difficulty == Difficulty.MEDIUM) {
+            return 2;
+        }
+        if (difficulty == Difficulty.HARD) {
+            return 3;
+        }
+        return 1;
+    }
+
+    private static String formatDifficultyLabel(Difficulty difficulty) {
+        if (difficulty == Difficulty.MEDIUM) {
+            return "Medium";
+        }
+        if (difficulty == Difficulty.HARD) {
+            return "Hard";
+        }
+        return "Easy";
+    }
+
+    /**
+     * returns true when the closed segment p0->p1 intersects the given axis-aligned rectangle.
+     *
+     * uses the Liang-Barsky slab test, which is stable for vertical and horizontal segments.
+     *
+     * @param x0 start x
+     * @param y0 start y
+     * @param x1 end x
+     * @param y1 end y
+     * @param bounds rectangle bounds
+     * @return true if the segment enters or touches the rectangle
+     */
+    private boolean segmentIntersectsRect(float x0, float y0, float x1, float y1, IBounds bounds) {
+        float[] min = bounds.getMinPosition();
+        float[] ext = bounds.getExtent();
+
+        float minX = min[0];
+        float minY = min[1];
+        float maxX = min[0] + ext[0];
+        float maxY = min[1] + ext[1];
+
+        float dx = x1 - x0;
+        float dy = y1 - y0;
+        clipWindow[0] = 0f;
+        clipWindow[1] = 1f;
+
+        if (!clipTest(-dx, x0 - minX)) {
+            return false;
+        }
+        if (!clipTest(dx, maxX - x0)) {
+            return false;
+        }
+        if (!clipTest(-dy, y0 - minY)) {
+            return false;
+        }
+        return clipTest(dy, maxY - y0);
+    }
+
+    /** reusable scratch window for Liang-Barsky clipping */
+    private final float[] clipWindow = new float[2];
+
+    /**
+     * one Liang-Barsky clipping step that narrows the parametric segment window.
+     *
+     * @param p line direction term for one slab
+     * @param q offset term for one slab
+     * @return true if the segment still intersects the clip volume after this slab
+     */
+    private boolean clipTest(float p, float q) {
+        float tMin = clipWindow[0];
+        float tMax = clipWindow[1];
+
+        if (p == 0f) {
+            if (q < 0f) {
+                return false;
+            }
+            clipWindow[0] = tMin;
+            clipWindow[1] = tMax;
+            return true;
+        }
+
+        float r = q / p;
+        if (p < 0f) {
+            if (r > tMax) {
+                return false;
+            }
+            if (r > tMin) {
+                tMin = r;
+            }
+        } else {
+            if (r < tMin) {
+                return false;
+            }
+            if (r < tMax) {
+                tMax = r;
+            }
+        }
+
+        clipWindow[0] = tMin;
+        clipWindow[1] = tMax;
+        return true;
+    }
+
+    /**
+     * spawns a random set of heart pickups within corridor/pathway rectangles.
+     *
+     * @return newly created active item list
+     */
+    private List<Item> spawnItems(ILevelOrchestrator orchestrator) {
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+        List<float[]> pathways = layout.getPathwayBounds();
+        List<Item> spawnedItems = new ArrayList<>();
+        int heartCount = rng.nextInt(1, 4);
+
+        for (int i = 0; i < heartCount; i++) {
+            Heart heart = trySpawnHeart(pathways, spawnedItems, rng, orchestrator);
+            if (heart != null) {
+                spawnedItems.add(heart);
+            }
+        }
+
+        return spawnedItems;
+    }
+
+    /**
+     * attempts to place one heart in a random pathway while keeping it away from existing hearts.
+     *
+     * @param pathways current walkway rectangles
+     * @param existing already spawned items
+     * @param rng random source
+     * @return a new heart, or null if placement failed after several attempts
+     */
+    private Heart trySpawnHeart(List<float[]> pathways, List<Item> existing, ThreadLocalRandom rng,
+                                ILevelOrchestrator orchestrator) {
+        final int maxAttempts = 24;
+        final float padding = Heart.SIZE / 2f + 6f;
+        final float minSpacing = Heart.SIZE * 1.6f;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
+            float[] rect = chooseRandomPathway(pathways, rng);
+            if (rect == null || rect[2] <= padding * 2f || rect[3] <= padding * 2f) {
+                continue;
+            }
+
+            float cx = rng.nextFloat(rect[0] + padding, rect[0] + rect[2] - padding);
+            float cy = rng.nextFloat(rect[1] + padding, rect[1] + rect[3] - padding);
+
+            boolean overlapsExisting = false;
+            for (Item item : existing) {
+                float ix = item.getTransform().getPosition(0) + item.getTransform().getSize(0) / 2f;
+                float iy = item.getTransform().getPosition(1) + item.getTransform().getSize(1) / 2f;
+                float dx = cx - ix;
+                float dy = cy - iy;
+                if (dx * dx + dy * dy < minSpacing * minSpacing) {
+                    overlapsExisting = true;
+                    break;
+                }
+            }
+
+            if (!overlapsExisting) {
+                return new Heart(cx, cy, orchestrator);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * chooses one pathway rectangle with probability proportional to its area.
+     *
+     * @param pathways candidate pathway rectangles
+     * @param rng random source
+     * @return chosen rectangle, or null if none are available
+     */
+    private float[] chooseRandomPathway(List<float[]> pathways, ThreadLocalRandom rng) {
+        if (pathways.isEmpty()) {
+            return null;
+        }
+
+        float totalArea = 0f;
+        for (float[] rect : pathways) {
+            totalArea += rect[2] * rect[3];
+        }
+
+        float pick = rng.nextFloat() * totalArea;
+        for (float[] rect : pathways) {
+            pick -= rect[2] * rect[3];
+            if (pick <= 0f) {
+                return rect;
+            }
+        }
+
+        return pathways.get(pathways.size() - 1);
     }
 
     /**

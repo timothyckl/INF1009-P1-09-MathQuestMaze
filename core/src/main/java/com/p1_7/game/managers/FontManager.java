@@ -16,7 +16,7 @@ import com.p1_7.abstractengine.engine.Manager;
  */
 public class FontManager extends Manager implements IFontManager {
 
-    private static final String TTF_ASSET = "menu/Kenney_Future.ttf";
+    private static final String TTF_ASSET = "ari-w9500-bold.ttf";
 
     private final Files files = Gdx.files;
     private final Map<String, BitmapFont> fontCache = new HashMap<>();

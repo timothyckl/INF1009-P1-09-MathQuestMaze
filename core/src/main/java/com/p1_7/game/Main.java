@@ -23,6 +23,7 @@ import com.p1_7.game.platform.GdxInputSource;
 import com.p1_7.game.platform.GdxRenderManager;
 import com.p1_7.game.scenes.GameScene;
 import com.p1_7.game.scenes.GameOverScene;
+import com.p1_7.game.scenes.HowToPlayScene;
 import com.p1_7.game.scenes.LevelCompleteScene;
 import com.p1_7.game.scenes.MenuScene;
 import com.p1_7.game.scenes.PauseScene;
@@ -83,6 +84,9 @@ public class Main extends ApplicationAdapter {
 
         // settings screen
         sceneManager.registerScene(new SettingScene());
+
+        // how-to-play guide
+        sceneManager.registerScene(new HowToPlayScene());
 
         // pause overlay — opened via ESC during the CHOOSING phase
         sceneManager.registerScene(new PauseScene());

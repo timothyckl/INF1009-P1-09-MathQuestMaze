@@ -86,6 +86,29 @@ public class GdxDrawContext implements IDrawContext {
     }
 
     /**
+     * draws a sub-region of a managed texture, e.g. one frame of a sprite strip.
+     *
+     * @param assetPath the path to the texture asset
+     * @param srcX      left edge of the source region in texture pixels
+     * @param srcY      top edge of the source region in texture pixels (libgdx y-down)
+     * @param srcW      width of the source region in texture pixels
+     * @param srcH      height of the source region in texture pixels
+     * @param x         left edge of the destination in world coordinates
+     * @param y         bottom edge of the destination in world coordinates
+     * @param w         destination draw width
+     * @param h         destination draw height
+     * @param flipX     true to mirror the region horizontally
+     */
+    public void drawTextureRegion(String assetPath,
+                                  int srcX, int srcY, int srcW, int srcH,
+                                  float x, float y, float w, float h,
+                                  boolean flipX) {
+        openBatch();
+        Texture texture = (Texture) assetStore.loadTexture(assetPath);
+        batch.draw(texture, x, y, w, h, srcX, srcY, srcW, srcH, flipX, false);
+    }
+
+    /**
      * draws a raw libgdx Texture (owned directly by the caller) with a colour tint.
      * resets the batch colour to white after drawing.
      *

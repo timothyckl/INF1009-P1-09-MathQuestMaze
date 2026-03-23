@@ -24,6 +24,9 @@ public class LevelOrchestrator implements ILevelOrchestrator {
     /** the current mapping of room indices to answer values; null until startLevel is called */
     private RoomAssignment roomAssignment;
 
+    /** difficulty selected for the current or next gameplay session */
+    private Difficulty currentDifficulty = Difficulty.EASY;
+
     /**
      * constructs a level orchestrator with a default room assigner.
      *
@@ -60,13 +63,23 @@ public class LevelOrchestrator implements ILevelOrchestrator {
      */
     @Override
     public void startLevel(Difficulty difficulty) {
-        if (difficulty == null) {
-            throw new IllegalArgumentException("difficulty must not be null");
-        }
-
+        setCurrentDifficulty(difficulty);
         QuestionGenerator generator = new QuestionGenerator(difficulty);
         gameRound = new GameRound(generator);
         refreshAssignment();
+    }
+
+    @Override
+    public void setCurrentDifficulty(Difficulty difficulty) {
+        if (difficulty == null) {
+            throw new IllegalArgumentException("difficulty must not be null");
+        }
+        this.currentDifficulty = difficulty;
+    }
+
+    @Override
+    public Difficulty getCurrentDifficulty() {
+        return currentDifficulty;
     }
 
     @Override
@@ -100,9 +113,33 @@ public class LevelOrchestrator implements ILevelOrchestrator {
     }
 
     @Override
+    public int getMaxHealth() {
+        requireActiveRound();
+        return gameRound.getMaxHealth();
+    }
+
+    @Override
     public boolean isLastAnswerCorrect() {
         requireActiveRound();
         return gameRound.isLastAnswerCorrect();
+    }
+
+    @Override
+    public boolean wasLastDamageFromEnemy() {
+        requireActiveRound();
+        return gameRound.wasLastDamageFromEnemy();
+    }
+
+    @Override
+    public void applyEnemyDamage() {
+        requireActiveRound();
+        gameRound.applyEnemyDamage();
+    }
+
+    @Override
+    public boolean healPlayer(int amount) {
+        requireActiveRound();
+        return gameRound.healPlayer(amount);
     }
 
     /**

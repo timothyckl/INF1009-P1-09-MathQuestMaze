@@ -25,6 +25,27 @@ public interface ILevelOrchestrator {
     void startLevel(Difficulty difficulty);
 
     /**
+     * updates the difficulty that should be used the next time a level starts.
+     *
+     * this does not create a new round by itself; GameScene calls startLevel()
+     * when gameplay begins.
+     *
+     * @param difficulty the difficulty to remember; must not be null
+     * @throws IllegalArgumentException if difficulty is null
+     */
+    void setCurrentDifficulty(Difficulty difficulty);
+
+    /**
+     * returns the currently selected difficulty.
+     *
+     * before the first round starts this defaults to EASY so menu-driven game
+     * starts have a stable baseline.
+     *
+     * @return the current difficulty selection
+     */
+    Difficulty getCurrentDifficulty();
+
+    /**
      * returns the current phase of the active game round.
      *
      * @return the current RoundPhase
@@ -67,6 +88,14 @@ public interface ILevelOrchestrator {
     int getHealth();
 
     /**
+     * returns the player's maximum health.
+     *
+     * @return the health cap
+     * @throws IllegalStateException if startLevel has not been called
+     */
+    int getMaxHealth();
+
+    /**
      * returns whether the most recently submitted answer was correct.
      *
      * meaningful only during the feedback phase.
@@ -75,6 +104,30 @@ public interface ILevelOrchestrator {
      * @throws IllegalStateException if startLevel has not been called
      */
     boolean isLastAnswerCorrect();
+
+    /**
+     * returns whether the most recent damage event came from enemy contact.
+     *
+     * @return true if the latest damaging event was enemy contact
+     * @throws IllegalStateException if startLevel has not been called
+     */
+    boolean wasLastDamageFromEnemy();
+
+    /**
+     * applies one point of damage from an enemy collision to the player.
+     *
+     * @throws IllegalStateException if startLevel has not been called
+     */
+    void applyEnemyDamage();
+
+    /**
+     * restores up to the given amount of player health.
+     *
+     * @param amount number of health points to restore; must be positive
+     * @return true if health increased, false if the player was already at full health
+     * @throws IllegalStateException if startLevel has not been called
+     */
+    boolean healPlayer(int amount);
 
     /**
      * resolves the answer for the given room index and submits it to the game round.

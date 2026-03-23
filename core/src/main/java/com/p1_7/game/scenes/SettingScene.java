@@ -34,7 +34,7 @@ import com.p1_7.game.managers.IFontManager;
  */
 public class SettingScene extends Scene {
 
-    private static final String BG_ASSET = "menu/background.png";
+    private static final String BG_ASSET = "background.png";
     private static final String BTN_ASSET = "menu/button.png";
     private static final String HOVER_ASSET = "menu/button_hover.png";
 

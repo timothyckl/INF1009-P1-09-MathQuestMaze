@@ -1,60 +1,84 @@
 package com.p1_7.game.entities;
 
-import com.badlogic.gdx.graphics.Color;
-import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.collision.ICollidable;
-import com.p1_7.abstractengine.entity.Entity;
 import com.p1_7.abstractengine.input.IInputQuery;
-import com.p1_7.abstractengine.movement.IMovable;
 import com.p1_7.abstractengine.render.IDrawContext;
-import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.transform.ITransform;
-import com.p1_7.game.core.Bounds2D;
-import com.p1_7.game.core.Transform2D;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.gameplay.RoundPhase;
+import com.p1_7.game.level.ILevelOrchestrator;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
- * the player entity — a sky-cyan square that moves freely around the maze.
+ * the player character — moves freely around the maze in response to input.
  *
- * movement is locked during non-interactive phases (QUESTION_INTRO, FEEDBACK,
- * ROUND_RESET). wall collision is handled reactively by MazeCollisionManager,
- * which pushes the player out of any penetrating wall after move() runs.
+ * extends Character for shared spatial infrastructure. movement is locked
+ * during non-interactive phases (QUESTION_INTRO, FEEDBACK, ROUND_RESET).
+ * wall collision is handled reactively by MazeCollisionManager, which pushes
+ * the player out of any penetrating wall after move() runs.
  *
  * call update() each frame to resolve input and set velocity. position
  * integration is delegated to GameMovementManager, which calls move() after
- * GameScene.update() has set the velocity. MazeCollisionManager.onUpdate()
- * runs after GameMovementManager and corrects any wall penetration.
+ * GameScene.update() has set the velocity.
  */
-public class Player extends Entity implements IRenderable, IMovable, ICollidable {
+public class Player extends Character {
 
     /** movement speed in pixels per second */
     private static final float SPEED = 160f;
 
-    /** player fill colour — sky cyan, distinct against the dark background */
-    private static final Color PLAYER_COLOUR = new Color(0.30f, 0.82f, 0.98f, 1f);
+    /** minimum time between successive enemy-contact hits */
+    private static final float ENEMY_HIT_COOLDOWN_SECONDS = 1.0f;
 
-    /** player width and height in pixels */
+    /** collision box side length in pixels */
     private static final float SIZE = 20f;
 
-    /** bottom-left origin, SIZE × SIZE */
-    private final Transform2D transform;
+    /** path to the walk-cycle sprite strip */
+    private static final String SPRITE_ASSET = "player.png";
 
-    /** AABB synced with transform position on each getBounds() call */
-    private final Bounds2D bounds;
+    /** path to the hurt animation sprite strip */
+    private static final String HURT_ASSET = "player-hurt.png";
 
-    /** reusable position scratch array for getBounds() — avoids per-call allocation */
-    private final float[] boundsPos = new float[2];
+    /** number of frames in the sprite strip */
+    private static final int FRAME_COUNT = 8;
 
-    /** constant extent array shared across all getBounds() calls */
-    private static final float[] BOUNDS_SIZE = new float[]{ SIZE, SIZE };
+    /** width of one frame in the source texture, in pixels */
+    private static final int FRAME_WIDTH = 96;
 
-    /** [vx, vy] — set each frame by update() */
-    private float[] velocity;
+    /** height of one frame in the source texture, in pixels */
+    private static final int FRAME_HEIGHT = 64;
 
-    /** [ax, ay] — unused for now, satisfies IMovable */
-    private float[] acceleration;
+    /** rendered width of the sprite in world units */
+    private static final float DISPLAY_W = 192f;
+
+    /** rendered height of the sprite in world units */
+    private static final float DISPLAY_H = 128f;
+
+    /** seconds each animation frame is held before advancing */
+    private static final float FRAME_DURATION = 0.1f;
+
+    /** total frames in the hurt strip */
+    private static final int HURT_FRAME_COUNT = 8;
+
+    /** seconds each hurt frame is held before advancing */
+    private static final float HURT_FRAME_DURATION = 0.1f;
+
+    /** true when the sprite should be flipped horizontally (i.e. player is moving left) */
+    private boolean flipSprite = false;
+
+    /** index of the current hurt frame while the damage animation is active */
+    private int hurtFrame = 0;
+
+    /** accumulated time since the last hurt-frame advance */
+    private float hurtFrameTimer = 0f;
+
+    /** true while the hurt animation is being displayed */
+    private boolean hurtAnimating = false;
+
+    /** orchestrator reference used to apply enemy-contact damage */
+    private ILevelOrchestrator orchestrator;
+
+    /** countdown timer that throttles repeated enemy-contact hits */
+    private float enemyHitCooldownTimer = 0f;
 
     /**
      * constructs a player centred on the given spawn coordinates.
@@ -63,127 +87,36 @@ public class Player extends Entity implements IRenderable, IMovable, ICollidable
      * @param spawnY world y coordinate of the desired spawn centre
      */
     public Player(float spawnX, float spawnY) {
-        // position transform so the player is centred on the spawn point
-        this.transform    = new Transform2D(spawnX - SIZE / 2f, spawnY - SIZE / 2f, SIZE, SIZE);
-        this.bounds       = new Bounds2D(spawnX - SIZE / 2f, spawnY - SIZE / 2f, SIZE, SIZE);
-        this.velocity     = new float[]{ 0f, 0f };
-        this.acceleration = new float[]{ 0f, 0f };
-    }
-
-    // ── ITransformable ───────────────────────────────────────────
-
-    @Override
-    public ITransform getTransform() {
-        return transform;
+        super(spawnX, spawnY, SIZE);
     }
 
     // ── IRenderable ──────────────────────────────────────────────
 
     /**
-     * returns null — this entity is shape-rendered; no texture asset required.
+     * returns the walk-cycle sprite strip path for asset pre-loading.
      *
-     * @return null
+     * @return path to the player sprite strip
      */
     @Override
     public String getAssetPath() {
-        return null;
+        return SPRITE_ASSET;
     }
 
     /**
-     * draws the player as a solid sky-cyan rectangle.
+     * draws the current animation frame centred on the player's collision box.
      *
      * @param ctx the draw context for this frame
      */
     @Override
     public void render(IDrawContext ctx) {
-        GdxDrawContext gdx = (GdxDrawContext) ctx;
-        gdx.rect(PLAYER_COLOUR,
-                 transform.getPosition(0),
-                 transform.getPosition(1),
-                 SIZE, SIZE, true);
-    }
-
-    // ── IMovable ─────────────────────────────────────────────────
-
-    /**
-     * returns a defensive copy of the current velocity vector.
-     *
-     * @return a new [vx, vy] array
-     */
-    @Override
-    public float[] getVelocity() {
-        return velocity.clone();
-    }
-
-    /**
-     * replaces the velocity vector with a defensive copy of the supplied array.
-     *
-     * @param velocity the new [vx, vy] values
-     */
-    @Override
-    public void setVelocity(float[] velocity) {
-        this.velocity = velocity.clone();
-    }
-
-    /**
-     * returns a defensive copy of the current acceleration vector.
-     *
-     * @return a new [ax, ay] array
-     */
-    @Override
-    public float[] getAcceleration() {
-        return acceleration.clone();
-    }
-
-    /**
-     * replaces the acceleration vector with a defensive copy of the supplied array.
-     *
-     * @param accel the new [ax, ay] values
-     */
-    @Override
-    public void setAcceleration(float[] accel) {
-        this.acceleration = accel.clone();
-    }
-
-    /**
-     * integrates the current velocity into the player's position.
-     *
-     * called by GameMovementManager each frame after GameScene.update() has set
-     * the velocity. wall penetration is corrected reactively by MazeCollisionManager
-     * after this call returns.
-     *
-     * @param deltaTime seconds elapsed since the previous frame
-     */
-    @Override
-    public void move(float deltaTime) {
-        transform.setPosition(0, transform.getPosition(0) + velocity[0] * deltaTime);
-        transform.setPosition(1, transform.getPosition(1) + velocity[1] * deltaTime);
-    }
-
-    // ── ICollidable ──────────────────────────────────────────────
-
-    /**
-     * returns the player's bounding box, synced to the current transform position.
-     *
-     * @return the AABB for this frame's position
-     */
-    @Override
-    public IBounds getBounds() {
-        // sync bounds to the current transform position using pre-allocated scratch arrays
-        boundsPos[0] = transform.getPosition(0);
-        boundsPos[1] = transform.getPosition(1);
-        bounds.set(boundsPos, BOUNDS_SIZE);
-        return bounds;
-    }
-
-    /**
-     * no-op — position correction is handled by MazeCollisionManager.resolve().
-     *
-     * @param other the collidable that this player collided with
-     */
-    @Override
-    public void onCollision(ICollidable other) {
-        // position correction delegated to MazeCollisionManager
+        GdxDrawContext gdx   = (GdxDrawContext) ctx;
+        // centre the larger sprite display over the smaller collision box
+        float drawX = transform.getPosition(0) + (SIZE - DISPLAY_W) / 2f;
+        float drawY = transform.getPosition(1) + (SIZE - DISPLAY_H) / 2f;
+        String asset = hurtAnimating ? HURT_ASSET : SPRITE_ASSET;
+        int   srcX  = (hurtAnimating ? hurtFrame : currentFrame) * FRAME_WIDTH;
+        gdx.drawTextureRegion(asset, srcX, 0, FRAME_WIDTH, FRAME_HEIGHT,
+                              drawX, drawY, DISPLAY_W, DISPLAY_H, flipSprite);
     }
 
     // ── per-frame update ─────────────────────────────────────────
@@ -200,6 +133,9 @@ public class Player extends Entity implements IRenderable, IMovable, ICollidable
      * @param phase      the current round phase; movement is locked unless CHOOSING
      */
     public void update(float deltaTime, IInputQuery inputQuery, RoundPhase phase) {
+        updateHurtAnimation(deltaTime);
+        enemyHitCooldownTimer = Math.max(0f, enemyHitCooldownTimer - deltaTime);
+
         // only allow movement during the choosing phase; any other phase locks the player
         if (phase != RoundPhase.CHOOSING) {
             setVelocity(new float[]{ 0f, 0f });
@@ -213,25 +149,87 @@ public class Player extends Entity implements IRenderable, IMovable, ICollidable
                     - (inputQuery.isActionActive(GameActions.MOVE_DOWN)  ? SPEED : 0f);
 
         setVelocity(new float[]{ rawVx, rawVy });
+
+        // update facing direction on horizontal input only
+        if (rawVx > 0f) flipSprite = false;
+        else if (rawVx < 0f) flipSprite = true;
+
+        // advance animation while moving; reset to the first frame when idle
+        if (rawVx != 0f || rawVy != 0f) {
+            advanceAnimation(deltaTime, FRAME_COUNT, FRAME_DURATION);
+        } else {
+            resetAnimation();
+        }
     }
 
     /**
-     * recentres the player on the given spawn coordinates.
-     *
-     * @param spawnPoint a two-element [x, y] array for the new spawn centre; must not be null
-     * @throws IllegalArgumentException if spawnPoint is null or not length 2
+     * starts the one-shot hurt animation from its first frame.
      */
-    public void resetToSpawn(float[] spawnPoint) {
-        if (spawnPoint == null) {
-            throw new IllegalArgumentException("spawnPoint must not be null");
-        }
-        if (spawnPoint.length != 2) {
-            throw new IllegalArgumentException(
-                "spawnPoint must have exactly 2 elements, got: " + spawnPoint.length);
-        }
-
-        transform.setPosition(0, spawnPoint[0] - SIZE / 2f);
-        transform.setPosition(1, spawnPoint[1] - SIZE / 2f);
+    public void triggerDamageAnimation() {
+        hurtAnimating = true;
+        hurtFrame = 0;
+        hurtFrameTimer = 0f;
     }
 
+    @Override
+    public void resetToSpawn(float[] spawnPoint) {
+        super.resetToSpawn(spawnPoint);
+        hurtAnimating = false;
+        hurtFrame = 0;
+        hurtFrameTimer = 0f;
+        enemyHitCooldownTimer = 0f;
+    }
+
+    /**
+     * binds the gameplay orchestrator so collision callbacks can apply health changes.
+     *
+     * @param orchestrator current gameplay orchestrator
+     */
+    public void bindGameplay(ILevelOrchestrator orchestrator) {
+        this.orchestrator = orchestrator;
+    }
+
+    @Override
+    public void onCollision(ICollidable other) {
+        if (!(other instanceof EnemyDamageZone)) {
+            return;
+        }
+        EnemyDamageZone damageZone = (EnemyDamageZone) other;
+        if (orchestrator == null || enemyHitCooldownTimer > 0f) {
+            return;
+        }
+        if (!damageZone.isDangerous() || orchestrator.getPhase() != RoundPhase.CHOOSING) {
+            return;
+        }
+
+        int healthBefore = orchestrator.getHealth();
+        orchestrator.applyEnemyDamage();
+        if (orchestrator.getHealth() < healthBefore) {
+            triggerDamageAnimation();
+            enemyHitCooldownTimer = ENEMY_HIT_COOLDOWN_SECONDS;
+        }
+    }
+
+    /**
+     * advances the temporary hurt animation independently of movement state.
+     *
+     * @param deltaTime seconds elapsed since the previous frame
+     */
+    private void updateHurtAnimation(float deltaTime) {
+        if (!hurtAnimating) {
+            return;
+        }
+
+        hurtFrameTimer += deltaTime;
+        while (hurtFrameTimer >= HURT_FRAME_DURATION) {
+            hurtFrameTimer -= HURT_FRAME_DURATION;
+            hurtFrame++;
+            if (hurtFrame >= HURT_FRAME_COUNT) {
+                hurtAnimating = false;
+                hurtFrame = 0;
+                hurtFrameTimer = 0f;
+                break;
+            }
+        }
+    }
 }
