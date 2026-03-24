@@ -2,7 +2,7 @@ package com.p1_7.game.ui;
 
 import com.badlogic.gdx.graphics.Color;
 import com.p1_7.abstractengine.entity.Entity;
-import com.p1_7.abstractengine.entity.IDisposable;
+import com.p1_7.abstractengine.render.IDisposable;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.abstractengine.render.IDrawContext;
