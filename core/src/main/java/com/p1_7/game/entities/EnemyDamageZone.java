@@ -37,7 +37,7 @@ public final class EnemyDamageZone implements ICollidable {
      * @return true when the enemy is in its attack state
      */
     public boolean isDangerous() {
-        return hostile.isAttacking();
+        return hostile.isHitActive();
     }
 
     @Override

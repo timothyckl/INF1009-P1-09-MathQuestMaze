@@ -34,14 +34,14 @@ public class Enemy extends HostileCharacter {
     private static final float VIEW_RANGE    = 300f;
 
     /** distance at which the enemy stops chasing and begins attacking */
-    private static final float ATTACK_RANGE  = 60f;
+    private static final float ATTACK_RANGE  = 50f;
 
     /**
      * distance at which an active attack is released back into chase.
      * this hysteresis prevents rapid ATTACK/CHASE thrashing near the threshold,
      * which otherwise restarts the attack strip and looks like flicker.
      */
-    private static final float ATTACK_RELEASE_RANGE = 72f;
+    private static final float ATTACK_RELEASE_RANGE = 70f;
 
     /** seconds the enemy walks in one direction before reversing patrol */
     private static final float PATROL_DURATION = 1.5f;
@@ -227,5 +227,11 @@ public class Enemy extends HostileCharacter {
     @Override
     public boolean isAttacking() {
         return animState == AnimState.ATTACK;
+    }
+
+    /** frames 5–8 of the 9-frame attack strip are the active hit window */
+    @Override
+    public boolean isHitActive() {
+        return animState == AnimState.ATTACK && currentFrame >= 5 && currentFrame <= 8;
     }
 }

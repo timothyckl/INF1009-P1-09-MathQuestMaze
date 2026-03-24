@@ -23,10 +23,10 @@ public final class GameConfig {
     public static final float ROOM_COOLDOWN_SECONDS = 1.0f;
 
     /** width of the centre trigger zone within each answer room in pixels */
-    public static final float ROOM_TRIGGER_WIDTH = 100f;
+    public static final float ROOM_TRIGGER_WIDTH = 30f;
 
     /** height of the centre trigger zone within each answer room in pixels */
-    public static final float ROOM_TRIGGER_HEIGHT = 80f;
+    public static final float ROOM_TRIGGER_HEIGHT = 30f;
 
     // item spawning ───────────────────────────────────────────────────
 
@@ -38,6 +38,11 @@ public final class GameConfig {
 
     /** maximum placement attempts per heart before giving up */
     public static final int HEART_SPAWN_ATTEMPTS = 24;
+
+    // debug ───────────────────────────────────────────────────────────
+
+    /** set to true to draw hitbox outlines over all entities and trigger zones */
+    public static final boolean DEBUG_HITBOXES = true;
 
     private GameConfig() {
         // prevent instantiation

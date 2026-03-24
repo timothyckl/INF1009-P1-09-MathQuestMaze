@@ -3,7 +3,10 @@ package com.p1_7.game.scenes;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.game.input.GameActions;
@@ -52,6 +55,13 @@ public class GameScene extends Scene implements GamePhaseListener {
     /** lighter blue-slate background for the walkable playfield */
     private static final Color SCENE_BG_COLOUR = new Color(0.15f, 0.19f, 0.27f, 1f);
 
+    // debug hitbox colours
+    private static final Color DBG_PLAYER   = new Color(0f,   1f,   0f,   1f);
+    private static final Color DBG_WALL_BOX = new Color(1f,   0f,   0f,   1f);
+    private static final Color DBG_DMG_BOX  = new Color(1f,   0.5f, 0f,   1f);
+    private static final Color DBG_ITEM     = new Color(1f,   1f,   0f,   1f);
+    private static final Color DBG_ROOM     = new Color(0f,   1f,   1f,   1f);
+
     /** solid wall fill colour for the generated maze */
     private static final Color WALL_FILL_COLOUR = new Color(0.07f, 0.10f, 0.16f, 1f);
 
@@ -79,6 +89,12 @@ public class GameScene extends Scene implements GamePhaseListener {
 
     /** solid background quad for the gameplay area */
     private IRenderable backgroundRenderable;
+
+    /** debug overlay that draws hitbox outlines; toggled with F1 */
+    private IRenderable debugHitboxRenderable;
+
+    /** whether to draw hitbox outlines this frame */
+    private boolean showHitboxes = GameConfig.DEBUG_HITBOXES;
 
     /** wall collidables registered with the collision manager */
     private List<WallCollidable> wallCollidables;
@@ -162,6 +178,11 @@ public class GameScene extends Scene implements GamePhaseListener {
         phaseController.setLastKnownPhase(orchestrator.getPhase());
         phaseController.setHoldTimer(GameConfig.QUESTION_INTRO_HOLD_SECONDS);
 
+        // build the debug hitbox overlay (references live scene fields via closure)
+        if (GameConfig.DEBUG_HITBOXES) {
+            debugHitboxRenderable = createDebugHitboxRenderable();
+        }
+
     }
 
     /**
@@ -192,12 +213,13 @@ public class GameScene extends Scene implements GamePhaseListener {
 
         hudRenderer.dispose();
 
-        cachedRoomBounds     = null;
-        wallRenderables      = null;
-        layout               = null;
-        player               = null;
-        backgroundRenderable = null;
-        wallCollidables      = null;
+        cachedRoomBounds      = null;
+        wallRenderables       = null;
+        layout                = null;
+        player                = null;
+        backgroundRenderable  = null;
+        debugHitboxRenderable = null;
+        wallCollidables       = null;
     }
 
     /**
@@ -232,6 +254,9 @@ public class GameScene extends Scene implements GamePhaseListener {
      */
     @Override
     public void update(float deltaTime, SceneContext context) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) {
+            showHitboxes = !showHitboxes;
+        }
         ILevelOrchestrator orchestrator = context.get(ILevelOrchestrator.class);
         IInputQuery inputQuery = context.get(IInputQuery.class);
         RoundPhase phase = orchestrator.getPhase();
@@ -300,6 +325,10 @@ public class GameScene extends Scene implements GamePhaseListener {
             }
         }
         renderQueue.queue(player);
+        // debug hitbox overlays sit on top of sprites, below HUD
+        if (showHitboxes) {
+            renderQueue.queue(debugHitboxRenderable);
+        }
         // HUD overlays sit on top of everything
         hudRenderer.submitHudOverlays(renderQueue, paused);
     }
@@ -341,6 +370,49 @@ public class GameScene extends Scene implements GamePhaseListener {
                 ((GdxDrawContext) ctx).rect(
                     WALL_FILL_COLOUR,
                     stableRect[0], stableRect[1], stableRect[2], stableRect[3], true);
+            }
+        };
+    }
+
+    private IRenderable createDebugHitboxRenderable() {
+        return new IRenderable() {
+            @Override public String getAssetPath() { return null; }
+            @Override public ITransform getTransform() { return null; }
+
+            @Override
+            public void render(IDrawContext ctx) {
+                GdxDrawContext gdx = (GdxDrawContext) ctx;
+
+                // player wall hitbox
+                IBounds pb = player.getBounds();
+                float[] pMin = pb.getMinPosition(); float[] pExt = pb.getExtent();
+                gdx.rect(DBG_PLAYER, pMin[0], pMin[1], pExt[0], pExt[1], false);
+
+                // enemy wall box (red) and damage zone (orange)
+                for (HostileCharacter enemy : enemies) {
+                    IBounds wb = enemy.getBounds();
+                    float[] wMin = wb.getMinPosition(); float[] wExt = wb.getExtent();
+                    gdx.rect(DBG_WALL_BOX, wMin[0], wMin[1], wExt[0], wExt[1], false);
+
+                    IBounds db = enemy.getDamageBounds();
+                    float[] dMin = db.getMinPosition(); float[] dExt = db.getExtent();
+                    gdx.rect(DBG_DMG_BOX, dMin[0], dMin[1], dExt[0], dExt[1], false);
+                }
+
+                // item pickup bounds
+                for (Item item : items) {
+                    if (!item.isActive()) continue;
+                    IBounds ib = item.getBounds();
+                    float[] iMin = ib.getMinPosition(); float[] iExt = ib.getExtent();
+                    gdx.rect(DBG_ITEM, iMin[0], iMin[1], iExt[0], iExt[1], false);
+                }
+
+                // room trigger zones
+                for (float[] room : cachedRoomBounds) {
+                    float tx = room[0] + (room[2] - GameConfig.ROOM_TRIGGER_WIDTH)  / 2f;
+                    float ty = room[1] + (room[3] - GameConfig.ROOM_TRIGGER_HEIGHT) / 2f;
+                    gdx.rect(DBG_ROOM, tx, ty, GameConfig.ROOM_TRIGGER_WIDTH, GameConfig.ROOM_TRIGGER_HEIGHT, false);
+                }
             }
         };
     }

@@ -44,6 +44,12 @@ public abstract class HostileCharacter extends Character {
     public abstract boolean isAttacking();
 
     /**
+     * returns true only during the frames of the attack animation where the hit lands.
+     * damage is applied during this window only, not throughout the full attack state.
+     */
+    public abstract boolean isHitActive();
+
+    /**
      * updates this hostile against the current player transform and visibility state.
      *
      * @param deltaTime       seconds elapsed since the previous frame
