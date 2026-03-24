@@ -22,6 +22,7 @@ public final class GameActions {
     public static final ActionId MENU_BACK = new ActionId("MENU_BACK");
     public static final ActionId MENU_CONFIRM = new ActionId("MENU_CONFIRM");
     public static final ActionId POINTER_PRIMARY = new ActionId("POINTER_PRIMARY");
+    public static final ActionId DEBUG_TOGGLE = new ActionId("DEBUG_TOGGLE");
 
     private static final List<BindingSpec> MOVEMENT_BINDINGS = createMovementBindings();
     private static final List<UiBindingSpec> UI_BINDINGS = createUiBindings();
@@ -71,6 +72,7 @@ public final class GameActions {
         bindings.add(UiBindingSpec.keys("menu back", MENU_BACK, Input.Keys.ESCAPE, Input.Keys.BACKSPACE));
         bindings.add(UiBindingSpec.keys("menu confirm", MENU_CONFIRM, Input.Keys.SPACE));
         bindings.add(UiBindingSpec.buttons("primary click", POINTER_PRIMARY, Input.Buttons.LEFT));
+        bindings.add(UiBindingSpec.keys("toggle debug hitboxes", DEBUG_TOGGLE, Input.Keys.F1));
         return Collections.unmodifiableList(bindings);
     }
 

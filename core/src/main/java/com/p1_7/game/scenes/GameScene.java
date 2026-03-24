@@ -3,8 +3,6 @@ package com.p1_7.game.scenes;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.input.IInputQuery;
@@ -179,9 +177,7 @@ public class GameScene extends Scene implements GamePhaseListener {
         phaseController.setHoldTimer(GameConfig.QUESTION_INTRO_HOLD_SECONDS);
 
         // build the debug hitbox overlay (references live scene fields via closure)
-        if (GameConfig.DEBUG_HITBOXES) {
-            debugHitboxRenderable = createDebugHitboxRenderable();
-        }
+        debugHitboxRenderable = createDebugHitboxRenderable();
 
     }
 
@@ -254,11 +250,11 @@ public class GameScene extends Scene implements GamePhaseListener {
      */
     @Override
     public void update(float deltaTime, SceneContext context) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) {
-            showHitboxes = !showHitboxes;
-        }
         ILevelOrchestrator orchestrator = context.get(ILevelOrchestrator.class);
         IInputQuery inputQuery = context.get(IInputQuery.class);
+        if (inputQuery.getActionState(GameActions.DEBUG_TOGGLE) == InputState.PRESSED) {
+            showHitboxes = !showHitboxes;
+        }
         RoundPhase phase = orchestrator.getPhase();
 
         // detect phase change and react
@@ -375,9 +371,11 @@ public class GameScene extends Scene implements GamePhaseListener {
     }
 
     private IRenderable createDebugHitboxRenderable() {
+        final Transform2D transform = new Transform2D(
+            0f, 0f, Settings.getWindowWidth(), HudStrip.PLAYFIELD_HEIGHT);
         return new IRenderable() {
             @Override public String getAssetPath() { return null; }
-            @Override public ITransform getTransform() { return null; }
+            @Override public ITransform getTransform() { return transform; }
 
             @Override
             public void render(IDrawContext ctx) {

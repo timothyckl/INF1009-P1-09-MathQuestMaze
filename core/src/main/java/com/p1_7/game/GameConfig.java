@@ -42,7 +42,7 @@ public final class GameConfig {
     // debug ───────────────────────────────────────────────────────────
 
     /** set to true to draw hitbox outlines over all entities and trigger zones */
-    public static final boolean DEBUG_HITBOXES = true;
+    public static final boolean DEBUG_HITBOXES = false;
 
     private GameConfig() {
         // prevent instantiation
