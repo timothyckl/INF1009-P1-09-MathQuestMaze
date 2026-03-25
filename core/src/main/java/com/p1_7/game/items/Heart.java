@@ -2,7 +2,6 @@ package com.p1_7.game.items;
 
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.game.level.ILevelOrchestrator;
-import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
@@ -22,12 +21,12 @@ public final class Heart extends Item {
      * @param centreY y coordinate of the heart centre
      * @param orchestrator gameplay state owner
      */
-    public Heart(float centreX, float centreY, ILevelOrchestrator orchestrator, IAudioManager audioManager) {
-        super(centreX, centreY, SIZE, orchestrator, audioManager);
+    public Heart(float centreX, float centreY, ILevelOrchestrator orchestrator) {
+        super(centreX, centreY, SIZE, orchestrator);
     }
 
     @Override
-    protected String getCollectSoundKey() {
+    public String getCollectSoundKey() {
         return "heart";
     }
 

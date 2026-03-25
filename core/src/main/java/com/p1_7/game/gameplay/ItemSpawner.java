@@ -8,7 +8,6 @@ import com.p1_7.game.GameConfig;
 import com.p1_7.game.items.Heart;
 import com.p1_7.game.items.Item;
 import com.p1_7.game.level.ILevelOrchestrator;
-import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.maze.MazeLayout;
 
 /**
@@ -24,15 +23,14 @@ public class ItemSpawner {
      * @param orchestrator the level orchestrator passed to each heart for heal callbacks
      * @return a mutable list of newly spawned items
      */
-    public List<Item> spawnItems(MazeLayout layout, ILevelOrchestrator orchestrator,
-                                 IAudioManager audioManager) {
+    public List<Item> spawnItems(MazeLayout layout, ILevelOrchestrator orchestrator) {
         ThreadLocalRandom rng = ThreadLocalRandom.current();
         List<float[]> pathways = layout.getPathwayBounds();
         List<Item> spawnedItems = new ArrayList<>();
         int heartCount = rng.nextInt(GameConfig.HEART_SPAWN_MIN, GameConfig.HEART_SPAWN_MAX);
 
         for (int i = 0; i < heartCount; i++) {
-            Heart heart = trySpawnHeart(pathways, spawnedItems, rng, orchestrator, audioManager);
+            Heart heart = trySpawnHeart(pathways, spawnedItems, rng, orchestrator);
             if (heart != null) {
                 spawnedItems.add(heart);
             }
@@ -53,8 +51,7 @@ public class ItemSpawner {
      */
     private Heart trySpawnHeart(List<float[]> pathways, List<Item> existing,
                                 ThreadLocalRandom rng,
-                                ILevelOrchestrator orchestrator,
-                                IAudioManager audioManager) {
+                                ILevelOrchestrator orchestrator) {
         final float padding    = Heart.SIZE / 2f + 6f;
         final float minSpacing = Heart.SIZE * 1.6f;
 
@@ -80,7 +77,7 @@ public class ItemSpawner {
             }
 
             if (!overlapsExisting) {
-                return new Heart(cx, cy, orchestrator, audioManager);
+                return new Heart(cx, cy, orchestrator);
             }
         }
 

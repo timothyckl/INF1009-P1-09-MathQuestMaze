@@ -7,7 +7,6 @@ import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.gameplay.RoundPhase;
 import com.p1_7.game.level.ILevelOrchestrator;
-import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
@@ -78,8 +77,8 @@ public class Player extends Character {
     /** orchestrator reference used to apply enemy-contact damage */
     private ILevelOrchestrator orchestrator;
 
-    /** audio manager reference used to play sound effects */
-    private IAudioManager audioManager;
+    /** scene-level listener notified when the player takes damage; may be null */
+    private PlayerDamageListener damageListener;
 
     /** countdown timer that throttles repeated enemy-contact hits */
     private float enemyHitCooldownTimer = 0f;
@@ -193,8 +192,13 @@ public class Player extends Character {
         this.orchestrator = orchestrator;
     }
 
-    public void bindAudio(IAudioManager audioManager) {
-        this.audioManager = audioManager;
+    /**
+     * registers the listener notified when the player takes damage.
+     *
+     * @param damageListener the damage callback, or null to remove it
+     */
+    public void bindDamageListener(PlayerDamageListener damageListener) {
+        this.damageListener = damageListener;
     }
 
     @Override
@@ -215,7 +219,9 @@ public class Player extends Character {
         if (orchestrator.getHealth() < healthBefore) {
             triggerDamageAnimation();
             enemyHitCooldownTimer = ENEMY_HIT_COOLDOWN_SECONDS;
-            if (audioManager != null) audioManager.playSound("hurt");
+            if (damageListener != null) {
+                damageListener.onPlayerDamaged();
+            }
         }
     }
 

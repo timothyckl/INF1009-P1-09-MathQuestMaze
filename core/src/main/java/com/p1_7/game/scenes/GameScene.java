@@ -35,6 +35,8 @@ import com.p1_7.game.maze.WallCollidable;
 import com.p1_7.game.managers.GameMovementManager;
 import com.p1_7.game.managers.IAudioManager;
 import com.p1_7.game.items.Item;
+import com.p1_7.game.items.ItemCollectionListener;
+import com.p1_7.game.entities.PlayerDamageListener;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
@@ -48,7 +50,7 @@ import com.p1_7.game.platform.GdxDrawContext;
  *   - ItemSpawner          — heart pickup placement
  *   - MovementPipeline     — documents the three-step movement ordering
  */
-public class GameScene extends Scene implements GamePhaseListener {
+public class GameScene extends Scene implements GamePhaseListener, ItemCollectionListener, PlayerDamageListener {
 
     /** lighter blue-slate background for the walkable playfield */
     private static final Color SCENE_BG_COLOUR = new Color(0.15f, 0.19f, 0.27f, 1f);
@@ -153,7 +155,7 @@ public class GameScene extends Scene implements GamePhaseListener {
         Difficulty difficulty = orchestrator.getCurrentDifficulty();
         orchestrator.startLevel(difficulty);
         player.bindGameplay(orchestrator);
-        player.bindAudio(audioManager);
+        player.bindDamageListener(this);
 
         // cache room bounds once
         this.cachedRoomBounds = new float[4][];
@@ -168,9 +170,10 @@ public class GameScene extends Scene implements GamePhaseListener {
             collisionManager.registerMover(enemy);
         }
 
-        // spawn items via the spawner
-        this.items = itemSpawner.spawnItems(layout, orchestrator, audioManager);
+        // spawn items via the spawner and register scene as the collection listener
+        this.items = itemSpawner.spawnItems(layout, orchestrator);
         for (Item item : items) {
+            item.bindListener(this);
             collisionManager.registerItem(item);
         }
 
@@ -361,6 +364,33 @@ public class GameScene extends Scene implements GamePhaseListener {
         if (to == RoundPhase.QUESTION_INTRO) {
             hudRenderer.refreshAnswerCache(orchestrator);
             hudRenderer.beginQuestionIntro(orchestrator.getCurrentQuestion().getPrompt());
+        }
+    }
+
+    // ItemCollectionListener ──────────────────────────────────────────
+
+    /**
+     * plays the collect sound for the item type, if one is defined.
+     *
+     * @param item the item that was collected
+     */
+    @Override
+    public void onItemCollected(Item item) {
+        String key = item.getCollectSoundKey();
+        if (audioManager != null && key != null) {
+            audioManager.playSound(key);
+        }
+    }
+
+    // PlayerDamageListener ────────────────────────────────────────────
+
+    /**
+     * plays the hurt sound when the player takes enemy damage.
+     */
+    @Override
+    public void onPlayerDamaged() {
+        if (audioManager != null) {
+            audioManager.playSound("hurt");
         }
     }
 
