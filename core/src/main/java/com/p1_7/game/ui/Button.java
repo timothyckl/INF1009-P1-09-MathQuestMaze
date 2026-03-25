@@ -3,6 +3,7 @@ package com.p1_7.game.ui;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.p1_7.abstractengine.entity.Entity;
+import com.p1_7.game.audio.IAudioManager;
 import com.p1_7.game.spatial.IDisposable;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.input.InputState;
@@ -21,6 +22,8 @@ import com.p1_7.game.input.ICursorSource;
  * call resetClick() after handling the action so it fires only once.
  */
 public abstract class Button extends Entity implements IRenderable, IDisposable {
+
+    private static final long SELECT_SOUND_COOLDOWN_MS = 75L;
 
     /** standard button width shared by all button subclasses */
     public static final float BUTTON_WIDTH  = 260f;
@@ -62,6 +65,18 @@ public abstract class Button extends Entity implements IRenderable, IDisposable 
      * @param inputQuery the logical input query for this frame
      */
     public void updateInput(ICursorSource cursor, IInputQuery inputQuery) {
+        updateInput(cursor, inputQuery, null);
+    }
+
+    /**
+     * polls cursor position and click state, optionally triggering UI sound effects.
+     * call once per frame from the scene's update().
+     *
+     * @param cursor       the world-space cursor source (Y-flip already applied)
+     * @param inputQuery   the logical input query for this frame
+     * @param audioManager audio service used for hover/select feedback; may be null
+     */
+    public void updateInput(ICursorSource cursor, IInputQuery inputQuery, IAudioManager audioManager) {
         float mx = cursor.getCursorX();
         float my = cursor.getCursorY();
 
@@ -74,6 +89,9 @@ public abstract class Button extends Entity implements IRenderable, IDisposable 
         if (hovered
             && inputQuery.getActionState(GameActions.POINTER_PRIMARY) == InputState.PRESSED) {
             clicked = true;
+            if (audioManager != null) {
+                audioManager.playSound("select", SELECT_SOUND_COOLDOWN_MS);
+            }
         }
     }
 

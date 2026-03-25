@@ -5,6 +5,7 @@ import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.p1_7.abstractengine.engine.Manager;
 import com.p1_7.game.Settings;
 
@@ -33,6 +34,9 @@ public class AudioManager extends Manager implements IAudioManager {
     /** cached sound effects, keyed by caller-supplied name */
     private final Map<String, Sound> soundCache = new HashMap<>();
 
+    /** last playback time per sound key, used for lightweight SFX throttling */
+    private final Map<String, Long> soundLastPlayedAt = new HashMap<>();
+
     /** the currently active music track, or null if none is playing */
     private Music currentMusic;
 
@@ -55,6 +59,7 @@ public class AudioManager extends Manager implements IAudioManager {
         loadSound("heart",  "sound/sfx_heart.ogg");
         loadSound("hurt",   "sound/sfx_hurt.ogg");
         loadSound("die",    "sound/sfx_die.ogg");
+        loadSound("select", "sound/sfx_select.ogg");
     }
 
     /**
@@ -150,12 +155,30 @@ public class AudioManager extends Manager implements IAudioManager {
      * @param key the name of the sound to play
      */
     public void playSound(String key) {
+        playSound(key, 0L);
+    }
+
+    /**
+     * plays a cached sound effect once at full volume, optionally throttled by key.
+     * a dedicated SFX volume setting is not yet implemented;
+     * when one is added this method should read from it instead.
+     *
+     * @param key the name of the sound to play
+     * @param minIntervalMs the minimum time in milliseconds between plays of the same key
+     */
+    public void playSound(String key, long minIntervalMs) {
         if (key == null) {
             throw new IllegalArgumentException("sound key must not be null");
         }
+        long now = TimeUtils.millis();
+        Long lastPlayedAt = soundLastPlayedAt.get(key);
+        if (minIntervalMs > 0L && lastPlayedAt != null && now - lastPlayedAt < minIntervalMs) {
+            return;
+        }
         Sound sound = soundCache.get(key);
         if (sound != null) {
-            sound.play(1.0f);
+            sound.play(Settings.getSfxVolume());
+            soundLastPlayedAt.put(key, now);
         } else {
             Gdx.app.log("AudioManager", "playSound: key '" + key + "' not found in cache, ignoring");
         }
@@ -175,12 +198,30 @@ public class AudioManager extends Manager implements IAudioManager {
     }
 
     /**
+     * clamps the given SFX volume via Settings.setSfxVolume(float).
+     *
+     * @param volume the desired volume level (0.0 = silent, 1.0 = maximum)
+     */
+    public void setSfxVolume(float volume) {
+        Settings.setSfxVolume(volume);
+    }
+
+    /**
      * returns the current music volume as stored in settings.
      *
      * @return the current volume level in the range [0.0, 1.0]
      */
     public float getMusicVolume() {
         return Settings.getMusicVolume();
+    }
+
+    /**
+     * returns the current SFX volume as stored in settings.
+     *
+     * @return the current volume level in the range [0.0, 1.0]
+     */
+    public float getSfxVolume() {
+        return Settings.getSfxVolume();
     }
 
     /**
@@ -197,6 +238,7 @@ public class AudioManager extends Manager implements IAudioManager {
         }
         musicCache.clear();
         soundCache.clear();
+        soundLastPlayedAt.clear();
         currentMusic = null;
         currentMusicKey = null;
     }

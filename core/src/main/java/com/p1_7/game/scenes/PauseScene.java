@@ -12,6 +12,7 @@ import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.abstractengine.transform.ITransform;
 import com.p1_7.game.Settings;
+import com.p1_7.game.audio.IAudioManager;
 import com.p1_7.game.spatial.Transform2D;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
@@ -119,6 +120,7 @@ public class PauseScene extends Scene {
     @Override
     public void update(float deltaTime, SceneContext context) {
         IInputQuery inputQuery = context.get(IInputQuery.class);
+        IAudioManager audio = context.get(IAudioManager.class);
 
         // esc while paused resumes the game, mirroring the key that opened the menu
         if (inputQuery.getActionState(GameActions.MENU_BACK) == InputState.PRESSED) {
@@ -131,9 +133,9 @@ public class PauseScene extends Scene {
             ? reg.getExtension(ICursorSource.class) : null;
         if (cursor == null) return;
 
-        resumeButton.updateInput(cursor, inputQuery);
-        settingsButton.updateInput(cursor, inputQuery);
-        returnToMenuButton.updateInput(cursor, inputQuery);
+        resumeButton.updateInput(cursor, inputQuery, audio);
+        settingsButton.updateInput(cursor, inputQuery, audio);
+        returnToMenuButton.updateInput(cursor, inputQuery, audio);
 
         if (resumeButton.isClicked()) {
             resumeButton.resetClick();

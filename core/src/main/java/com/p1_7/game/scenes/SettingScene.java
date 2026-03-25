@@ -22,6 +22,7 @@ import com.p1_7.game.ui.BrightnessOverlay;
 import com.p1_7.game.ui.BrightnessSlider;
 import com.p1_7.game.ui.MenuButton;
 import com.p1_7.game.ui.RemapSlot;
+import com.p1_7.game.ui.SfxSlider;
 import com.p1_7.game.ui.Text;
 import com.p1_7.game.ui.VolumeSlider;
 import com.p1_7.game.input.GameActions;
@@ -37,6 +38,8 @@ import com.p1_7.game.font.IFontManager;
  * when a key is pressed.
  */
 public class SettingScene extends Scene {
+
+    private static final long UI_SELECT_SOUND_COOLDOWN_MS = 75L;
 
     private static final String BG_ASSET = "background.png";
     private static final String BTN_ASSET = "menu/button.png";
@@ -72,9 +75,14 @@ public class SettingScene extends Scene {
 
     private BackgroundImage background;
     private Text heading;
-    private Text volumeLabel;
+    private Text musicLabel;
+    private Text musicValueLabel;
     private VolumeSlider volumeSlider;
+    private Text sfxLabel;
+    private Text sfxValueLabel;
+    private SfxSlider sfxSlider;
     private Text brightnessLabel;
+    private Text brightnessValueLabel;
     private BrightnessSlider brightnessSlider;
     private Text controlsHeading;
     private Text remapHint;
@@ -138,8 +146,8 @@ public class SettingScene extends Scene {
         IInputQuery inputQuery = context.get(IInputQuery.class);
         IAudioManager audio = context.get(IAudioManager.class);
         updateSliderInputs(cursorSource, inputQuery);
-        updateRemapInput(cursorSource, inputQuery);
-        updateBackButtonInput(cursorSource, inputQuery);
+        updateRemapInput(cursorSource, inputQuery, audio);
+        updateBackButtonInput(cursorSource, inputQuery, audio);
         applySliderChanges(audio);
         handleBackButtonClick(context);
     }
@@ -164,33 +172,42 @@ public class SettingScene extends Scene {
 
     private void createFonts(IFontManager fontManager) {
         headingFont = fontManager.getGoldDisplayFont(52);
-        labelFont = fontManager.getDarkTextFont(28);
+        labelFont = fontManager.getDarkTextFont(24);
         tableFont = fontManager.getDarkTextFont(22);
         buttonFont = fontManager.getDarkTextFont(26);
     }
 
     private void createSceneComponents(IAudioManager audio) {
         float screenHeight = Settings.getWindowHeight();
+        float sliderCenterX = centreX + 24f;
+        float sliderWidth = 340f;
+        float sliderLabelX = sliderCenterX - sliderWidth / 2f - 120f;
+        float sliderValueX = sliderCenterX + sliderWidth / 2f + 82f;
         float backButtonY = screenHeight * 0.085f;
         float hintY = backButtonY + 54f;
         float rowSpacing = 36f;
         float firstRowY = hintY + 176f;
         float tableHeaderY = firstRowY + 46f;
-        float controlsHeadingY = tableHeaderY + 45f;
-        float brightnessSliderY = controlsHeadingY + 58f;
-        float brightnessLabelY = brightnessSliderY + 48f;
-        float volumeSliderY = brightnessLabelY + 62f;
-        float volumeLabelY = volumeSliderY + 50f;
-        float headingY = volumeLabelY + 66f;
+        float controlsHeadingY = tableHeaderY + 36f;
+        float sliderRowGap = 74f;
+        float brightnessRowY = controlsHeadingY + 64f;
+        float sfxRowY = brightnessRowY + sliderRowGap;
+        float musicRowY = sfxRowY + sliderRowGap;
+        float headingY = musicRowY + 78f;
 
         background = new BackgroundImage(BG_ASSET);
         heading = createCenteredLabel("SETTINGS", headingY, headingFont);
-        volumeLabel = createCenteredLabel(volumeText(audio), volumeLabelY, labelFont);
-        brightnessLabel = createCenteredLabel(brightnessText(), brightnessLabelY, labelFont);
+        musicLabel = new Text("Music", sliderLabelX, musicRowY + 10f, labelFont);
+        musicValueLabel = new Text(percentText(audio.getMusicVolume()), sliderValueX, musicRowY + 10f, labelFont);
+        sfxLabel = new Text("SFX", sliderLabelX, sfxRowY + 10f, labelFont);
+        sfxValueLabel = new Text(percentText(audio.getSfxVolume()), sliderValueX, sfxRowY + 10f, labelFont);
+        brightnessLabel = new Text("Brightness", sliderLabelX, brightnessRowY + 10f, labelFont);
+        brightnessValueLabel = new Text(percentText(Settings.getBrightnessLevel()), sliderValueX, brightnessRowY + 10f, labelFont);
         controlsHeading = createCenteredLabel("CONTROLS", controlsHeadingY, buttonFont);
         remapHint = createCenteredLabel(idleRemapHintText(), hintY, tableFont);
-        volumeSlider = new VolumeSlider(centreX, volumeSliderY, 340f, audio.getMusicVolume());
-        brightnessSlider = new BrightnessSlider(centreX, brightnessSliderY, 340f, Settings.getBrightnessLevel());
+        volumeSlider = new VolumeSlider(sliderCenterX, musicRowY, sliderWidth, audio.getMusicVolume());
+        sfxSlider = new SfxSlider(sliderCenterX, sfxRowY, sliderWidth, audio.getSfxVolume());
+        brightnessSlider = new BrightnessSlider(sliderCenterX, brightnessRowY, sliderWidth, Settings.getBrightnessLevel());
         backButton = MenuButton.withTexture("BACK", centreX, backButtonY, buttonFont, BTN_ASSET, HOVER_ASSET);
         brightnessOverlay = new BrightnessOverlay();
 
@@ -231,9 +248,14 @@ public class SettingScene extends Scene {
         }
         background = null;
         heading = null;
-        volumeLabel = null;
+        musicLabel = null;
+        musicValueLabel = null;
         volumeSlider = null;
+        sfxLabel = null;
+        sfxValueLabel = null;
+        sfxSlider = null;
         brightnessLabel = null;
+        brightnessValueLabel = null;
         brightnessSlider = null;
         controlsHeading = null;
         remapHint = null;
@@ -276,22 +298,28 @@ public class SettingScene extends Scene {
 
     private void updateSliderInputs(ICursorSource cursorSource, IInputQuery inputQuery) {
         volumeSlider.updateInput(cursorSource, inputQuery);
+        sfxSlider.updateInput(cursorSource, inputQuery);
         brightnessSlider.updateInput(cursorSource, inputQuery);
     }
 
-    private void updateBackButtonInput(ICursorSource cursorSource, IInputQuery inputQuery) {
-        backButton.updateInput(cursorSource, inputQuery);
+    private void updateBackButtonInput(ICursorSource cursorSource, IInputQuery inputQuery, IAudioManager audio) {
+        backButton.updateInput(cursorSource, inputQuery, audio);
     }
 
     private void applySliderChanges(IAudioManager audio) {
         if (volumeSlider.hasMoved()) {
             audio.setMusicVolume(volumeSlider.getValue());
-            volumeLabel.setText(volumeText(audio));
+            musicValueLabel.setText(percentText(audio.getMusicVolume()));
             volumeSlider.resetMoved();
+        }
+        if (sfxSlider.hasMoved()) {
+            audio.setSfxVolume(sfxSlider.getValue());
+            sfxValueLabel.setText(percentText(audio.getSfxVolume()));
+            sfxSlider.resetMoved();
         }
         if (brightnessSlider.hasMoved()) {
             Settings.setBrightnessLevel(brightnessSlider.getValue());
-            brightnessLabel.setText(brightnessText());
+            brightnessValueLabel.setText(percentText(Settings.getBrightnessLevel()));
             brightnessSlider.resetMoved();
         }
     }
@@ -306,9 +334,14 @@ public class SettingScene extends Scene {
     private void queuePrimaryRenderables(IRenderQueue renderQueue) {
         renderQueue.queue(background);
         renderQueue.queue(heading);
-        renderQueue.queue(volumeLabel);
+        renderQueue.queue(musicLabel);
+        renderQueue.queue(musicValueLabel);
         renderQueue.queue(volumeSlider);
+        renderQueue.queue(sfxLabel);
+        renderQueue.queue(sfxValueLabel);
+        renderQueue.queue(sfxSlider);
         renderQueue.queue(brightnessLabel);
+        renderQueue.queue(brightnessValueLabel);
         renderQueue.queue(brightnessSlider);
         renderQueue.queue(controlsHeading);
     }
@@ -323,12 +356,8 @@ public class SettingScene extends Scene {
         renderQueue.queue(remapHint);
     }
 
-    private String volumeText(IAudioManager audio) {
-        return "Music Volume:  " + Math.round(audio.getMusicVolume() * 100) + "%";
-    }
-
-    private String brightnessText() {
-        return "Brightness:  " + Math.round(Settings.getBrightnessLevel() * 100) + "%";
+    private String percentText(float value) {
+        return Math.round(value * 100) + "%";
     }
 
     private String idleRemapHintText() {
@@ -383,7 +412,7 @@ public class SettingScene extends Scene {
         return fallbackKeyCode;
     }
 
-    private void updateRemapInput(ICursorSource cursorSource, IInputQuery inputQuery) {
+    private void updateRemapInput(ICursorSource cursorSource, IInputQuery inputQuery, IAudioManager audio) {
         float mx = cursorSource.getCursorX();
         float my = cursorSource.getCursorY();
         boolean clickStarted =
@@ -395,6 +424,9 @@ public class SettingScene extends Scene {
             slot.setHoveredColumn(hitColumn);
             slot.setActiveColumn(activeRemapSlot == slot ? activeRemapColumn : null);
             if (clickStarted && hitColumn != null) {
+                if (audio != null) {
+                    audio.playSound("select", UI_SELECT_SOUND_COOLDOWN_MS);
+                }
                 startListening(slot, hitColumn);
                 return;
             }

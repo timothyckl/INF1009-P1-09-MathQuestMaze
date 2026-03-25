@@ -121,6 +121,7 @@ public class MenuScene extends Scene {
     @Override
     public void update(float deltaTime, SceneContext context) {
         IInputQuery inputQuery = context.get(IInputQuery.class);
+        IAudioManager audio = context.get(IAudioManager.class);
         if (inputQuery.getActionState(GameActions.MENU_BACK) == InputState.PRESSED) {
             Gdx.app.exit();
             return;
@@ -130,10 +131,10 @@ public class MenuScene extends Scene {
         ICursorSource cursorSource = inputRegistry.hasExtension(ICursorSource.class)
             ? inputRegistry.getExtension(ICursorSource.class) : null;
         if (cursorSource == null) return;
-        startButton.updateInput(cursorSource, inputQuery);
-        howToPlayButton.updateInput(cursorSource, inputQuery);
-        settingsButton.updateInput(cursorSource, inputQuery);
-        exitButton.updateInput(cursorSource, inputQuery);
+        startButton.updateInput(cursorSource, inputQuery, audio);
+        howToPlayButton.updateInput(cursorSource, inputQuery, audio);
+        settingsButton.updateInput(cursorSource, inputQuery, audio);
+        exitButton.updateInput(cursorSource, inputQuery, audio);
 
         if (startButton.isClicked()) {
             startButton.resetClick();

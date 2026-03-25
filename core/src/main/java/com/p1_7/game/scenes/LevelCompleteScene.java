@@ -105,13 +105,14 @@ public class LevelCompleteScene extends Scene {
         }
 
         IInputQuery inputQuery = context.get(IInputQuery.class);
+        IAudioManager audio = context.get(IAudioManager.class);
         IInputExtensionRegistry inputRegistry = context.get(IInputExtensionRegistry.class);
         ICursorSource cursorSource = inputRegistry.hasExtension(ICursorSource.class)
             ? inputRegistry.getExtension(ICursorSource.class) : null;
         // cursorSource stays null if not registered; guard below handles it cleanly
         if (cursorSource != null) {
-            continueButton.updateInput(cursorSource, inputQuery);
-            mainMenuButton.updateInput(cursorSource, inputQuery);
+            continueButton.updateInput(cursorSource, inputQuery, audio);
+            mainMenuButton.updateInput(cursorSource, inputQuery, audio);
         }
 
         boolean backPressed = inputQuery.getActionState(GameActions.MENU_BACK) == InputState.PRESSED;

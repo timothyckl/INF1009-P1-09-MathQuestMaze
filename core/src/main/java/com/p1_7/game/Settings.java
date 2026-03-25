@@ -50,6 +50,7 @@ public class Settings {
     private static int   windowWidth     = 1280;
     private static int   windowHeight    = 720;
     private static float musicVolume     = 0.5f;
+    private static float sfxVolume       = 0.5f;
     private static float brightnessLevel = DEFAULT_BRIGHTNESS_LEVEL;
 
     /** returns the window width in pixels */
@@ -61,6 +62,9 @@ public class Settings {
     /** returns the music volume in the range [0.0, 1.0] */
     public static float getMusicVolume() { return musicVolume; }
 
+    /** returns the SFX volume in the range [0.0, 1.0] */
+    public static float getSfxVolume() { return sfxVolume; }
+
     /** returns the screen brightness level in the range [0.1, 1.0] */
     public static float getBrightnessLevel() { return brightnessLevel; }
 
@@ -71,6 +75,15 @@ public class Settings {
      */
     public static void setMusicVolume(float volume) {
         musicVolume = Math.max(0.0f, Math.min(1.0f, volume));
+    }
+
+    /**
+     * Sets the SFX volume, clamped to the valid range [0.0, 1.0].
+     *
+     * @param volume the desired volume level; values outside [0.0, 1.0] are clamped
+     */
+    public static void setSfxVolume(float volume) {
+        sfxVolume = Math.max(0.0f, Math.min(1.0f, volume));
     }
 
     /**

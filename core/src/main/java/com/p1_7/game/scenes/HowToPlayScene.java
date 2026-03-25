@@ -261,6 +261,7 @@ public final class HowToPlayScene extends Scene {
     @Override
     public void update(float deltaTime, SceneContext context) {
         IInputQuery inputQuery = context.get(IInputQuery.class);
+        IAudioManager audio = context.get(IAudioManager.class);
         if (inputQuery.getActionState(GameActions.MENU_BACK) == InputState.PRESSED) {
             context.changeScene("menu");
             return;
@@ -273,7 +274,7 @@ public final class HowToPlayScene extends Scene {
             return;
         }
 
-        backButton.updateInput(cursorSource, inputQuery);
+        backButton.updateInput(cursorSource, inputQuery, audio);
         if (backButton.isClicked()) {
             backButton.resetClick();
             context.changeScene("menu");

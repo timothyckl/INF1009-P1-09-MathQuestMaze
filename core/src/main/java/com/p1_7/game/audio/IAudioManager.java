@@ -43,6 +43,14 @@ public interface IAudioManager {
     void playSound(String key);
 
     /**
+     * plays a cached sound effect once unless it was played too recently.
+     *
+     * @param key the name of the sound to play
+     * @param minIntervalMs the minimum time in milliseconds between plays of the same key
+     */
+    void playSound(String key, long minIntervalMs);
+
+    /**
      * sets the volume on the currently playing music track.
      * the value is clamped to [0.0, 1.0] before being applied.
      * as a side-effect, the clamped value is persisted via Settings.setMusicVolume(float)
@@ -53,11 +61,26 @@ public interface IAudioManager {
     void setMusicVolume(float volume);
 
     /**
+     * sets the volume used for sound effects.
+     * the value is clamped to [0.0, 1.0] before being persisted.
+     *
+     * @param volume the desired SFX volume level (0.0 = silent, 1.0 = maximum)
+     */
+    void setSfxVolume(float volume);
+
+    /**
      * returns the current music volume as stored in settings.
      *
      * @return the current volume level in the range [0.0, 1.0]
      */
     float getMusicVolume();
+
+    /**
+     * returns the current SFX volume as stored in settings.
+     *
+     * @return the current SFX volume level in the range [0.0, 1.0]
+     */
+    float getSfxVolume();
 
     /**
      * pauses the currently playing music track.
