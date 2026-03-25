@@ -52,7 +52,7 @@ public class MazeLayout {
     private static final float LAYOUT_SCALE = 0.88f;
 
     /** vertical offset applied to the whole maze after scaling; positive moves the maze upward */
-    private static final float LAYOUT_OFFSET_Y = 45f;
+    private static final float LAYOUT_OFFSET_Y = 15f;
 
     /** downward shift applied to corridors after scaling, without affecting room positions */
     private static final float CORRIDOR_OFFSET_Y = -30f;
