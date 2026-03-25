@@ -35,6 +35,8 @@ import com.p1_7.game.maze.WallCollidable;
 import com.p1_7.game.character.GameMovementManager;
 import com.p1_7.game.audio.IAudioManager;
 import com.p1_7.game.collectible.Item;
+import com.p1_7.game.collectible.ItemCollectionListener;
+import com.p1_7.game.character.PlayerDamageListener;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
@@ -48,7 +50,7 @@ import com.p1_7.game.platform.GdxDrawContext;
  *   - ItemSpawner          — heart pickup placement
  *   - MovementPipeline     — documents the three-step movement ordering
  */
-public class GameScene extends Scene implements GamePhaseListener {
+public class GameScene extends Scene implements GamePhaseListener, ItemCollectionListener, PlayerDamageListener {
 
     /** lighter blue-slate background for the walkable playfield */
     private static final Color SCENE_BG_COLOUR = new Color(0.15f, 0.19f, 0.27f, 1f);
@@ -84,6 +86,9 @@ public class GameScene extends Scene implements GamePhaseListener {
 
     /** collectable pickups currently present in the maze */
     private List<Item> items;
+
+    /** cached audio manager for sound effect playback */
+    private IAudioManager audioManager;
 
     /** solid background quad for the gameplay area */
     private IRenderable backgroundRenderable;
@@ -122,7 +127,8 @@ public class GameScene extends Scene implements GamePhaseListener {
     public void onEnter(SceneContext context) {
         // ensure the scene always starts unpaused
         setPaused(false);
-        context.get(IAudioManager.class).playMusic("game", true);
+        this.audioManager = context.get(IAudioManager.class);
+        audioManager.playMusic("game", true);
         this.layout   = MazeLayout.createDefault();
         float[] spawn = layout.getSpawnPoint();
         this.player   = new Player(spawn[0], spawn[1]);
@@ -149,6 +155,7 @@ public class GameScene extends Scene implements GamePhaseListener {
         Difficulty difficulty = orchestrator.getCurrentDifficulty();
         orchestrator.startLevel(difficulty);
         player.bindGameplay(orchestrator);
+        player.bindDamageListener(this);
 
         // cache room bounds once
         this.cachedRoomBounds = new float[4][];
@@ -163,9 +170,10 @@ public class GameScene extends Scene implements GamePhaseListener {
             collisionManager.registerMover(enemy);
         }
 
-        // spawn items via the spawner
+        // spawn items via the spawner and register scene as the collection listener
         this.items = itemSpawner.spawnItems(layout, orchestrator);
         for (Item item : items) {
+            item.bindListener(this);
             collisionManager.registerItem(item);
         }
 
@@ -216,6 +224,7 @@ public class GameScene extends Scene implements GamePhaseListener {
         backgroundRenderable  = null;
         debugHitboxRenderable = null;
         wallCollidables       = null;
+        audioManager          = null;
     }
 
     /**
@@ -338,6 +347,13 @@ public class GameScene extends Scene implements GamePhaseListener {
     @Override
     public void onPhaseChanged(RoundPhase from, RoundPhase to,
                                ILevelOrchestrator orchestrator) {
+        if (to == RoundPhase.FEEDBACK) {
+            audioManager.playSound(orchestrator.isLastAnswerCorrect() ? "answer" : "wrong");
+        } else if (to == RoundPhase.LEVEL_COMPLETE) {
+            audioManager.playSound("answer");
+        } else if (to == RoundPhase.GAME_OVER) {
+            audioManager.playSound("die");
+        }
         if (to == RoundPhase.ROUND_RESET) {
             player.resetToSpawn(layout.getSpawnPoint());
             for (HostileCharacter enemy : enemies) {
@@ -348,6 +364,33 @@ public class GameScene extends Scene implements GamePhaseListener {
         if (to == RoundPhase.QUESTION_INTRO) {
             hudRenderer.refreshAnswerCache(orchestrator);
             hudRenderer.beginQuestionIntro(orchestrator.getCurrentQuestion().getPrompt());
+        }
+    }
+
+    // ItemCollectionListener ──────────────────────────────────────────
+
+    /**
+     * plays the collect sound for the item type, if one is defined.
+     *
+     * @param item the item that was collected
+     */
+    @Override
+    public void onItemCollected(Item item) {
+        String key = item.getCollectSoundKey();
+        if (audioManager != null && key != null) {
+            audioManager.playSound(key);
+        }
+    }
+
+    // PlayerDamageListener ────────────────────────────────────────────
+
+    /**
+     * plays the hurt sound when the player takes enemy damage.
+     */
+    @Override
+    public void onPlayerDamaged() {
+        if (audioManager != null) {
+            audioManager.playSound("hurt");
         }
     }
 

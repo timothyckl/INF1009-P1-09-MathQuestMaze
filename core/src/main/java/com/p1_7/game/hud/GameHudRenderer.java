@@ -266,7 +266,7 @@ public class GameHudRenderer {
 
             @Override
             public void render(IDrawContext ctx) {
-                String text = "Score: " + orch.getScore();
+                String text = "Score: " + orch.getScore() + "/5";
                 layout.setText(capturedHudFont, text);
                 ((GdxDrawContext) ctx).drawFont(capturedHudFont, text,
                     Settings.getWindowWidth() - RIGHT_PADDING - layout.width,

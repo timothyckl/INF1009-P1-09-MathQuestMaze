@@ -77,6 +77,9 @@ public class Player extends Character {
     /** orchestrator reference used to apply enemy-contact damage */
     private ILevelOrchestrator orchestrator;
 
+    /** scene-level listener notified when the player takes damage; may be null */
+    private PlayerDamageListener damageListener;
+
     /** countdown timer that throttles repeated enemy-contact hits */
     private float enemyHitCooldownTimer = 0f;
 
@@ -189,6 +192,15 @@ public class Player extends Character {
         this.orchestrator = orchestrator;
     }
 
+    /**
+     * registers the listener notified when the player takes damage.
+     *
+     * @param damageListener the damage callback, or null to remove it
+     */
+    public void bindDamageListener(PlayerDamageListener damageListener) {
+        this.damageListener = damageListener;
+    }
+
     @Override
     public void onCollision(ICollidable other) {
         if (!(other instanceof EnemyDamageZone)) {
@@ -207,6 +219,9 @@ public class Player extends Character {
         if (orchestrator.getHealth() < healthBefore) {
             triggerDamageAnimation();
             enemyHitCooldownTimer = ENEMY_HIT_COOLDOWN_SECONDS;
+            if (damageListener != null) {
+                damageListener.onPlayerDamaged();
+            }
         }
     }
 

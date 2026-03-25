@@ -26,6 +26,11 @@ public final class Heart extends Item {
     }
 
     @Override
+    public String getCollectSoundKey() {
+        return "heart";
+    }
+
+    @Override
     public String getAssetPath() {
         return HEART_ASSET;
     }

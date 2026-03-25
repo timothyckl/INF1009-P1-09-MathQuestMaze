@@ -14,7 +14,7 @@ import com.p1_7.game.platform.GdxDrawContext;
  * wall collision is handled reactively by MazeCollisionManager, matching the
  * player's collision model. the sprite is flipped horizontally to match movement direction.
  */
-public class Enemy extends HostileCharacter {
+public class Goblin extends HostileCharacter {
 
     // AI constants ─────────────────────────────────────────────
 
@@ -92,12 +92,12 @@ public class Enemy extends HostileCharacter {
     private float     patrolDir   = 1f;
 
     /**
-     * constructs an enemy centred on the given spawn coordinates.
+     * constructs a goblin centred on the given spawn coordinates.
      *
      * @param spawnX world x coordinate of the spawn centre
      * @param spawnY world y coordinate of the spawn centre
      */
-    public Enemy(float spawnX, float spawnY) {
+    public Goblin(float spawnX, float spawnY) {
         super(spawnX, spawnY, SIZE, DAMAGE_BOX_SIZE);
     }
 

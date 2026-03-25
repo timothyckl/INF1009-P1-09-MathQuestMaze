@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.transform.ITransform;
-import com.p1_7.game.character.Enemy;
+import com.p1_7.game.character.Goblin;
 import com.p1_7.game.character.HostileCharacter;
 import com.p1_7.game.character.Player;
 import com.p1_7.game.character.Skeleton;
@@ -47,7 +47,7 @@ public class EnemyController {
         for (float[] room : roomBounds) {
             float cx = room[0] + room[2] / 2f;
             float cy = room[1] + room[3] / 2f;
-            enemies.add(new Enemy(cx, cy));
+            enemies.add(new Goblin(cx, cy));
         }
 
         // skeletons at distinct corridor intersections sharing a maze-wide patrol loop

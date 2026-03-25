@@ -49,6 +49,12 @@ public class AudioManager extends Manager implements IAudioManager {
         loadMusic("game",           "music/background.mp3");
         loadMusic("game-over",      "music/game-over.mp3");
         loadMusic("level-complete", "music/level-complete.mp3");
+
+        loadSound("answer", "sound/sfx_answer.ogg");
+        loadSound("wrong",  "sound/sfx_wrong.ogg");
+        loadSound("heart",  "sound/sfx_heart.ogg");
+        loadSound("hurt",   "sound/sfx_hurt.ogg");
+        loadSound("die",    "sound/sfx_die.ogg");
     }
 
     /**
