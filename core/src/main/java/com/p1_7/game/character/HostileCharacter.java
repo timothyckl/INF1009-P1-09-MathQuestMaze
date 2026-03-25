@@ -1,8 +1,8 @@
-package com.p1_7.game.entities;
+package com.p1_7.game.character;
 
 import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.transform.ITransform;
-import com.p1_7.game.core.Bounds2D;
+import com.p1_7.game.spatial.Bounds2D;
 
 /**
  * shared base for enemy-style characters that can damage the player.
