@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import com.p1_7.game.Settings;
-import com.p1_7.game.ui.HudStrip;
+import com.p1_7.game.hud.HudStrip;
 
 /**
  * immutable value object that describes the fixed spatial layout of the math maze.

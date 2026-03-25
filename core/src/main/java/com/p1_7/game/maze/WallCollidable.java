@@ -2,7 +2,7 @@ package com.p1_7.game.maze;
 
 import com.p1_7.abstractengine.collision.IBounds;
 import com.p1_7.abstractengine.collision.ICollidable;
-import com.p1_7.game.core.Bounds2D;
+import com.p1_7.game.spatial.Bounds2D;
 
 /**
  * lightweight immutable wrapper for a single wall rectangle from MazeLayout.

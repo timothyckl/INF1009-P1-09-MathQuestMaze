@@ -14,8 +14,8 @@ import com.p1_7.game.ui.MenuButton;
 import com.p1_7.game.ui.Text;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
-import com.p1_7.game.managers.IAudioManager;
-import com.p1_7.game.managers.IFontManager;
+import com.p1_7.game.audio.IAudioManager;
+import com.p1_7.game.font.IFontManager;
 
 /**
  * Shown when the player's health reaches zero and the game ends.

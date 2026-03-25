@@ -6,7 +6,7 @@ import com.p1_7.abstractengine.entity.Entity;
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.transform.ITransform;
-import com.p1_7.game.core.Transform2D;
+import com.p1_7.game.spatial.Transform2D;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**

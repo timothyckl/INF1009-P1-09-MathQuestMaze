@@ -2,13 +2,13 @@ package com.p1_7.game.ui;
 
 import com.badlogic.gdx.graphics.Color;
 import com.p1_7.abstractengine.entity.Entity;
-import com.p1_7.game.core.IDisposable;
+import com.p1_7.game.spatial.IDisposable;
 import com.p1_7.abstractengine.input.IInputQuery;
 import com.p1_7.abstractengine.input.InputState;
 import com.p1_7.abstractengine.render.IDrawContext;
 import com.p1_7.abstractengine.render.IRenderable;
 import com.p1_7.abstractengine.transform.ITransform;
-import com.p1_7.game.core.Transform2D;
+import com.p1_7.game.spatial.Transform2D;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
 import com.p1_7.game.platform.GdxDrawContext;

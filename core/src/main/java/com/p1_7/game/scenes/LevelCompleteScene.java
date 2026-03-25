@@ -8,16 +8,16 @@ import com.p1_7.abstractengine.render.IRenderQueue;
 import com.p1_7.abstractengine.scene.Scene;
 import com.p1_7.abstractengine.scene.SceneContext;
 import com.p1_7.game.Settings;
-import com.p1_7.game.gameplay.Difficulty;
+import com.p1_7.game.math.Difficulty;
 import com.p1_7.game.ui.BackgroundImage;
 import com.p1_7.game.ui.BrightnessOverlay;
 import com.p1_7.game.ui.MenuButton;
 import com.p1_7.game.ui.Text;
 import com.p1_7.game.input.GameActions;
 import com.p1_7.game.input.ICursorSource;
-import com.p1_7.game.managers.IAudioManager;
-import com.p1_7.game.managers.IFontManager;
-import com.p1_7.game.level.ILevelOrchestrator;
+import com.p1_7.game.audio.IAudioManager;
+import com.p1_7.game.font.IFontManager;
+import com.p1_7.game.round.ILevelOrchestrator;
 
 /**
  * shown after the player clears a level; displays the current level number, a prompt
