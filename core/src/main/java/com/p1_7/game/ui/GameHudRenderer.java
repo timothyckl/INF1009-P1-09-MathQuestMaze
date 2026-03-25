@@ -21,7 +21,7 @@ import com.p1_7.game.maze.MazeLayout;
 import com.p1_7.game.platform.GdxDrawContext;
 
 /**
- * owns all HUD renderables — score, health, level label, question panel,
+ * owns all HUD renderables — score, health, level label, esc hint, question panel,
  * feedback overlay, room answer labels, and the brightness overlay.
  *
  * created and initialised by GameScene in onEnter(); submitRoomLabels() and
@@ -33,11 +33,17 @@ public class GameHudRenderer {
     private static final Color OVERLAY_CORRECT = new Color(0.08f, 0.62f, 0.22f, 0.42f);
     private static final Color OVERLAY_WRONG   = new Color(0.75f, 0.08f, 0.08f, 0.42f);
 
-    /** vertical offset from the strip baseline to the score text baseline */
-    private static final float HUD_SCORE_BASELINE_OFFSET = 31f;
+    /** vertical offset from the strip baseline to the main hud text baseline */
+    private static final float HUD_TEXT_BASELINE_OFFSET = 31f;
 
     /** vertical offset from the strip baseline to the health pip top edge */
     private static final float HUD_HEALTH_BASELINE_OFFSET = 14f;
+
+    /** left / right padding for strip-aligned text */
+    private static final float HUD_SIDE_PADDING = 18f;
+
+    /** gap between centred level text and centred score text */
+    private static final float HUD_CENTRE_GAP = 42f;
 
     // fields populated during init() ──────────────────────────────────
 
@@ -53,6 +59,7 @@ public class GameHudRenderer {
     private IRenderable scoreDisplay;
     private IRenderable healthDisplay;
     private IRenderable levelDisplay;
+    private IRenderable escHintDisplay;
     private BrightnessOverlay brightnessOverlay;
 
     private String[]      roomAnswerTexts;
@@ -73,7 +80,6 @@ public class GameHudRenderer {
         this.questionFont = fontManager.getLightTextFont(36);
         this.hudFont      = fontManager.getLightTextFont(22);
 
-        // allocate per-room answer caches
         this.roomAnswerTexts   = new String[4];
         this.roomAnswerLayouts = new GlyphLayout[4];
         for (int i = 0; i < 4; i++) {
@@ -90,9 +96,10 @@ public class GameHudRenderer {
         questionPanel.beginIntro(orchestrator.getCurrentQuestion().getPrompt());
 
         buildFeedbackOverlay(orchestrator);
-        buildScoreDisplay(orchestrator);
         buildHealthDisplay(orchestrator);
         buildLevelDisplay(difficulty);
+        buildScoreDisplay(orchestrator);
+        buildEscHintDisplay();
     }
 
     /**
@@ -108,7 +115,7 @@ public class GameHudRenderer {
     }
 
     /**
-     * queues the question panel, HUD strip, score, health, level, feedback,
+     * queues the question panel, HUD strip, score, health, level, esc hint, feedback,
      * and brightness overlays. called after entities so HUD sits on top.
      *
      * @param renderQueue the frame's render queue
@@ -118,9 +125,10 @@ public class GameHudRenderer {
     public void submitHudOverlays(IRenderQueue renderQueue, boolean paused) {
         renderQueue.queue(questionPanel);
         renderQueue.queue(hudStrip);
-        renderQueue.queue(scoreDisplay);
         renderQueue.queue(healthDisplay);
         renderQueue.queue(levelDisplay);
+        renderQueue.queue(scoreDisplay);
+        renderQueue.queue(escHintDisplay);
         renderQueue.queue(feedbackOverlay);
         if (!paused) {
             renderQueue.queue(brightnessOverlay);
@@ -175,6 +183,7 @@ public class GameHudRenderer {
         scoreDisplay      = null;
         healthDisplay     = null;
         levelDisplay      = null;
+        escHintDisplay    = null;
         hudStrip          = null;
         brightnessOverlay = null;
     }
@@ -185,7 +194,7 @@ public class GameHudRenderer {
         this.roomRenderables = new ArrayList<>(4);
         List<float[]> allRooms = layout.getAllRoomBounds();
 
-        final BitmapFont    roomFont           = promptFont;
+        final BitmapFont    roomFont              = promptFont;
         final String[]      capturedAnswerTexts   = roomAnswerTexts;
         final GlyphLayout[] capturedAnswerLayouts = roomAnswerLayouts;
 
@@ -196,7 +205,7 @@ public class GameHudRenderer {
                 rect[0], rect[1], rect[2], rect[3]);
 
             roomRenderables.add(new IRenderable() {
-                @Override public String     getAssetPath() { return null; }
+                @Override public String getAssetPath() { return null; }
                 @Override public ITransform getTransform() { return roomTransform; }
 
                 @Override
@@ -222,7 +231,7 @@ public class GameHudRenderer {
             private final Transform2D t = new Transform2D(
                 0f, 0f, Settings.getWindowWidth(), HudStrip.PLAYFIELD_HEIGHT);
 
-            @Override public String     getAssetPath() { return null; }
+            @Override public String getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
 
             @Override
@@ -240,7 +249,7 @@ public class GameHudRenderer {
                 gdx.drawTintedQuad(overlayColour, 0f, 0f,
                     Settings.getWindowWidth(), HudStrip.PLAYFIELD_HEIGHT);
 
-                String      msg    = correct ? "CORRECT!" : "WRONG!";
+                String msg = correct ? "CORRECT!" : "WRONG!";
                 GlyphLayout layout = correct ? correctLayout : wrongLayout;
                 gdx.drawFont(capturedHudFont, msg,
                     Settings.getWindowWidth() / 2f - layout.width / 2f,
@@ -249,31 +258,9 @@ public class GameHudRenderer {
         };
     }
 
-    private void buildScoreDisplay(ILevelOrchestrator orchestrator) {
-        final ILevelOrchestrator orch = orchestrator;
-        final BitmapFont capturedHudFont = hudFont;
-
-        this.scoreDisplay = new IRenderable() {
-            private static final float RIGHT_PADDING = 18f;
-            private final float BASELINE_Y = HudStrip.STRIP_Y + HUD_SCORE_BASELINE_OFFSET;
-            private final Transform2D t = new Transform2D(
-                Settings.getWindowWidth() - RIGHT_PADDING, BASELINE_Y, 0f, 0f);
-            private final GlyphLayout layout = new GlyphLayout();
-
-            @Override public String     getAssetPath() { return null; }
-            @Override public ITransform getTransform() { return t; }
-
-            @Override
-            public void render(IDrawContext ctx) {
-                String text = "Score: " + orch.getScore();
-                layout.setText(capturedHudFont, text);
-                ((GdxDrawContext) ctx).drawFont(capturedHudFont, text,
-                    Settings.getWindowWidth() - RIGHT_PADDING - layout.width,
-                    BASELINE_Y);
-            }
-        };
-    }
-
+    /**
+     * top-left: health label and hearts.
+     */
     private void buildHealthDisplay(ILevelOrchestrator orchestrator) {
         final ILevelOrchestrator orch = orchestrator;
         final BitmapFont capturedHudFont = hudFont;
@@ -287,43 +274,60 @@ public class GameHudRenderer {
             private static final float  SQ           = 20f;
             private static final float  GAP          = 6f;
             private static final float  LABEL_MARGIN = 8f;
-            private static final float  BASE_X       = 18f;
-            private final float       BASE_Y      = HudStrip.STRIP_Y + HUD_HEALTH_BASELINE_OFFSET;
-            private final float       LABEL_Y     = HudStrip.STRIP_Y + HUD_SCORE_BASELINE_OFFSET;
-            private final GlyphLayout labelLayout = new GlyphLayout(capturedHudFont, LABEL);
-            private final Transform2D t           = new Transform2D(BASE_X, BASE_Y, 0f, 0f);
 
-            @Override public String     getAssetPath() { return null; }
+            private final float BASE_X = HUD_SIDE_PADDING;
+            private final float BASE_Y = HudStrip.STRIP_Y + HUD_HEALTH_BASELINE_OFFSET;
+            private final float LABEL_Y = HudStrip.STRIP_Y + HUD_TEXT_BASELINE_OFFSET;
+
+            private final GlyphLayout labelLayout = new GlyphLayout(capturedHudFont, LABEL);
+            private final Transform2D t = new Transform2D(BASE_X, BASE_Y, 0f, 0f);
+
+            @Override public String getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
 
             @Override
             public void render(IDrawContext ctx) {
-                GdxDrawContext gdx     = (GdxDrawContext) ctx;
-                int           health   = orch.getHealth();
-                float         heartsX  = BASE_X + labelLayout.width + LABEL_MARGIN;
+                GdxDrawContext gdx = (GdxDrawContext) ctx;
+                int health = orch.getHealth();
+                float heartsX = BASE_X + labelLayout.width + LABEL_MARGIN;
+
                 gdx.drawFont(capturedHudFont, LABEL, BASE_X, LABEL_Y);
+
                 for (int i = 0; i < 3; i++) {
-                    float x    = heartsX + i * (SQ + GAP);
-                    int   frame = (i < health) ? FRAME_FULL : FRAME_EMPTY;
-                    int   srcX  = frame * FRAME_SIZE;
-                    gdx.drawTextureRegion(HEART_ASSET, srcX, 0, FRAME_SIZE, FRAME_SIZE,
-                                         x, BASE_Y, SQ, SQ, false);
+                    float x = heartsX + i * (SQ + GAP);
+                    int frame = (i < health) ? FRAME_FULL : FRAME_EMPTY;
+                    int srcX = frame * FRAME_SIZE;
+                    gdx.drawTextureRegion(
+                        HEART_ASSET,
+                        srcX,
+                        0,
+                        FRAME_SIZE,
+                        FRAME_SIZE,
+                        x,
+                        BASE_Y,
+                        SQ,
+                        SQ,
+                        false
+                    );
                 }
             }
         };
     }
 
+    /**
+     * top-centre left half: level text.
+     */
     private void buildLevelDisplay(Difficulty difficulty) {
         final BitmapFont capturedHudFont = hudFont;
         final Difficulty capturedDifficulty = difficulty;
 
         this.levelDisplay = new IRenderable() {
-            private final float BASELINE_Y = HudStrip.STRIP_Y + HUD_SCORE_BASELINE_OFFSET;
-            private final float CENTRE_X   = Settings.getWindowWidth() / 2f;
+            private final float BASELINE_Y = HudStrip.STRIP_Y + HUD_TEXT_BASELINE_OFFSET;
+            private final float CENTRE_X = Settings.getWindowWidth() / 2f;
             private final Transform2D t = new Transform2D(CENTRE_X, BASELINE_Y, 0f, 0f);
             private final GlyphLayout layout = new GlyphLayout();
 
-            @Override public String     getAssetPath() { return null; }
+            @Override public String getAssetPath() { return null; }
             @Override public ITransform getTransform() { return t; }
 
             @Override
@@ -331,8 +335,64 @@ public class GameHudRenderer {
                 String text = "Level " + getLevelNumber(capturedDifficulty)
                     + " - " + formatDifficultyLabel(capturedDifficulty);
                 layout.setText(capturedHudFont, text);
-                ((GdxDrawContext) ctx).drawFont(capturedHudFont, text,
-                    CENTRE_X - layout.width / 2f, BASELINE_Y);
+
+                float drawX = CENTRE_X - HUD_CENTRE_GAP / 2f - layout.width;
+                ((GdxDrawContext) ctx).drawFont(capturedHudFont, text, drawX, BASELINE_Y);
+            }
+        };
+    }
+
+    /**
+     * top-centre right half: score text.
+     */
+    private void buildScoreDisplay(ILevelOrchestrator orchestrator) {
+        final ILevelOrchestrator orch = orchestrator;
+        final BitmapFont capturedHudFont = hudFont;
+
+        this.scoreDisplay = new IRenderable() {
+            private final float BASELINE_Y = HudStrip.STRIP_Y + HUD_TEXT_BASELINE_OFFSET;
+            private final float CENTRE_X = Settings.getWindowWidth() / 2f;
+            private final Transform2D t = new Transform2D(CENTRE_X, BASELINE_Y, 0f, 0f);
+            private final GlyphLayout layout = new GlyphLayout();
+
+            @Override public String getAssetPath() { return null; }
+            @Override public ITransform getTransform() { return t; }
+
+            @Override
+            public void render(IDrawContext ctx) {
+                String text = "Score: " + orch.getScore();
+                layout.setText(capturedHudFont, text);
+
+                float drawX = CENTRE_X + HUD_CENTRE_GAP / 2f;
+                ((GdxDrawContext) ctx).drawFont(capturedHudFont, text, drawX, BASELINE_Y);
+            }
+        };
+    }
+
+    /**
+     * top-right: ESC hint for pause.
+     */
+    private void buildEscHintDisplay() {
+        final BitmapFont capturedHudFont = hudFont;
+
+        this.escHintDisplay = new IRenderable() {
+            private static final String LABEL = "[ESC] Pause";
+            private final float BASELINE_Y = HudStrip.STRIP_Y + HUD_TEXT_BASELINE_OFFSET;
+            private final GlyphLayout layout = new GlyphLayout(capturedHudFont, LABEL);
+            private final Transform2D t = new Transform2D(
+                Settings.getWindowWidth() - HUD_SIDE_PADDING,
+                BASELINE_Y,
+                0f,
+                0f
+            );
+
+            @Override public String getAssetPath() { return null; }
+            @Override public ITransform getTransform() { return t; }
+
+            @Override
+            public void render(IDrawContext ctx) {
+                float drawX = Settings.getWindowWidth() - HUD_SIDE_PADDING - layout.width;
+                ((GdxDrawContext) ctx).drawFont(capturedHudFont, LABEL, drawX, BASELINE_Y);
             }
         };
     }
