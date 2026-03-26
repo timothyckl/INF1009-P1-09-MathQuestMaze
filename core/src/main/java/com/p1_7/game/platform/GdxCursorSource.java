@@ -1,6 +1,7 @@
 package com.p1_7.game.platform;
 
 import com.badlogic.gdx.Gdx;
+import com.p1_7.game.Settings;
 import com.p1_7.game.input.ICursorSource;
 
 /**
@@ -11,6 +12,22 @@ import com.p1_7.game.input.ICursorSource;
  */
 public class GdxCursorSource implements ICursorSource {
 
+    private float scaleX() {
+        int screenWidth = Gdx.graphics.getWidth();
+        if (screenWidth <= 0) {
+            return 1f;
+        }
+        return (float) Settings.getWindowWidth() / screenWidth;
+    }
+
+    private float scaleY() {
+        int screenHeight = Gdx.graphics.getHeight();
+        if (screenHeight <= 0) {
+            return 1f;
+        }
+        return (float) Settings.getWindowHeight() / screenHeight;
+    }
+
     /**
      * returns the raw horizontal cursor position in screen pixels.
      *
@@ -18,7 +35,7 @@ public class GdxCursorSource implements ICursorSource {
      */
     @Override
     public float getCursorX() {
-        return Gdx.input.getX();
+        return Gdx.input.getX() * scaleX();
     }
 
     /**
@@ -28,6 +45,6 @@ public class GdxCursorSource implements ICursorSource {
      */
     @Override
     public float getCursorY() {
-        return Gdx.graphics.getHeight() - Gdx.input.getY();
+        return (Gdx.graphics.getHeight() - Gdx.input.getY()) * scaleY();
     }
 }
