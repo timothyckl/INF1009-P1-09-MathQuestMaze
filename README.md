@@ -47,6 +47,9 @@ core/src/main/java/com/p1_7/
 
 The included demo is a simple arcade game that exercises the engine's core systems. It demonstrates entity composition, collision detection, scene transitions, and input handling in a working application built entirely on top of the abstract engine layer.
 
+## CI/CD Pipeline
+Our project enforces strict Continuous Integration. Every push and pull request is automatically built and tested against our comprehensive JUnit 5 suite via GitHub Actions. This ensures that the engine's core subsystems remain stable, heavily decoupled from LibGDX, and protected from regressions.
+
 ## Getting Started
 
 Run the demo application:
