@@ -31,6 +31,7 @@ import com.p1_7.game.round.RoundPhase;
 import com.p1_7.game.round.ILevelOrchestrator;
 import com.p1_7.game.maze.MazeCollisionManager;
 import com.p1_7.game.maze.MazeLayout;
+import com.p1_7.game.maze.MazeWallGrid;
 import com.p1_7.game.maze.WallCollidable;
 import com.p1_7.game.character.GameMovementManager;
 import com.p1_7.game.audio.IAudioManager;
@@ -102,7 +103,10 @@ public class GameScene extends Scene implements GamePhaseListener, ItemCollectio
     /** wall collidables registered with the collision manager */
     private List<WallCollidable> wallCollidables;
 
-    /** one renderable per wall rectangle so the maze geometry is visible */
+    /** exact wall grid used for render-time wall-cell iteration */
+    private MazeWallGrid wallGrid;
+
+    /** one renderable per occupied wall cell so the maze geometry is visible */
     private List<IRenderable> wallRenderables;
 
     /**
@@ -130,6 +134,7 @@ public class GameScene extends Scene implements GamePhaseListener, ItemCollectio
         this.audioManager = context.get(IAudioManager.class);
         audioManager.playMusic("game", true);
         this.layout   = MazeLayout.createDefault();
+        this.wallGrid = MazeWallGrid.fromLayout(layout);
         float[] spawn = layout.getSpawnPoint();
         this.player   = new Player(spawn[0], spawn[1]);
         this.backgroundRenderable = createBackgroundRenderable();
@@ -141,13 +146,15 @@ public class GameScene extends Scene implements GamePhaseListener, ItemCollectio
         // wire collision manager and register the player and all walls
         MazeCollisionManager collisionManager = context.get(MazeCollisionManager.class);
         this.wallCollidables = new ArrayList<>();
-        this.wallRenderables = new ArrayList<>();
+        this.wallRenderables = new ArrayList<>(wallGrid.getWallCells().size());
         collisionManager.registerPlayer(player);
         for (float[] rect : layout.getWallBounds()) {
             WallCollidable wall = new WallCollidable(rect);
             wallCollidables.add(wall);
             collisionManager.registerWall(wall);
-            wallRenderables.add(createWallRenderable(rect));
+        }
+        for (MazeWallGrid.WallCell cell : wallGrid.getWallCells()) {
+            wallRenderables.add(createWallRenderable(cell.toRect()));
         }
 
         // wire level orchestrator and start the session at the selected difficulty
@@ -219,6 +226,7 @@ public class GameScene extends Scene implements GamePhaseListener, ItemCollectio
 
         cachedRoomBounds      = null;
         wallRenderables       = null;
+        wallGrid              = null;
         layout                = null;
         player                = null;
         backgroundRenderable  = null;
