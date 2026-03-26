@@ -155,8 +155,9 @@ public class GameHudRenderer {
      */
     public void refreshAnswerCache(ILevelOrchestrator orchestrator) {
         for (int i = 0; i < 4; i++) {
-            roomAnswerTexts[i] = String.valueOf(
-                orchestrator.getRoomAssignment().getAnswerForRoom(i));
+            roomAnswerTexts[i] = orchestrator.isRoomActive(i)
+                ? String.valueOf(orchestrator.getRoomAssignment().getAnswerForRoom(i))
+                : "";
             roomAnswerLayouts[i].setText(promptFont, roomAnswerTexts[i]);
         }
     }

@@ -82,6 +82,12 @@ public class GamePhaseController {
             }
 
             boolean overlapping = overlapsRoom(playerBounds, cachedRoomBounds[i]);
+            if (!orchestrator.isRoomActive(i)) {
+                if (!overlapping && playerInsideRoom[i]) {
+                    playerInsideRoom[i] = false;
+                }
+                continue;
+            }
 
             if (overlapping && !playerInsideRoom[i] && roomCooldownTimers[i] <= 0f) {
                 // player just entered a room with no active cooldown

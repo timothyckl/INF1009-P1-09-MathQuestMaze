@@ -71,6 +71,19 @@ public interface ILevelOrchestrator {
     RoomAssignment getRoomAssignment();
 
     /**
+     * returns whether the answer room at the given index is still active for the current question.
+     *
+     * rooms become inactive after the player selects them incorrectly and stay hidden/disabled
+     * until a new question is generated.
+     *
+     * @param roomIndex the room index to test; must be in the range 0–3
+     * @return true if the room can still be selected, false if it has been eliminated
+     * @throws IllegalStateException if startLevel has not been called
+     * @throws IllegalArgumentException if roomIndex is not in the range 0–3
+     */
+    boolean isRoomActive(int roomIndex);
+
+    /**
      * returns the player's current score.
      *
      * @return the number of correct answers given so far this round

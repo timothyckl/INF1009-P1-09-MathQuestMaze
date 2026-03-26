@@ -1,5 +1,7 @@
 package com.p1_7.game.round;
 
+import java.util.Arrays;
+
 import com.p1_7.game.math.Difficulty;
 import com.p1_7.game.math.MathQuestion;
 import com.p1_7.game.math.QuestionGenerator;
@@ -24,6 +26,9 @@ public class LevelOrchestrator implements ILevelOrchestrator {
 
     /** difficulty selected for the current or next gameplay session */
     private Difficulty currentDifficulty = Difficulty.EASY;
+
+    /** tracks which answer rooms remain selectable for the current question */
+    private final boolean[] activeRooms = new boolean[4];
 
     /**
      * constructs a level orchestrator with a default room assigner.
@@ -99,6 +104,13 @@ public class LevelOrchestrator implements ILevelOrchestrator {
     }
 
     @Override
+    public boolean isRoomActive(int roomIndex) {
+        requireActiveRound();
+        validateRoomIndex(roomIndex);
+        return activeRooms[roomIndex];
+    }
+
+    @Override
     public int getScore() {
         requireActiveRound();
         return gameRound.getScore();
@@ -151,10 +163,17 @@ public class LevelOrchestrator implements ILevelOrchestrator {
     @Override
     public void submitRoomChoice(int roomIndex) {
         requireActiveRound();
+        validateRoomIndex(roomIndex);
+        if (!activeRooms[roomIndex]) {
+            return;
+        }
 
         // resolve the answer value from the current room layout before submitting
         int answer = roomAssignment.getAnswerForRoom(roomIndex);
         gameRound.submitAnswer(answer);
+        if (!gameRound.isLastAnswerCorrect()) {
+            activeRooms[roomIndex] = false;
+        }
     }
 
     /**
@@ -186,6 +205,13 @@ public class LevelOrchestrator implements ILevelOrchestrator {
      */
     private void refreshAssignment() {
         roomAssignment = roomAssigner.assign(gameRound.getCurrentQuestion());
+        Arrays.fill(activeRooms, true);
+    }
+
+    private static void validateRoomIndex(int roomIndex) {
+        if (roomIndex < 0 || roomIndex > 3) {
+            throw new IllegalArgumentException("roomIndex must be in [0, 3], got: " + roomIndex);
+        }
     }
 
     /**

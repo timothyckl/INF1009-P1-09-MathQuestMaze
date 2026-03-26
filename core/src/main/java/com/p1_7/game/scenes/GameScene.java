@@ -349,6 +349,9 @@ public class GameScene extends Scene implements GamePhaseListener, ItemCollectio
                                ILevelOrchestrator orchestrator) {
         if (to == RoundPhase.FEEDBACK) {
             audioManager.playSound(orchestrator.isLastAnswerCorrect() ? "answer" : "wrong");
+            if (!orchestrator.isLastAnswerCorrect()) {
+                hudRenderer.refreshAnswerCache(orchestrator);
+            }
         } else if (to == RoundPhase.LEVEL_COMPLETE) {
             audioManager.playSound("answer");
         } else if (to == RoundPhase.GAME_OVER) {
