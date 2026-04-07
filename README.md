@@ -1,10 +1,23 @@
 # Math Quest Maze & Abstract Simulation Engine
 
-This repository contains two layers: **Math Quest Maze**, the primary project deliverable — a complete game built with [libGDX](https://libgdx.com/) — and the **Abstract Simulation Engine** it is built on top of, following OOP and SOLID principles. The engine's core classes are intentionally abstract and provide no runnable behaviour on their own; the game layer is a full implementation that exercises every engine subsystem.
+![CI Pipeline](https://github.com/timothyckl/INF1009-P1-09-AbstractEngine/actions/workflows/CI-test.yml/badge.svg)
+
+Math Quest Maze is an educational game for primary school students (ages 6–10) that builds arithmetic fluency through maze navigation and problem-solving. It is built on top of the **Abstract Simulation Engine** — a reusable, framework-agnostic game engine following OOP and SOLID principles.
+
+---
+
+## Table of Contents
+
+- [Game: Math Quest Maze](#game-math-quest-maze)
+- [Engine Architecture](#engine-architecture)
+- [Project Structure](#project-structure)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Getting Started](#getting-started)
+- [Requirements](#requirements)
+
+---
 
 ## Game: Math Quest Maze
-
-Math Quest Maze is a maze-exploration game where the player navigates a series of rooms and answers arithmetic questions to progress through levels. It exercises every engine subsystem end-to-end.
 
 **Screenshots**
 
@@ -17,57 +30,94 @@ Math Quest Maze is a maze-exploration game where the player navigates a series o
 | <img width="1277" height="714" alt="how-to-play-scene" src="https://github.com/user-attachments/assets/5e5a4773-a644-489c-9ef7-9eb5b9b2be4a" /> | <img width="1275" height="717" alt="setting-scene" src="https://github.com/user-attachments/assets/89ad6f21-9546-4f63-b7d8-eda9f8ec972e" /> |
 
 **Gameplay**
-- The player moves through a maze split into labelled answer rooms, each corresponding to a possible answer to the current maths question
-- Entering the correct room advances the round; entering an incorrect room incurs a penalty
-- Hostile enemies (Goblin and Skeleton) patrol the maze and deal damage on contact
-- Collectible hearts are scattered through the maze and restore health when picked up
+- A maths question is displayed each round; the maze contains four answer rooms — enter the correct one to score a point
+- Win by answering 5 questions correctly; wrong rooms cost 1 HP and re-present the same question
+- Start each round with 3 HP; collect hearts (1–3 per round) to restore 1 HP each
 
 **Difficulty**
 
-| Level  | Operand range | Operations |
-|--------|---------------|------------|
-| Easy   | 1 – 10        | Addition, Subtraction |
-| Medium | 1 – 20        | Addition, Subtraction, Multiplication |
-| Hard   | 1 – 100       | Addition, Subtraction, Multiplication, Division |
+| Level  | Operand range | Operations | Enemies |
+|--------|---------------|------------|---------|
+| Easy   | 1 – 10        | Addition, Subtraction | Fewer, placed farther away |
+| Medium | 1 – 20        | Addition, Subtraction, Multiplication | Moderate count and aggression |
+| Hard   | 1 – 100       | Addition, Subtraction, Multiplication, Division | More, placed in closer proximity |
 
-**Scene flow**
+**Enemy AI** — PATROL → CHASE → ATTACK
 
-Main Menu → Gameplay → Pause / Level Complete / Game Over → (back to menu or next level)
+| Enemy | Patrol | Detection | Chase | Attack |
+|-------|--------|-----------|-------|--------|
+| Goblin | 40 px/s, reverses every 1.5 s | 300 px radius | 80 px/s | Within 50 px |
+| Skeleton | Waypoints at 58 px/s | 260 px, line-of-sight | 76 px/s | Within 40 px |
 
-A How To Play screen and a Settings screen (volume, SFX, brightness, and key remapping) are accessible from the main menu.
+**Controls**
+
+| Action | Primary | Alternate |
+|--------|---------|-----------|
+| Move Up | W | ↑ |
+| Move Down | S | ↓ |
+| Move Left | A | ← |
+| Move Right | D | → |
+| Pause / Back | Escape | Backspace |
+| Confirm | Space | — |
+
+All movement bindings are remappable via the Settings screen.
+
+**Scene flow:** Main Menu → Gameplay → Pause / Level Complete / Game Over
+
+---
 
 ## Engine Architecture
 
 <img width="1500" height="734" alt="engine-uml" src="https://github.com/user-attachments/assets/ad92dbba-c62a-4da1-b619-21e0ff97cad1" />
 
-The engine is organised around a central orchestrator, abstract base classes, and concrete manager implementations:
+**Layers**
 
-- **`Engine`** – Central orchestrator managing the lifecycle and update loop of all managers
+| Layer | Package | Responsibility |
+|-------|---------|----------------|
+| Abstract Engine | `com.p1_7.abstractengine` | Framework-level abstractions; zero libGDX imports |
+| Game | `com.p1_7.game` | All game logic; depends only on engine abstractions |
+| Platform | `com.p1_7.game.platform` | libGDX implementations; sole framework dependency |
 
 **Abstract base classes**
 
-- **`Manager`** – Abstract base class providing standard init/shutdown lifecycle for all subsystems
-- **`UpdatableManager`** – Extension of `Manager` for subsystems that participate in the per-frame update loop
-- **`Entity`** – Abstract base for all game objects, assigned unique IDs and active state
-- **`Scene`** – Abstract base for game states with lifecycle hooks (onEnter, onExit, update, submitRenderable)
+- **`Manager`** – init/shutdown lifecycle for all subsystems
+- **`UpdatableManager`** – extends `Manager` to participate in the per-frame update loop
+- **`Entity`** – base for all game objects; assigned unique IDs and active state
+- **`Scene`** – base for game states with lifecycle hooks (onEnter, onExit, onSuspend, onResume, update, submitRenderable)
 
-**Concrete manager implementations**
+**Concrete managers**
 
-- `EntityManager` – handles entity creation, removal, and repository access
-- `SceneManager` – manages scene transitions and the active scene
-- `MovementManager` – updates positions of all registered movable entities
-- `CollisionManager` – detects and handles collisions using `SpatialTree` for broadphase and `CollisionDetector` for narrowphase
-- `RenderManager` – processes the render queue and draws entities via platform-neutral `IDrawContext`, `ISpriteBatch`, and `IShapeRenderer` interfaces
-- `InputManager` – maps raw events from an `IInputSource` to action identifiers, with support for rebindable bindings via `IInputExtension`
+- `EntityManager` – entity creation, removal, and repository access
+- `SceneManager` – scene transitions, deferred to the next tick to prevent mid-frame state changes
+- `MovementManager` – advances all registered `IMovable` entities each frame; clamps to world bounds
+- `CollisionManager` – `SpatialTree` broadphase + `CollisionDetector` narrowphase
+- `RenderManager` – drives the render queue via `IDrawContext`, `ISpriteBatch`, and `IShapeRenderer`
+- `InputManager` – maps `IInputSource` events to `ActionId` constants; supports rebindable bindings via `IInputExtension`
 
-**Engine innovations**
+**Innovations**
 
-- **Topological manager initialisation** — Managers declare their dependencies by type. At startup, `DependencySorter` builds a `DirectedAcyclicGraph` over all registered managers and runs Kahn's algorithm to determine a safe initialisation order automatically. Circular dependencies are detected and reported at startup, not at runtime. Shutdown proceeds in reverse order, ensuring dependants are torn down before their dependencies.
-- **Dimension-agnostic spatial tree** — `SpatialTree` generalises the quadtree/octree concept to arbitrary N dimensions. Each node subdivides along all *d* axes at their midpoints, producing 2<sup>d</sup> children (4 for 2D, 8 for 3D). Child placement uses a bitmask: bit *i* is set when an entity's bounds fall entirely in the high half of dimension *i*. Entities spanning a midpoint are retained in the parent node and checked against all children during retrieval.
-- **Platform-neutral rendering and input** — The engine defines all rendering and input access through interfaces (`IDrawContext`, `ISpriteBatch`, `IShapeRenderer`, `IAssetStore`, `IInputSource`). The engine core has zero libGDX imports; all GDX coupling is isolated to the game layer's `platform/` package, making the engine independently testable and portable.
-- **Type-keyed manager registry** — Managers are indexed by their concrete class, full superclass chain, and implemented interfaces. Any manager can be resolved by type via `Engine.getManager(Class<T>)`, providing a lightweight, compile-safe service locator without a framework dependency.
+- **Topological manager initialisation** — managers declare dependencies via `getDependencies()`; `DependencySorter` builds a `DirectedAcyclicGraph` and applies Kahn's algorithm at startup to derive a valid init order. Circular dependencies are detected and reported with clear error messages.
+- **Dimension-agnostic spatial tree** — `SpatialTree` generalises quadtree/octree to N dimensions, producing 2<sup>d</sup> children per node. Child placement uses a per-axis bitmask; entities spanning a midpoint stay in the parent.
+- **Platform-neutral interfaces** — rendering and input are expressed as engine-layer interfaces (`IDrawContext`, `ISpriteBatch`, `IShapeRenderer`, `IAssetStore`, `IInputSource`); all libGDX coupling lives in `platform/`.
+- **Type-keyed manager registry** — `Engine.getManager(Class<T>)` resolves any manager by concrete class, superclass, or interface, providing compile-safe service lookup without a framework dependency.
 
-Entities implement capability interfaces (`IMovable`, `ICollidable`, `IRenderable`, `ITransformable`) and are registered with the appropriate managers, allowing flexible composition of behaviours.
+**SOLID & Design Patterns**
+
+| Principle / Pattern | Application |
+|---------------------|-------------|
+| SRP | `MovementManager` only advances positions; `QuestionGenerator` only produces questions; `GamePhaseController` only drives phase transitions |
+| OCP | `Manager` exposes `onInit()`/`onShutdown()` hooks; `CollisionManager` declares abstract `resolve()` — subclasses add behaviour without modifying the base |
+| LSP | All scenes managed as `Scene`; `Player`, `Goblin`, `Skeleton` are interchangeable as `Character` / `IRenderable` / `IMovable` / `ICollidable` |
+| ISP | `IEntityRepository` (read) / `IEntityMutator` (write); `IInputQuery` (state) / `IInputMapping` (remapping) |
+| DIP | `Engine` operates on `IManager`; `RenderManager` depends on `ISpriteBatch`, `IShapeRenderer`, `IAssetStore` — never concrete types |
+| Template Method | `Manager.init()` and `shutdown()` are `final`; behaviour added by overriding `onInit()`/`onShutdown()` |
+| Factory | `EntityFactory` decouples entity creation from `EntityManager`; `RenderManager` is an abstract factory for rendering resources |
+| Observer | `PlayerDamageListener`, `ItemCollectionListener`, `GamePhaseListener` decouple event producers from consumers |
+| State | `RoundPhase` FSM (`CHOOSING` → `QUESTION_INTRO` → `FEEDBACK` → `ROUND_RESET` → `LEVEL_COMPLETE` / `GAME_OVER`) driven by `GamePhaseController` |
+| Facade | `LevelOrchestrator` hides round orchestration from `GameScene`; `SceneContext` wraps manager access; `IDrawContext` hides pass-switching |
+| Service Locator | `Engine.getManager(Class<T>)` and `SceneContext.get(Class<T>)` resolve dependencies by type at runtime |
+
+---
 
 ## Project Structure
 
@@ -113,13 +163,13 @@ abstractengine/
 └── transform/   # ITransform, ITransformable
 ```
 
+---
+
 ## CI/CD Pipeline
 
-Our project enforces strict Continuous Integration. Every push and pull request is automatically built and tested against our comprehensive JUnit 5 suite via GitHub Actions. This ensures that the engine's core subsystems remain stable, heavily decoupled from LibGDX, and protected from regressions.
+Every push and pull request is automatically built and tested via GitHub Actions. The suite comprises 22 JUnit 5 test classes covering dependency resolution, collision detection, input state transitions, scene lifecycle, question generation, and round state machine behaviour.
 
 ## Getting Started
-
-Run the game:
 
 ```bash
 ./gradlew run
@@ -128,4 +178,4 @@ Run the game:
 ## Requirements
 
 - Java 8 or higher
-- Gradle (libGDX is managed automatically as a Gradle dependency — no manual setup required)
+- Gradle (libGDX is managed automatically as a Gradle dependency)
