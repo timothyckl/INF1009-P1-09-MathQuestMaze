@@ -39,7 +39,7 @@ Entities implement capability interfaces (`IMovable`, `ICollidable`, `IRenderabl
 
 ### Engine layer
 
-```
+```bash
 abstractengine/
 ├── collision/   # ICollidable, IBounds, CollisionManager, CollisionDetector, SpatialTree, CollisionPair
 ├── engine/      # Engine, Manager, UpdatableManager, IManager, IUpdatable,
@@ -57,7 +57,7 @@ abstractengine/
 
 ### Game layer
 
-```
+```bash
 game/
 ├── audio/       # AudioManager, IAudioManager
 ├── character/   # Player, Goblin, Skeleton, HostileCharacter, EnemyDamageZone,
