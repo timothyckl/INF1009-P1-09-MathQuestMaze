@@ -83,6 +83,16 @@ game/
 
 Math Quest Maze is a maze-exploration game where the player navigates a series of rooms and answers arithmetic questions to progress through levels. It is the primary deliverable of this project and exercises every engine subsystem end-to-end.
 
+**Screenshots**
+
+| Menu | Gameplay |
+|------|----------|
+| *screenshot* | *screenshot* |
+
+| Game Over | Level Complete |
+|-----------|----------------|
+| *screenshot* | *screenshot* |
+
 **Gameplay**
 - The player moves through a maze split into labelled answer rooms, each corresponding to a possible answer to the current maths question
 - Entering the correct room advances the round; entering an incorrect room incurs a penalty
